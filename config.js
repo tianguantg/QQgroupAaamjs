@@ -37,8 +37,8 @@ PS：本群严厉禁止聊及互联网恶俗话题（包括但不限于开盒、
 
     // 资源文件
     assets: {
-        avatar: "/QQgroupAaamjs/images/group-avatar.jpg", // 群头像文件路径
-        qrcode: "/QQgroupAaamjs/images/qrcode.jpg"       // 二维码文件路径
+        avatar: "images/group-avatar.jpg", // 群头像文件路径
+        qrcode: "images/qrcode.jpg"       // 二维码文件路径
     }
 };
 
