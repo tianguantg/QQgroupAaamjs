@@ -648,6 +648,26 @@ body::before {
         gap: 12px;
     }
 
+    /* 手机端群特色卡片充分利用宽度 */
+    .features-card {
+        min-width: unset;
+        max-width: unset;
+        width: 100%;
+    }
+
+    .feature-tags-container {
+        width: 100%;
+    }
+
+    .feature-category {
+        width: 100%;
+    }
+
+    .category-tags {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
     .group-name {
         font-size: 20px;
     }
