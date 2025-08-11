@@ -1,4 +1,4 @@
-// 群聊配置文件 - 修改这里的内容来更新页面信息
+// 群聊配置文件
 const groupConfig = {
     // 基本信息
     basic_info: {
