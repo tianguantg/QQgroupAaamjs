@@ -2,7 +2,7 @@
 const groupConfig = {
     // 基本信息
     basic_info: {
-        name: "AAa",
+        name: "AAa美甲师后援会",
         description: "星引擎游戏组队聊天群！",
         member_count: "60+",
         established_date: "2025/4/29",
