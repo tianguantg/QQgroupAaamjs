@@ -100,7 +100,7 @@ function updatePageContent() {
     // 更新二维码
     const qrCode = document.getElementById('qrCode');
     if (groupConfig.assets.qrcode && checkImageExists(groupConfig.assets.qrcode)) {
-        qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}?v=20250811" alt="群二维码">`;
+        qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}?v=202508111725" alt="群二维码">`;
     } else {
         qrCode.innerHTML = '二维码<br>暂未上传';
     }
