@@ -45,6 +45,7 @@ PS：本群严厉禁止聊及互联网恶俗话题（包括但不限于开盒、
 // 页面加载完成后更新内容
 document.addEventListener('DOMContentLoaded', function() {
     updatePageContent();
+    initRandomGradients();
 });
 
 // 更新页面内容的函数
@@ -191,4 +192,183 @@ function showMessage(message) {
             }
         }, 300);
     }, 3000);
+}
+
+// 随机渐变位置功能
+function initRandomGradients() {
+    // 颜色配置：每种颜色的名称和对应的CSS变量
+    const gradientColors = [
+        { 
+            name: '蓝紫色', 
+            xVar: '--gradient1-x', 
+            yVar: '--gradient1-y', 
+            color: '#667eea',
+            currentX: 20,
+            currentY: 20,
+            targetX: 20,
+            targetY: 20,
+            speedX: 0,
+            speedY: 0
+        },
+        { 
+            name: '亮紫色', 
+            xVar: '--gradient2-x', 
+            yVar: '--gradient2-y', 
+            color: '#f093fb',
+            currentX: 80,
+            currentY: 80,
+            targetX: 80,
+            targetY: 80,
+            speedX: 0,
+            speedY: 0
+        },
+        { 
+            name: '深紫色', 
+            xVar: '--gradient3-x', 
+            yVar: '--gradient3-y', 
+            color: '#764ba2',
+            currentX: 40,
+            currentY: 60,
+            targetX: 40,
+            targetY: 60,
+            speedX: 0,
+            speedY: 0
+        },
+        { 
+            name: '珊瑚红', 
+            xVar: '--gradient4-x', 
+            yVar: '--gradient4-y', 
+            color: '#f5576c',
+            currentX: 60,
+            currentY: 40,
+            targetX: 60,
+            targetY: 40,
+            speedX: 0,
+            speedY: 0
+        },
+        { 
+            name: '天蓝色', 
+            xVar: '--gradient5-x', 
+            yVar: '--gradient5-y', 
+            color: '#4facfe',
+            currentX: 80,
+            currentY: 20,
+            targetX: 80,
+            targetY: 20,
+            speedX: 0,
+            speedY: 0
+        },
+        { 
+            name: '青色', 
+            xVar: '--gradient6-x', 
+            yVar: '--gradient6-y', 
+            color: '#00f2fe',
+            currentX: 20,
+            currentY: 80,
+            targetX: 20,
+            targetY: 80,
+            speedX: 0,
+            speedY: 0
+        }
+    ];
+
+    // 生成随机位置的函数
+    function getRandomPosition() {
+        return Math.random() * 70 + 15; // 15% 到 85% 之间
+    }
+
+    // 生成新的目标位置
+    function generateNewTargets() {
+        gradientColors.forEach(gradient => {
+            gradient.targetX = getRandomPosition();
+            gradient.targetY = getRandomPosition();
+            
+            // 计算移动速度（让移动更平滑）
+            const deltaX = gradient.targetX - gradient.currentX;
+            const deltaY = gradient.targetY - gradient.currentY;
+            
+            // 随机移动时间 2-5 秒
+            const moveTime = Math.random() * 3 + 2;
+            const framesPerSecond = 60;
+            const totalFrames = moveTime * framesPerSecond;
+            
+            gradient.speedX = deltaX / totalFrames;
+            gradient.speedY = deltaY / totalFrames;
+        });
+        
+        console.log('🎯 生成新的目标位置');
+    }
+
+    // 动画更新函数
+    function animateGradients() {
+        const root = document.documentElement;
+        let allReachedTarget = true;
+        
+        gradientColors.forEach(gradient => {
+            // 检查是否接近目标位置
+            const distanceX = Math.abs(gradient.targetX - gradient.currentX);
+            const distanceY = Math.abs(gradient.targetY - gradient.currentY);
+            
+            if (distanceX > 0.5 || distanceY > 0.5) {
+                allReachedTarget = false;
+                
+                // 平滑移动到目标位置
+                gradient.currentX += gradient.speedX;
+                gradient.currentY += gradient.speedY;
+                
+                // 防止超过目标位置
+                if (Math.abs(gradient.speedX) > 0 && 
+                    ((gradient.speedX > 0 && gradient.currentX >= gradient.targetX) ||
+                     (gradient.speedX < 0 && gradient.currentX <= gradient.targetX))) {
+                    gradient.currentX = gradient.targetX;
+                }
+                
+                if (Math.abs(gradient.speedY) > 0 && 
+                    ((gradient.speedY > 0 && gradient.currentY >= gradient.targetY) ||
+                     (gradient.speedY < 0 && gradient.currentY <= gradient.targetY))) {
+                    gradient.currentY = gradient.targetY;
+                }
+            }
+            
+            // 更新CSS变量
+            root.style.setProperty(gradient.xVar, gradient.currentX + '%');
+            root.style.setProperty(gradient.yVar, gradient.currentY + '%');
+        });
+        
+        // 如果所有渐变都到达目标位置，生成新的目标
+        if (allReachedTarget) {
+            // 等待0.5-2秒后生成新目标
+            setTimeout(() => {
+                generateNewTargets();
+            }, Math.random() * 1500 + 500);
+        }
+        
+        // 继续动画
+        requestAnimationFrame(animateGradients);
+    }
+
+    // 初始化
+    generateNewTargets();
+    animateGradients();
+    
+    // 添加手动触发按钮（可选，用于测试）
+    if (window.location.search.includes('debug=true')) {
+        const debugButton = document.createElement('button');
+        debugButton.textContent = '🎨 新目标位置';
+        debugButton.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(90, 103, 216, 0.9);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 10000;
+            backdrop-filter: blur(10px);
+        `;
+        debugButton.onclick = generateNewTargets;
+        document.body.appendChild(debugButton);
+    }
 }
