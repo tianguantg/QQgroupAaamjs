@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人数据分析</title>
+    <style>
+        /* CSS变量定义 - 统一透明度控制 */
+        :root {
+            --panel-opacity: 0.65; /* 主要板块透明度 - 进一步增加亮度 */
+            --search-opacity: 0.55; /* 搜索框透明度 - 进一步增加亮度 */
+            --blur-amount: 10px; /* 背景模糊程度 - 减少模糊度提高清晰度 */
+            --bg-opacity: 0.2; /* 背景图透明度 */
+            --glass-border: rgba(255, 255, 255, 0.5); /* 毛玻璃边框颜色 */
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); /* 毛玻璃阴影 */
+        }
+        
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* 动态渐变背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                #667eea 0%, 
+                #764ba2 25%, 
+                #f093fb 50%, 
+                #f5576c 75%, 
+                #4facfe 100%);
+            background-size: 400% 400%;
+            opacity: 0.8;
+            z-index: -2;
+            animation: gradientFlow 20s ease-in-out infinite;
+        }
+        
+        /* 第二层动态背景 */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -30%;
+            left: -30%;
+            width: 160%;
+            height: 160%;
+            background: linear-gradient(-45deg, 
+                rgba(102, 126, 234, 0.3) 0%, 
+                rgba(118, 75, 162, 0.3) 25%, 
+                rgba(240, 147, 251, 0.3) 50%, 
+                rgba(245, 87, 108, 0.3) 75%, 
+                rgba(79, 172, 254, 0.3) 100%);
+            background-size: 600% 600%;
+            z-index: -1;
+            filter: blur(var(--blur-amount));
+            animation: gentle-sway 30s ease-in-out infinite;
+        }
+        
+        @keyframes gradientFlow {
+            0% { 
+                background-position: 0% 50%;
+                transform: rotate(0deg) scale(1);
+            }
+            25% { 
+                background-position: 100% 50%;
+                transform: rotate(90deg) scale(1.1);
+            }
+            50% { 
+                background-position: 100% 100%;
+                transform: rotate(180deg) scale(1);
+            }
+            75% { 
+                background-position: 0% 100%;
+                transform: rotate(270deg) scale(1.1);
+            }
+            100% { 
+                background-position: 0% 50%;
+                transform: rotate(360deg) scale(1);
+            }
+        }
+        
+        @keyframes gentle-sway {
+            0% { 
+                transform: rotate(-15deg) translateX(-30px);
+                background-position: 0% 0%;
+            }
+            25% { 
+                transform: rotate(15deg) translateX(30px);
+                background-position: 100% 0%;
+            }
+            50% { 
+                transform: rotate(-10deg) translateX(-20px);
+                background-position: 100% 100%;
+            }
+            75% { 
+                transform: rotate(10deg) translateX(20px);
+                background-position: 0% 100%;
+            }
+            100% { 
+                transform: rotate(-15deg) translateX(-30px);
+                background-position: 0% 0%;
+            }
+        }
+        
+        /* 容器样式 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* 个人统计页面特殊样式 */
+        .user-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease-in-out infinite;
+            color: white;
+            padding: 1.2rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .group-name {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+            font-weight: normal;
+        }
+        
+        /* 用户选择区域 */
+        .user-selector {
+            background: rgba(255, 255, 255, var(--search-opacity));
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--glass-shadow);
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .user-selector.fade-out {
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+        }
+        
+        .user-selector::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 255, 255, 0.05) 50%, 
+                rgba(255, 255, 255, 0.1) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .user-selector > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .user-selector h2 {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .qq-input-container {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        #qq-input {
+            padding: 12px 20px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: 12px;
+            font-size: 1.1rem;
+            background: rgba(255, 255, 255, var(--search-opacity));
+            backdrop-filter: blur(var(--blur-amount));
+            color: #333;
+            min-width: 200px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+        
+        #qq-input:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.6);
+            background: rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+        }
+        
+        #qq-input::placeholder {
+            color: #999;
+        }
+        
+        #search-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #search-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.2) 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                rgba(255, 255, 255, 0.2) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        #search-btn > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        #search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #7c8ef0 0%, #8a5cb8 100%);
+        }
+        
+        #search-btn:active {
+            transform: translateY(0);
+        }
+        
+        .search-message {
+            margin-top: 1rem;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            min-height: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-message.success {
+            background: rgba(76, 175, 80, 0.1);
+            color: #2e7d32;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .search-message.error {
+            background: rgba(244, 67, 54, 0.1);
+            color: #c62828;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+        
+        /* 弹出提示样式 */
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .toast-notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast-notification.success {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.9), rgba(56, 142, 60, 0.9));
+        }
+
+        .toast-notification.error {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.9), rgba(211, 47, 47, 0.9));
+        }
+
+        .toast-notification.info {
+            background: linear-gradient(135deg, rgba(33, 150, 243, 0.9), rgba(25, 118, 210, 0.9));
+        }
+        
+        .search-message.info {
+            background: rgba(33, 150, 243, 0.1);
+            color: #1565c0;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+        
+        /* 用户数据展示区域 */
+        .user-data {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        
+        .user-data.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        /* 用户标签展示 */
+        .user-tags {
+            text-align: center;
+            margin: 1rem 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-delay: 0.1s;
+        }
+        
+        .user-data.active .user-tags {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .user-tag {
+            display: inline-block;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 1rem 2rem;
+            margin: 0.5rem;
+            border-radius: 30px;
+            color: #000;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .user-tag::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.3) 0%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(255, 255, 255, 0.3) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .user-tag > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* 根据不同角色设置不同背景色 */
+        .tag-core {
+            background: linear-gradient(135deg, rgba(255, 154, 158, var(--panel-opacity)) 0%, rgba(250, 208, 196, var(--panel-opacity)) 100%);
+        }
+        
+        .tag-active {
+            background: linear-gradient(135deg, rgba(161, 196, 253, var(--panel-opacity)) 0%, rgba(194, 233, 251, var(--panel-opacity)) 100%);
+        }
+        
+        .tag-occasional {
+            background: linear-gradient(135deg, rgba(212, 252, 121, var(--panel-opacity)) 0%, rgba(150, 230, 161, var(--panel-opacity)) 100%);
+        }
+        
+        .tag-lurker {
+            background: linear-gradient(135deg, rgba(246, 211, 101, var(--panel-opacity)) 0%, rgba(253, 160, 133, var(--panel-opacity)) 100%);
+        }
+        
+        /* 用户统计摘要 */
+        .user-summary {
+            background: linear-gradient(135deg, rgba(161, 196, 253, var(--panel-opacity)) 0%, rgba(194, 233, 251, var(--panel-opacity)) 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
+            color: #000;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-delay: 0.2s;
+        }
+        
+        .user-data.active .user-summary {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .user-summary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.25) 0%, 
+                rgba(255, 255, 255, 0.15) 50%, 
+                rgba(255, 255, 255, 0.25) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .user-summary > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .user-summary h3 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #000;
+        }
+        
+        .user-summary p {
+            font-size: 1.1rem;
+            color: #000;
+            margin: 0.5rem 0;
+            line-height: 1.8;
+        }
+        
+        /* 用户参与度板块 */
+        .user-engagement {
+            background: linear-gradient(135deg, rgba(212, 252, 121, var(--panel-opacity)) 0%, rgba(150, 230, 161, var(--panel-opacity)) 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
+            color: #000;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-delay: 0.3s;
+        }
+        
+        .user-data.active .user-engagement {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .user-engagement::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.25) 0%, 
+                rgba(255, 255, 255, 0.15) 50%, 
+                rgba(255, 255, 255, 0.25) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .user-engagement > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        .user-engagement h3 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #000;
+        }
+
+        .user-engagement p {
+            font-size: 1.1rem;
+            color: #000;
+            margin: 0.5rem 0;
+            line-height: 1.8;
+        }
+        
+        /* 活跃时段板块 */
+        .active-periods {
+            background: linear-gradient(135deg, rgba(246, 211, 101, var(--panel-opacity)) 0%, rgba(253, 160, 133, var(--panel-opacity)) 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
+            color: #000;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-delay: 0.4s;
+        }
+        
+        .user-data.active .active-periods {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .active-periods::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.25) 0%, 
+                rgba(255, 255, 255, 0.15) 50%, 
+                rgba(255, 255, 255, 0.25) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .active-periods > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .active-periods h3 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #000;
+        }
+        
+        .active-periods p {
+            font-size: 1.1rem;
+            color: #000;
+            margin: 0.5rem 0;
+            line-height: 1.8;
+        }
+        
+        /* 核心互动关系板块 */
+        .core-interactions {
+            background: linear-gradient(135deg, rgba(255, 154, 158, var(--panel-opacity)) 0%, rgba(250, 208, 196, var(--panel-opacity)) 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
+            color: #000;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-delay: 0.5s;
+        }
+        
+        .user-data.active .core-interactions {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .core-interactions::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.25) 0%, 
+                rgba(255, 255, 255, 0.15) 50%, 
+                rgba(255, 255, 255, 0.25) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .core-interactions > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .core-interactions h3 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #000;
+        }
+        
+        .core-interactions p {
+            font-size: 1.1rem;
+            color: #000;
+            margin: 0.5rem 0;
+            line-height: 1.8;
+        }
+        
+        /* 高亮样式 */
+        .highlight-number {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #fff;
+            background: rgba(0,0,0,0.3);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            margin: 0 0.2rem;
+        }
+        
+        .highlight-text {
+            font-weight: bold;
+            color: #fff;
+            background: rgba(0,0,0,0.3);
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            margin: 0 0.2rem;
+        }
+        
+        .time-period {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        /* 图标样式 */
+        .icon {
+            margin-right: 0.5rem;
+        }
+        
+        /* 署名 */
+        .footer {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 20px auto 0;
+            font-size: 12px;
+            color: #666;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            backdrop-filter: blur(8px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 255, 255, 0.05) 50%, 
+                rgba(255, 255, 255, 0.1) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .footer-container {
+            text-align: center;
+        }
+        
+        .footer > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* 移动端优化：禁用动画以提升性能 */
+        @media (max-width: 768px) {
+            /* 禁用所有背景动画 */
+            body::before,
+            body::after {
+                animation: none !important;
+                transform: none !important;
+            }
+            
+            /* 禁用header的背景动画 */
+            .user-header {
+                animation: none !important;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%) !important;
+                background-size: 100% 100% !important;
+            }
+            
+            /* 简化移动端的模糊效果 */
+            :root {
+                --blur-amount: 5px;
+            }
+        }
+        
+        /* 更小屏幕的额外优化 */
+        @media (max-width: 480px) {
+            /* 进一步减少模糊效果 */
+            :root {
+                --blur-amount: 2px;
+            }
+            
+            /* 减少玻璃效果的复杂度 */
+            .user-selector::before,
+            .user-summary::before,
+            .user-engagement::before,
+            .active-periods::before,
+            .core-interactions::before,
+            .footer::before {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="user-header">
+        <div class="group-name" id="group-name"></div>
+        <h1 style="font-size: 1.8rem; margin: 0.5rem 0;" id="main-title">个人数据分析</h1>
+        <p style="margin: 0; opacity: 0.8;" id="subtitle"></p>
+    </header>
+
+    <main class="container">
+        <!-- QQ号输入区域 -->
+        <div class="user-selector">
+            <h2>输入QQ号查看个人数据</h2>
+            <div class="qq-input-container">
+                <input type="text" id="qq-input" placeholder="请输入你的QQ号" maxlength="15">
+                <button id="search-btn">查看数据</button>
+            </div>
+            <div id="search-message" class="search-message"></div>
+        </div>
+        
+        <!-- 用户数据展示区域 -->
+        <div class="user-data" id="user-data">
+            <!-- 用户标签展示 -->
+            <div class="user-tags">
+                <div class="user-tag" id="user-tag"></div>
+            </div>
+            
+            <!-- 用户统计摘要 -->
+            <div class="user-summary">
+                <h3><span class="icon"></span>你的群聊足迹</h3>
+                <p id="user-summary-text"></p>
+            </div>
+            
+            <!-- 用户参与度 -->
+            <div class="user-engagement">
+                <h3><span class="icon"></span>你的群聊参与度</h3>
+                <p id="user-engagement-text"></p>
+            </div>
+            
+            <!-- 活跃时段 -->
+            <div class="active-periods">
+                <h3>你的活跃时段</h3>
+                <p id="active-periods-text"></p>
+            </div>
+            
+            <!-- 核心互动关系 -->
+            <div class="core-interactions">
+                <h3>你的核心互动关系</h3>
+                <p id="core-interactions-text"></p>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 署名 -->
+    <div class="footer-container">
+        <div class="footer">
+            Powered by 天官
+        </div>
+    </div>
+    
+    <script>
+        // 全局数据变量
+        let userData = null;
+        
+        // SHA-256哈希计算函数
+        async function calculateQQHash(qq) {
+            // 检查crypto.subtle是否可用
+            if (!window.crypto || !window.crypto.subtle) {
+                throw new Error('Web Crypto API不可用，请使用HTTPS访问或更新浏览器');
+            }
+            
+            try {
+                const saltedQQ = qq + 'qqchat_privacy_protection_2025';
+                const encoder = new TextEncoder();
+                const data = encoder.encode(saltedQQ);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                return hashHex.substring(0, 16); // 取前16位
+            } catch (error) {
+                console.error('哈希计算失败:', error);
+                throw new Error('哈希计算失败，请重试');
+            }
+        }
+        
+        // 初始化搜索功能
+        function initializeSearch() {
+            const qqInput = document.getElementById('qq-input');
+            const searchBtn = document.getElementById('search-btn');
+            const searchMessage = document.getElementById('search-message');
+            
+            // 搜索按钮点击事件
+            searchBtn.addEventListener('click', handleSearch);
+            
+            // 回车键搜索
+            qqInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleSearch();
+                }
+            });
+            
+            // 输入验证
+            qqInput.addEventListener('input', function(e) {
+                // 只允许输入数字
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                // 清除之前的消息
+                searchMessage.textContent = '';
+                searchMessage.className = 'search-message';
+            });
+        }
+        
+        // 处理搜索
+        async function handleSearch() {
+            const qqInput = document.getElementById('qq-input');
+            const searchMessage = document.getElementById('search-message');
+            const qq = qqInput.value.trim();
+            
+            // 验证QQ号
+            if (!qq) {
+                showMessage('请输入QQ号', 'error');
+                return;
+            }
+            
+            if (qq.length < 5 || qq.length > 12) {
+                showMessage('QQ号长度应在5-12位之间', 'error');
+                return;
+            }
+            
+            try {
+                showMessage('正在查找数据...', 'info');
+                
+                // 计算哈希值
+                const hash = await calculateQQHash(qq);
+                
+                // 查找用户数据
+                const userInfo = userData.user_data[hash];
+                if (userInfo) {
+                    showMessage('数据加载成功！', 'success');
+                    displayUserData(userInfo, hash);
+                    
+                    // 为用户选择器添加淡出动画
+                    const userSelector = document.querySelector('.user-selector');
+                    userSelector.classList.add('fade-out');
+                    
+                    // 等待动画完成后隐藏元素并显示用户数据
+                    setTimeout(() => {
+                        userSelector.style.display = 'none';
+                        // 减少header的下边距，消除多余空白
+                        document.querySelector('.user-header').style.marginBottom = '0.5rem';
+                        // 显示用户数据区域
+                        document.getElementById('user-data').classList.add('active');
+                    }, 300); // 与CSS动画时间一致
+                } else {
+                    showMessage('暂未查到有效信息，可能你最近没有发言记录哦', 'error');
+                }
+            } catch (error) {
+                console.error('搜索失败:', error);
+                
+                // 根据错误类型显示不同的错误信息
+                if (error.message.includes('Web Crypto API不可用')) {
+                    showMessage('浏览器不支持加密功能，请使用HTTPS访问或更新浏览器', 'error');
+                } else if (error.message.includes('哈希计算失败')) {
+                    showMessage('数据处理失败，请重试', 'error');
+                } else {
+                    showMessage('搜索过程中出现错误，请重试', 'error');
+                }
+            }
+        }
+        
+        // 显示消息
+        function showMessage(message, type) {
+            // 如果是成功消息或正在查找数据消息，使用弹出提示
+            if (type === 'success' || message.includes('数据加载成功') || message.includes('正在查找数据')) {
+                const toastType = message.includes('正在查找数据') ? 'info' : 'success';
+                const duration = message.includes('正在查找数据') ? 2000 : 3000; // 查找数据提示显示时间稍短
+                showToast(message, toastType, duration);
+                return;
+            }
+            
+            // 其他消息仍使用原有方式
+            const searchMessage = document.getElementById('search-message');
+            searchMessage.textContent = message;
+            searchMessage.className = `search-message ${type}`;
+        }
+
+        function showToast(message, type = 'info', duration = 3000) {
+            // 创建弹出提示元素
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${type}`;
+            toast.textContent = message;
+            
+            // 添加到页面
+            document.body.appendChild(toast);
+            
+            // 触发显示动画
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 10);
+            
+            // 自动消失
+            setTimeout(() => {
+                toast.classList.remove('show');
+                // 动画结束后移除元素
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        document.body.removeChild(toast);
+                    }
+                }, 300);
+            }, duration);
+        }
+        
+        // 加载数据
+        async function loadData() {
+            try {
+                const response = await fetch('data.json');
+                userData = await response.json();
+                
+                // 设置页面标题
+                if (userData.group_info && userData.group_info.name) {
+                    document.title = userData.group_info.name + ' - 个人分析';
+                    // 同时更新页面顶部显示的主标题
+                    document.getElementById('main-title').textContent = userData.group_info.name + ' - 个人分析';
+                }
+                
+            } catch (error) {
+                console.error('加载数据失败:', error);
+                showMessage('数据加载失败，请检查data.json文件', 'error');
+            }
+        }
+        
+        // 显示用户数据
+        function displayUserData(data, qq) {
+            // 更新页面标题为用户昵称
+            const userName = data.basic_info?.name || '未知用户';
+            document.getElementById('main-title').textContent = userName;
+            
+            // 显示用户标签
+            displayUserTag(data);
+            
+            // 显示用户统计摘要
+            displayUserSummary(data);
+            
+            // 显示用户参与度
+            displayUserEngagement(data);
+            
+            // 显示活跃时段
+            displayActivePeriods(data);
+            
+            // 显示核心互动关系
+            displayCoreInteractions(data);
+        }
+        
+        // 显示用户标签
+        function displayUserTag(data) {
+            const userTag = document.getElementById('user-tag');
+            const role = data.engagement?.role || '未知';
+            
+            userTag.textContent = role;
+            
+            // 根据角色设置不同的样式类
+            userTag.className = 'user-tag';
+            if (role.includes('核心')) {
+                userTag.classList.add('tag-core');
+            } else if (role.includes('活跃')) {
+                userTag.classList.add('tag-active');
+            } else if (role.includes('偶尔')) {
+                userTag.classList.add('tag-occasional');
+            } else {
+                userTag.classList.add('tag-lurker');
+            }
+        }
+        
+        // 显示用户统计摘要
+        function displayUserSummary(data) {
+            const basicInfo = data.basic_info || {};
+            const startDate = basicInfo.start_date || '未知';
+            const endDate = basicInfo.end_date || '未知';
+            const totalDays = basicInfo.total_days || 0;
+            const activeDays = basicInfo.active_days || 0;
+            const totalMessages = basicInfo.total_messages || 0;
+            const messageRank = basicInfo.message_rank || '-';
+            
+            let summaryText = `你在 <span class="time-period">${startDate}</span> 到 <span class="time-period">${endDate}</span> 共 <span class="highlight-number">${totalDays}</span> 天内的活跃天数为 <span class="highlight-number">${activeDays}</span> 天`;
+            
+            if (totalDays === activeDays && totalDays > 0) {
+                summaryText += '<span class="highlight-text">（全勤！）</span>';
+            }
+            
+            summaryText += `<br><br>共发了 <span class="highlight-number">${totalMessages}</span> 条消息，位列全群第 <span class="highlight-number">${messageRank}</span> 名！`;
+            
+            if (messageRank > 1 && basicInfo.previous_user) {
+                const previousUser = basicInfo.previous_user;
+                const difference = previousUser.message_count - totalMessages;
+                summaryText += `<br><br>与前一名（<span class="highlight-text">${previousUser.name}</span>）相差 <span class="highlight-number">${difference}</span> 条消息！`;
+            }
+            
+            document.getElementById('user-summary-text').innerHTML = summaryText;
+        }
+        
+        // 显示用户参与度
+        function displayUserEngagement(data) {
+            const engagement = data.engagement || {};
+            const engagementScore = engagement.score || 0;
+            const engagementRank = engagement.ranking || engagement.rank || 0;
+            const role = engagement.role || '未知';
+            const interactionScore = engagement.interaction_score || 0;
+            const influenceScore = engagement.influence_score || 0;
+            
+            let rankDisplay = engagementRank || '-';
+            
+            let interactionText = '';
+            if (interactionScore >= 75) {
+                interactionText = '尤其喜欢主动与群友互动';
+            } else if (interactionScore >= 50) {
+                interactionText = '喜欢与群友互动';
+            } else if (interactionScore >= 25) {
+                interactionText = '有时会主动与群友互动';
+            } else {
+                interactionText = '不太主动与群友互动';
+            }
+            
+            let engagementText = `相较于其他成员，你<span class="highlight-text">${interactionText}</span>`;
+            
+            let influenceText = '';
+            if (influenceScore >= 75) {
+                influenceText = '大家在群里都特别留意你呢，你在群聊的影响力非常高';
+            } else if (influenceScore >= 50) {
+                influenceText = '群里不少人记得你呢，你在群里的影响力蛮高的';
+            } else if (influenceScore >= 25) {
+                influenceText = '群里有时会有人留意到你，你在群里的影响力不高不低';
+            } else {
+                influenceText = '你在群里影响力暂时不高呢';
+            }
+            
+            engagementText += `<br><br><span class="highlight-text">${influenceText}</span>`;
+            engagementText += `<br><br>总的来看，你在本群参与度得分为：<span class="highlight-number">${engagementScore.toFixed(2)}</span>分！位列第<span class="highlight-number">${rankDisplay}</span>名，是群聊的<span class="highlight-text">${role}</span>！`;
+            
+            document.getElementById('user-engagement-text').innerHTML = engagementText;
+        }
+        
+        // 显示活跃时段
+        function displayActivePeriods(data) {
+            try {
+                // 获取高峰时段数据
+                const categories = data.basic_info?.active_hours?.categories || {};
+                
+                // 检查是否为预计算进行时的不完整数据
+                if (!data.basic_info?.active_hours || Object.keys(categories).length === 0) {
+                    document.getElementById('active-periods-text').innerHTML = '<span class="loading-text">正在分析你的活跃时段...</span>';
+                    return;
+                }
+                
+                const sortedCategories = Object.entries(categories)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+                
+                // 构建高峰时段文本
+                let peakTimesText = '';
+                if (sortedCategories.length > 0) {
+                    const peakTimeNames = sortedCategories.map(item => item[0]);
+                    peakTimesText = peakTimeNames.join('、');
+                } else {
+                    peakTimesText = '暂无数据';
+                }
+                
+                // 获取活跃度得分
+                const activityScore = data.engagement?.activity_score || 0;
+                
+                // 构建活跃时段信息文本
+                let activePeriodsText = `你最活跃的三个时间段是：<span class="highlight-text">${peakTimesText}</span>。`;
+                
+                // 根据活跃度得分判断是否显示睡眠分析
+                if (activityScore >= 40) {
+                    const sleepData = data.sleep_patterns;
+                    if (sleepData && sleepData.primary_sleep_period) {
+                        // 有睡眠数据
+                        const primarySleep = sleepData.primary_sleep_period;
+                        const startTime = `${primarySleep.start_hour.toString().padStart(2, '0')}:00`;
+                        const endTime = `${primarySleep.end_hour.toString().padStart(2, '0')}:00`;
+                        
+                        activePeriodsText += `<br><br>tg分析了你的发言时间，保守估计你一般在<span class="highlight-text">${startTime}-${endTime}</span>时睡觉，因为此时你的活跃度明显降低<br><br>由此，估计你单次睡眠时长约为<span class="highlight-number">${primarySleep.duration}</span>个小时。属于<span class="highlight-text">${sleepData.sleep_type}</span>，看上去<span class="highlight-text">${sleepData.sleep_quality}</span>呢。`;
+                    } else if (sleepData && (sleepData.sleep_type === "未知" || !sleepData.primary_sleep_period)) {
+                        // 有睡眠数据但无法分析出作息模式
+                        activePeriodsText += '<br><br>tg分析了你的发言时间，竟然推测不出你的作息！难道你不需要睡觉，还是说作息太混乱了？';
+                    } else {
+                        // 其他情况，无法分析作息
+                        activePeriodsText += '<br><br>tg分析了你的发言时间，竟然推测不出你的作息！难道你不需要睡觉，还是说作息太混乱了？';
+                    }
+                } else {
+                    // 活跃度得分低于40，不显示后续内容
+                    activePeriodsText += '<br><br>tg发现你还不够活跃，分析不了作息哦';
+                }
+                
+                document.getElementById('active-periods-text').innerHTML = activePeriodsText;
+            } catch (error) {
+                console.error('生成活跃时段信息时出错:', error);
+                document.getElementById('active-periods-text').innerHTML = '生成活跃时段信息时出错';
+            }
+        }
+        
+        // 显示核心互动关系
+        function displayCoreInteractions(data) {
+            const interactions = data.interactions || {};
+            
+            let coreInteractionsText = '<span style="font-weight: bold; font-size: 1.2rem;">你和谁互动最频繁？</span><br>';
+            
+            // @ 互动
+            if (interactions.mention_targets && interactions.mention_targets.length > 0) {
+                const topMention = interactions.mention_targets[0];
+                coreInteractionsText += `你 @ 得最多的群友是 <span class="highlight-text">${topMention.user.name}</span>（${topMention.count}次）`;
+            } else {
+                coreInteractionsText += '你很少 @ 其他群友';
+            }
+            
+            // 戳一戳互动
+            if (interactions.poke_targets && interactions.poke_targets.length > 0) {
+                const topPoke = interactions.poke_targets[0];
+                coreInteractionsText += `，平时被你戳一戳最多的是 <span class="highlight-text">${topPoke.user.name}</span>（${topPoke.count}次）！`;
+            } else {
+                coreInteractionsText += '，很少戳一戳其他群友！';
+            }
+            
+            coreInteractionsText += '<br><br><span style="font-weight: bold; font-size: 1.2rem;">谁最常与你互动？</span><br>';
+            
+            // 被 @ 
+            if (interactions.mentioned_by && interactions.mentioned_by.length > 0) {
+                const topMentionedBy = interactions.mentioned_by[0];
+                coreInteractionsText += `<span class="highlight-text">${topMentionedBy.user.name}</span> @ 你的次数最多（${topMentionedBy.count}次）`;
+            } else {
+                coreInteractionsText += '很少有人 @ 你';
+            }
+            
+            // 被戳一戳
+            if (interactions.poked_by && interactions.poked_by.length > 0) {
+                const topPokedBy = interactions.poked_by[0];
+                coreInteractionsText += `，<span class="highlight-text">${topPokedBy.user.name}</span> 则最常戳一戳你（${topPokedBy.count}次）~`;
+            } else {
+                coreInteractionsText += '，很少有人戳一戳你~';
+            }
+            
+            // 亲密度分析
+            if (interactions.closeness_rankings && interactions.closeness_rankings.length > 0) {
+                const topCloseness = interactions.closeness_rankings[0];
+                const topScore = Math.round(topCloseness.closeness_index * 100);
+                
+                if (topScore > 3) {
+                    coreInteractionsText += '<br><br><span style="font-weight: bold; font-size: 1.2rem;">亲密度？！</span><br>';
+                    coreInteractionsText += `经过多个指标的分析，计算出亲密度指数最高的群友是：<br>`;
+                    coreInteractionsText += `<div style="text-align: center; margin: 15px 0; font-size: 1.3em; font-weight: bold; color: #fff; background: linear-gradient(135deg, #ff6b6b, #ff8e8e); padding: 10px 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); display: inline-block;">${topCloseness.user.name}</div>（${topScore}分）<br>`;
+                    
+                    if (interactions.bidirectional_check) {
+                        if (interactions.bidirectional_check.is_mutual_top) {
+                            coreInteractionsText += `（同时，<span class="highlight-text">${topCloseness.user.name}</span>亲密度排行榜里的No.1也是你！）<br><br>`;
+                        } else {
+                            coreInteractionsText += `（不过，对<span class="highlight-text">${topCloseness.user.name}</span>来说，亲密度最高的另有其人呢）<br><br>`;
+                        }
+                    }
+                    
+                    if (interactions.closeness_rankings.length > 1) {
+                        const secondCloseness = interactions.closeness_rankings[1];
+                        const secondScore = Math.round(secondCloseness.closeness_index * 100);
+                        
+                        if (interactions.closeness_rankings.length > 2) {
+                            const thirdCloseness = interactions.closeness_rankings[2];
+                            const thirdScore = Math.round(thirdCloseness.closeness_index * 100);
+                            coreInteractionsText += `其次则是<span class="highlight-text">${secondCloseness.user.name}</span>（${secondScore}分）和<span class="highlight-text">${thirdCloseness.user.name}</span>（${thirdScore}分）！`;
+                        } else {
+                            coreInteractionsText += `其次则是<span class="highlight-text">${secondCloseness.user.name}</span>（${secondScore}分）！`;
+                        }
+                    }
+                } else {
+                    coreInteractionsText += '<br><br><span style="font-weight: bold; font-size: 1.2rem;">亲密度？！</span><br>';
+                    coreInteractionsText += `tg分析了你的互动数据，发现你与群友的亲密度指数都比较低，还需要多多互动哦！`;
+                }
+            } else {
+                coreInteractionsText += '<br><br><span style="font-weight: bold; font-size: 1.2rem;">亲密度？！</span><br>';
+                coreInteractionsText += `暂无足够的互动数据来计算亲密度指数`;
+            }
+            
+            document.getElementById('core-interactions-text').innerHTML = coreInteractionsText;
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            initializeSearch();
+        });
+    </script>
+</body>
+</html>
