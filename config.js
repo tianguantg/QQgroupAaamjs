@@ -42,10 +42,54 @@ PS：本群严厉禁止聊及互联网恶俗话题（包括但不限于开盒、
     }
 };
 
+// 检测是否为移动设备
+function isMobileDevice() {
+    return window.innerWidth <= 768 || 
+           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// 检测是否为低性能设备
+function isLowPerformanceDevice() {
+    // 检测硬件并发数（CPU核心数的近似值）
+    const cores = navigator.hardwareConcurrency || 1;
+    
+    // 检测内存（如果支持）
+    const memory = navigator.deviceMemory || 1;
+    
+    // 检测连接速度
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const isSlowConnection = connection && (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g');
+    
+    // 如果是移动设备、低核心数、低内存或慢连接，则认为是低性能设备
+    return isMobileDevice() || cores <= 2 || memory <= 2 || isSlowConnection;
+}
+
 // 页面加载完成后更新内容
 document.addEventListener('DOMContentLoaded', function() {
     updatePageContent();
-    initRandomGradients();
+    
+    // 只在非移动设备且非低性能设备上启用复杂动画
+    if (!isLowPerformanceDevice()) {
+        initRandomGradients();
+        console.log('🎨 启用完整动画效果（高性能设备）');
+    } else {
+        console.log('📱 移动端/低性能设备检测，已禁用复杂动画以提升性能');
+        
+        // 为移动端添加简化的静态渐变
+        const root = document.documentElement;
+        root.style.setProperty('--gradient1-x', '20%');
+        root.style.setProperty('--gradient1-y', '20%');
+        root.style.setProperty('--gradient2-x', '80%');
+        root.style.setProperty('--gradient2-y', '80%');
+        root.style.setProperty('--gradient3-x', '40%');
+        root.style.setProperty('--gradient3-y', '60%');
+        root.style.setProperty('--gradient4-x', '60%');
+        root.style.setProperty('--gradient4-y', '40%');
+        root.style.setProperty('--gradient5-x', '80%');
+        root.style.setProperty('--gradient5-y', '20%');
+        root.style.setProperty('--gradient6-x', '20%');
+        root.style.setProperty('--gradient6-y', '80%');
+    }
 });
 
 // 更新页面内容的函数
