@@ -91,7 +91,7 @@ function updatePageContent() {
     // 更新头像
     const groupAvatar = document.getElementById('groupAvatar');
     if (groupConfig.assets.avatar && checkImageExists(groupConfig.assets.avatar)) {
-        groupAvatar.innerHTML = `<img src="${groupConfig.assets.avatar}" alt="群头像">`;
+        groupAvatar.innerHTML = `<img src="${groupConfig.assets.avatar}?v=20250811" alt="群头像">`;
     } else {
         // 使用默认头像（群名首字母）
         groupAvatar.innerHTML = groupConfig.basic_info.name.charAt(0);
@@ -100,7 +100,7 @@ function updatePageContent() {
     // 更新二维码
     const qrCode = document.getElementById('qrCode');
     if (groupConfig.assets.qrcode && checkImageExists(groupConfig.assets.qrcode)) {
-        qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}" alt="群二维码">`;
+        qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}?v=20250811" alt="群二维码">`;
     } else {
         qrCode.innerHTML = '二维码<br>暂未上传';
     }
