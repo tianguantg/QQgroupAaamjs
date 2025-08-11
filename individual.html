@@ -7,12 +7,12 @@
     <style>
         /* CSS变量定义 - 统一透明度控制 */
         :root {
-            --panel-opacity: 0.65; /* 主要板块透明度 - 进一步增加亮度 */
-            --search-opacity: 0.55; /* 搜索框透明度 - 进一步增加亮度 */
-            --blur-amount: 10px; /* 背景模糊程度 - 减少模糊度提高清晰度 */
+            --panel-opacity: 0.55; /* 主要板块透明度 - 增加透明度 */
+            --search-opacity: 0.45; /* 搜索框透明度 - 增加透明度 */
+            --blur-amount: 15px; /* 背景模糊程度 - 增加模糊度提升毛玻璃效果 */
             --bg-opacity: 0.2; /* 背景图透明度 */
-            --glass-border: rgba(255, 255, 255, 0.5); /* 毛玻璃边框颜色 */
-            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); /* 毛玻璃阴影 */
+            --glass-border: rgba(255, 255, 255, 0.7); /* 毛玻璃边框颜色 - 更亮的边框 */
+            --glass-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(255, 255, 255, 0.1); /* 增强毛玻璃阴影和高光 */
         }
         
         /* 基础样式 */
@@ -147,10 +147,11 @@
         /* 用户选择区域 */
         .user-selector {
             background: rgba(255, 255, 255, var(--search-opacity));
-            border-radius: 16px;
-            padding: 1.5rem;
+            border-radius: 30px;
+            padding: 1.5rem 2rem;
             box-shadow: var(--glass-shadow);
-            margin-bottom: 1.5rem;
+            margin: 1.5rem auto;
+            max-width: 500px;
             backdrop-filter: blur(var(--blur-amount)) saturate(180%);
             border: 1px solid var(--glass-border);
             position: relative;
@@ -158,6 +159,10 @@
             opacity: 1;
             transform: translateY(0);
             transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         
         .user-selector.fade-out {
@@ -174,9 +179,9 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.1) 0%, 
-                rgba(255, 255, 255, 0.05) 50%, 
-                rgba(255, 255, 255, 0.1) 100%);
+                rgba(255, 255, 255, 0.2) 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                rgba(255, 255, 255, 0.25) 100%);
             pointer-events: none;
             z-index: 1;
         }
@@ -186,30 +191,24 @@
             z-index: 2;
         }
         
-        .user-selector h2 {
-            text-align: center;
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-        
         .qq-input-container {
             display: flex;
             gap: 1rem;
             justify-content: center;
             align-items: center;
-            margin-top: 1rem;
+            margin: 0;
             flex-wrap: wrap;
         }
         
         #qq-input {
             padding: 12px 20px;
             border: 2px solid rgba(102, 126, 234, 0.3);
-            border-radius: 12px;
+            border-radius: 20px;
             font-size: 1rem;
             background: rgba(255, 255, 255, var(--search-opacity));
             backdrop-filter: blur(var(--blur-amount));
             color: #333;
-            min-width: 200px;
+            min-width: 180px;
             transition: all 0.3s ease;
             position: relative;
             z-index: 2;
@@ -231,7 +230,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 20px;
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
@@ -272,13 +271,24 @@
         }
         
         .search-message {
-            margin-top: 1rem;
-            padding: 10px 20px;
-            border-radius: 8px;
+            margin: 0;
+            padding: 0;
+            border-radius: 15px;
             text-align: center;
             font-weight: 500;
-            min-height: 20px;
+            min-height: 0;
             transition: all 0.3s ease;
+            opacity: 0;
+            max-height: 0;
+            overflow: hidden;
+        }
+        
+        .search-message:not(:empty) {
+            margin: 0.8rem 0 0 0;
+            padding: 10px 20px;
+            min-height: 20px;
+            opacity: 1;
+            max-height: 100px;
         }
         
         .search-message.success {
@@ -387,9 +397,9 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.3) 0%, 
-                rgba(255, 255, 255, 0.2) 50%, 
-                rgba(255, 255, 255, 0.3) 100%);
+                rgba(255, 255, 255, 0.4) 0%, 
+                rgba(255, 255, 255, 0.3) 50%, 
+                rgba(255, 255, 255, 0.45) 100%);
             pointer-events: none;
             z-index: 1;
         }
@@ -418,10 +428,18 @@
         
         /* 用户统计摘要 */
         .user-summary {
-            background: linear-gradient(135deg, rgba(161, 196, 253, var(--panel-opacity)) 0%, rgba(194, 233, 251, var(--panel-opacity)) 100%);
+            background: linear-gradient(135deg, 
+                rgba(150, 180, 255, var(--panel-opacity)) 0%, 
+                rgba(180, 200, 255, var(--panel-opacity)) 25%, 
+                rgba(200, 220, 255, var(--panel-opacity)) 50%, 
+                rgba(170, 190, 255, var(--panel-opacity)) 75%, 
+                rgba(190, 210, 255, var(--panel-opacity)) 100%);
             border-radius: 16px;
             padding: 1.5rem;
-            margin: 1rem 0;
+            margin: 1rem auto;
+            width: 90%;
+            max-width: 650px;
+            min-width: 300px;
             text-align: center;
             color: #000;
             box-shadow: var(--glass-shadow);
@@ -448,9 +466,9 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.25) 0%, 
-                rgba(255, 255, 255, 0.15) 50%, 
-                rgba(255, 255, 255, 0.25) 100%);
+                rgba(255, 255, 255, 0.35) 0%, 
+                rgba(255, 255, 255, 0.25) 50%, 
+                rgba(255, 255, 255, 0.4) 100%);
             pointer-events: none;
             z-index: 1;
         }
@@ -462,12 +480,12 @@
         
         .user-summary h3 {
             margin-top: 0;
-            font-size: 1.3rem;
+            font-size: 1.6rem;
             color: #000;
         }
         
         .user-summary p {
-            font-size: 1rem;
+            font-size: 1.2rem;
             color: #000;
             margin: 0.5rem 0;
             line-height: 1.8;
@@ -475,10 +493,18 @@
         
         /* 用户参与度板块 */
         .user-engagement {
-            background: linear-gradient(135deg, rgba(212, 252, 121, var(--panel-opacity)) 0%, rgba(150, 230, 161, var(--panel-opacity)) 100%);
+            background: linear-gradient(135deg, 
+                rgba(160, 200, 255, var(--panel-opacity)) 0%, 
+                rgba(180, 220, 255, var(--panel-opacity)) 25%, 
+                rgba(200, 240, 255, var(--panel-opacity)) 50%, 
+                rgba(180, 230, 250, var(--panel-opacity)) 75%, 
+                rgba(170, 210, 255, var(--panel-opacity)) 100%);
             border-radius: 16px;
             padding: 1.5rem;
-            margin: 1rem 0;
+            margin: 1rem auto;
+            width: 90%;
+            max-width: 650px;
+            min-width: 300px;
             text-align: center;
             color: #000;
             box-shadow: var(--glass-shadow);
@@ -505,9 +531,9 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.25) 0%, 
-                rgba(255, 255, 255, 0.15) 50%, 
-                rgba(255, 255, 255, 0.25) 100%);
+                rgba(255, 255, 255, 0.35) 0%, 
+                rgba(255, 255, 255, 0.25) 50%, 
+                rgba(255, 255, 255, 0.4) 100%);
             pointer-events: none;
             z-index: 1;
         }
@@ -519,12 +545,12 @@
 
         .user-engagement h3 {
             margin-top: 0;
-            font-size: 1.3rem;
+            font-size: 1.6rem;
             color: #000;
         }
 
         .user-engagement p {
-            font-size: 1rem;
+            font-size: 1.2rem;
             color: #000;
             margin: 0.5rem 0;
             line-height: 1.8;
@@ -532,10 +558,18 @@
         
         /* 活跃时段板块 */
         .active-periods {
-            background: linear-gradient(135deg, rgba(246, 211, 101, var(--panel-opacity)) 0%, rgba(253, 160, 133, var(--panel-opacity)) 100%);
+            background: linear-gradient(135deg, 
+                rgba(180, 210, 255, var(--panel-opacity)) 0%, 
+                rgba(200, 220, 255, var(--panel-opacity)) 25%, 
+                rgba(220, 230, 255, var(--panel-opacity)) 50%, 
+                rgba(200, 210, 255, var(--panel-opacity)) 75%, 
+                rgba(190, 200, 255, var(--panel-opacity)) 100%);
             border-radius: 16px;
             padding: 1.5rem;
-            margin: 1rem 0;
+            margin: 1rem auto;
+            width: 90%;
+            max-width: 650px;
+            min-width: 300px;
             text-align: center;
             color: #000;
             box-shadow: var(--glass-shadow);
@@ -562,9 +596,9 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.25) 0%, 
-                rgba(255, 255, 255, 0.15) 50%, 
-                rgba(255, 255, 255, 0.25) 100%);
+                rgba(255, 255, 255, 0.35) 0%, 
+                rgba(255, 255, 255, 0.25) 50%, 
+                rgba(255, 255, 255, 0.4) 100%);
             pointer-events: none;
             z-index: 1;
         }
@@ -576,12 +610,12 @@
         
         .active-periods h3 {
             margin-top: 0;
-            font-size: 1.3rem;
+            font-size: 1.6rem;
             color: #000;
         }
         
         .active-periods p {
-            font-size: 1rem;
+            font-size: 1.2rem;
             color: #000;
             margin: 0.5rem 0;
             line-height: 1.8;
@@ -589,10 +623,18 @@
         
         /* 核心互动关系板块 */
         .core-interactions {
-            background: linear-gradient(135deg, rgba(255, 154, 158, var(--panel-opacity)) 0%, rgba(250, 208, 196, var(--panel-opacity)) 100%);
+            background: linear-gradient(135deg, 
+                rgba(170, 190, 255, var(--panel-opacity)) 0%, 
+                rgba(190, 210, 255, var(--panel-opacity)) 25%, 
+                rgba(210, 220, 255, var(--panel-opacity)) 50%, 
+                rgba(180, 200, 255, var(--panel-opacity)) 75%, 
+                rgba(160, 180, 255, var(--panel-opacity)) 100%);
             border-radius: 16px;
             padding: 1.5rem;
-            margin: 1rem 0;
+            margin: 1rem auto;
+            width: 90%;
+            max-width: 650px;
+            min-width: 300px;
             text-align: center;
             color: #000;
             box-shadow: var(--glass-shadow);
@@ -619,9 +661,9 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.25) 0%, 
-                rgba(255, 255, 255, 0.15) 50%, 
-                rgba(255, 255, 255, 0.25) 100%);
+                rgba(255, 255, 255, 0.35) 0%, 
+                rgba(255, 255, 255, 0.25) 50%, 
+                rgba(255, 255, 255, 0.4) 100%);
             pointer-events: none;
             z-index: 1;
         }
@@ -633,12 +675,12 @@
         
         .core-interactions h3 {
             margin-top: 0;
-            font-size: 1.3rem;
+            font-size: 1.6rem;
             color: #000;
         }
         
         .core-interactions p {
-            font-size: 1rem;
+            font-size: 1.2rem;
             color: #000;
             margin: 0.5rem 0;
             line-height: 1.8;
@@ -687,9 +729,9 @@
             color: #666;
             background: rgba(255, 255, 255, 0.15);
             border-radius: 20px;
-            backdrop-filter: blur(8px) saturate(150%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
         }
@@ -702,9 +744,9 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.1) 0%, 
-                rgba(255, 255, 255, 0.05) 50%, 
-                rgba(255, 255, 255, 0.1) 100%);
+                rgba(255, 255, 255, 0.2) 0%, 
+                rgba(255, 255, 255, 0.1) 50%, 
+                rgba(255, 255, 255, 0.25) 100%);
             pointer-events: none;
             z-index: 1;
         }
@@ -738,6 +780,16 @@
             :root {
                 --blur-amount: 5px;
             }
+            
+            /* 卡片在平板设备上的优化 */
+            .user-summary,
+            .user-engagement,
+            .active-periods,
+            .core-interactions {
+                width: 95%;
+                margin: 0.8rem auto;
+                padding: 1.2rem;
+            }
         }
         
         /* 更小屏幕的额外优化 */
@@ -767,6 +819,33 @@
             body::after {
                 display: none !important;
             }
+            
+            /* 手机端卡片优化 */
+            .user-summary,
+            .user-engagement,
+            .active-periods,
+            .core-interactions {
+                width: 98%;
+                margin: 0.5rem auto;
+                padding: 1rem;
+                min-width: unset;
+            }
+            
+            /* 手机端字体调整 */
+            .user-summary h3,
+            .user-engagement h3,
+            .active-periods h3,
+            .core-interactions h3 {
+                font-size: 1.4rem;
+            }
+            
+            .user-summary p,
+            .user-engagement p,
+            .active-periods p,
+            .core-interactions p {
+                font-size: 1.1rem;
+                line-height: 1.6;
+            }
         }
     </style>
 </head>
@@ -780,7 +859,6 @@
     <main class="container">
         <!-- QQ号输入区域 -->
         <div class="user-selector">
-            <h2>输入QQ号查看个人数据</h2>
             <div class="qq-input-container">
                 <input type="text" id="qq-input" placeholder="请输入你的QQ号" maxlength="15">
                 <button id="search-btn">查看数据</button>
@@ -1272,18 +1350,18 @@
             const totalMessages = basicInfo.total_messages || 0;
             const messageRank = basicInfo.message_rank || '-';
             
-            let summaryText = `你在 <span class="time-period">${startDate}</span> 到 <span class="time-period">${endDate}</span> 共 <span class="highlight-number">${totalDays}</span> 天内的活跃天数为 <span class="highlight-number">${activeDays}</span> 天`;
+            let summaryText = `你在 <span class="time-period">${startDate}</span> 到<br><span class="time-period">${endDate}</span> 共 <span class="highlight-number">${totalDays}</span> 天内<br>活跃天数为 <span class="highlight-number">${activeDays}</span> 天`;
             
             if (totalDays === activeDays && totalDays > 0) {
                 summaryText += '<span class="highlight-text">（全勤！）</span>';
             }
             
-            summaryText += `<br><br>共发了 <span class="highlight-number">${totalMessages}</span> 条消息，位列全群第 <span class="highlight-number">${messageRank}</span> 名！`;
+            summaryText += `<br><br>共发了 <span class="highlight-number">${totalMessages}</span> 条消息<br>位列全群第 <span class="highlight-number">${messageRank}</span> 名！`;
             
             if (messageRank > 1 && basicInfo.previous_user) {
                 const previousUser = basicInfo.previous_user;
                 const difference = previousUser.message_count - totalMessages;
-                summaryText += `<br><br>与前一名（<span class="highlight-text">${previousUser.name}</span>）相差 <span class="highlight-number">${difference}</span> 条消息！`;
+                summaryText += `<br><br>与前一名<br>（<span class="highlight-text">${previousUser.name}</span>）<br>相差 <span class="highlight-number">${difference}</span> 条消息！`;
             }
             
             document.getElementById('user-summary-text').innerHTML = summaryText;
@@ -1311,21 +1389,21 @@
                 interactionText = '不太主动与群友互动';
             }
             
-            let engagementText = `相较于其他成员，你<span class="highlight-text">${interactionText}</span>`;
+            let engagementText = `相较于其他成员<br>你<span class="highlight-text">${interactionText}</span>`;
             
             let influenceText = '';
             if (influenceScore >= 75) {
-                influenceText = '大家在群里都特别留意你呢，你在群聊的影响力非常高';
+                influenceText = '大家在群里都特别留意你呢<br>你在群聊的影响力非常高';
             } else if (influenceScore >= 50) {
-                influenceText = '群里不少人记得你呢，你在群里的影响力蛮高的';
+                influenceText = '群里不少人记得你呢<br>你在群里的影响力蛮高的';
             } else if (influenceScore >= 25) {
-                influenceText = '群里有时会有人留意到你，你在群里的影响力不高不低';
+                influenceText = '群里有时会有人留意到你<br>你在群里的影响力不高不低';
             } else {
                 influenceText = '你在群里影响力暂时不高呢';
             }
             
             engagementText += `<br><br><span class="highlight-text">${influenceText}</span>`;
-            engagementText += `<br><br>总的来看，你在本群参与度得分为：<span class="highlight-number">${engagementScore.toFixed(2)}</span>分！位列第<span class="highlight-number">${rankDisplay}</span>名，是群聊的<span class="highlight-text">${role}</span>！`;
+            engagementText += `<br><br>总的来看，你在本群参与度得分为：<br><span class="highlight-number">${engagementScore.toFixed(2)}</span>分！位列第<span class="highlight-number">${rankDisplay}</span>名<br>是群聊的<span class="highlight-text">${role}</span>！`;
             
             document.getElementById('user-engagement-text').innerHTML = engagementText;
         }
@@ -1359,7 +1437,7 @@
                 const activityScore = data.engagement?.activity_score || 0;
                 
                 // 构建活跃时段信息文本
-                let activePeriodsText = `你最活跃的三个时间段是：<span class="highlight-text">${peakTimesText}</span>。`;
+                let activePeriodsText = `你最活跃的三个时间段是：<br><span class="highlight-text">${peakTimesText}</span>`;
                 
                 // 根据活跃度得分判断是否显示睡眠分析
                 if (activityScore >= 40) {
@@ -1370,17 +1448,17 @@
                         const startTime = `${primarySleep.start_hour.toString().padStart(2, '0')}:00`;
                         const endTime = `${primarySleep.end_hour.toString().padStart(2, '0')}:00`;
                         
-                        activePeriodsText += `<br><br>tg分析了你的发言时间，保守估计你一般在<span class="highlight-text">${startTime}-${endTime}</span>时睡觉，因为此时你的活跃度明显降低<br><br>由此，估计你单次睡眠时长约为<span class="highlight-number">${primarySleep.duration}</span>个小时。属于<span class="highlight-text">${sleepData.sleep_type}</span>，看上去<span class="highlight-text">${sleepData.sleep_quality}</span>呢。`;
+                        activePeriodsText += `<br><br>tg分析了你的发言时间<br>保守估计你一般在<br><span class="highlight-text">${startTime}-${endTime}</span>时睡觉<br>因为此时你的活跃度明显降低<br><br>由此，估计你单次睡眠时长<br>约为<span class="highlight-number">${primarySleep.duration}</span>个小时<br>属于<span class="highlight-text">${sleepData.sleep_type}</span><br>看上去<span class="highlight-text">${sleepData.sleep_quality}</span>呢`;
                     } else if (sleepData && (sleepData.sleep_type === "未知" || !sleepData.primary_sleep_period)) {
                         // 有睡眠数据但无法分析出作息模式
-                        activePeriodsText += '<br><br>tg分析了你的发言时间，竟然推测不出你的作息！难道你不需要睡觉，还是说作息太混乱了？';
+                        activePeriodsText += '<br><br>tg分析了你的发言时间<br>竟然推测不出你的作息！<br>难道你不需要睡觉<br>还是说作息太混乱了？';
                     } else {
                         // 其他情况，无法分析作息
-                        activePeriodsText += '<br><br>tg分析了你的发言时间，竟然推测不出你的作息！难道你不需要睡觉，还是说作息太混乱了？';
+                        activePeriodsText += '<br><br>tg分析了你的发言时间<br>竟然推测不出你的作息！<br>难道你不需要睡觉<br>还是说作息太混乱了？';
                     }
                 } else {
                     // 活跃度得分低于40，不显示后续内容
-                    activePeriodsText += '<br><br>tg发现你还不够活跃，分析不了作息哦';
+                    activePeriodsText += '<br><br>tg发现你还不够活跃<br>分析不了作息哦';
                 }
                 
                 document.getElementById('active-periods-text').innerHTML = activePeriodsText;
@@ -1399,7 +1477,7 @@
             // @ 互动
             if (interactions.mention_targets && interactions.mention_targets.length > 0) {
                 const topMention = interactions.mention_targets[0];
-                coreInteractionsText += `你 @ 得最多的群友是 <span class="highlight-text">${topMention.user.name}</span>（${topMention.count}次）`;
+                coreInteractionsText += `你 @ 得最多的群友是<br><span class="highlight-text">${topMention.user.name}</span>（${topMention.count}次）`;
             } else {
                 coreInteractionsText += '你很少 @ 其他群友';
             }
@@ -1407,9 +1485,9 @@
             // 戳一戳互动
             if (interactions.poke_targets && interactions.poke_targets.length > 0) {
                 const topPoke = interactions.poke_targets[0];
-                coreInteractionsText += `，平时被你戳一戳最多的是 <span class="highlight-text">${topPoke.user.name}</span>（${topPoke.count}次）！`;
+                coreInteractionsText += `<br>平时被你戳一戳最多的是<br><span class="highlight-text">${topPoke.user.name}</span>（${topPoke.count}次）！`;
             } else {
-                coreInteractionsText += '，很少戳一戳其他群友！';
+                coreInteractionsText += '<br>很少戳一戳其他群友！';
             }
             
             coreInteractionsText += '<br><br><span style="font-weight: bold; font-size: 1.1rem;">谁最常与你互动？</span><br>';
@@ -1417,7 +1495,7 @@
             // 被 @ 
             if (interactions.mentioned_by && interactions.mentioned_by.length > 0) {
                 const topMentionedBy = interactions.mentioned_by[0];
-                coreInteractionsText += `<span class="highlight-text">${topMentionedBy.user.name}</span> @ 你的次数最多（${topMentionedBy.count}次）`;
+                coreInteractionsText += `<span class="highlight-text">${topMentionedBy.user.name}</span> @ 你的次数最多<br>（${topMentionedBy.count}次）`;
             } else {
                 coreInteractionsText += '很少有人 @ 你';
             }
@@ -1425,9 +1503,9 @@
             // 被戳一戳
             if (interactions.poked_by && interactions.poked_by.length > 0) {
                 const topPokedBy = interactions.poked_by[0];
-                coreInteractionsText += `，<span class="highlight-text">${topPokedBy.user.name}</span> 则最常戳一戳你（${topPokedBy.count}次）~`;
+                coreInteractionsText += `<br><span class="highlight-text">${topPokedBy.user.name}</span> 则最常戳一戳你<br>（${topPokedBy.count}次）~`;
             } else {
-                coreInteractionsText += '，很少有人戳一戳你~';
+                coreInteractionsText += '<br>很少有人戳一戳你~';
             }
             
             // 亲密度分析
@@ -1437,14 +1515,14 @@
                 
                 if (topScore > 3) {
                     coreInteractionsText += '<br><br><span style="font-weight: bold; font-size: 1.1rem;">亲密度？！</span><br>';
-                    coreInteractionsText += `经过多个指标的分析，计算出亲密度指数最高的群友是：<br>`;
+                    coreInteractionsText += `经过多个指标的分析<br>计算出亲密度指数最高的群友是：<br>`;
                     coreInteractionsText += `<div style="text-align: center; margin: 15px 0; font-size: 1.2em; font-weight: bold; color: #fff; background: linear-gradient(135deg, #ff6b6b, #ff8e8e); padding: 10px 20px; border-radius: 25px; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3); display: inline-block;">${topCloseness.user.name}</div>（${topScore}分）<br>`;
                     
                     if (interactions.bidirectional_check) {
                         if (interactions.bidirectional_check.is_mutual_top) {
-                            coreInteractionsText += `（同时，<span class="highlight-text">${topCloseness.user.name}</span>亲密度排行榜里的No.1也是你！）<br><br>`;
+                            coreInteractionsText += `（同时，<span class="highlight-text">${topCloseness.user.name}</span><br>亲密度排行榜里的No.1也是你！）<br><br>`;
                         } else {
-                            coreInteractionsText += `（不过，对<span class="highlight-text">${topCloseness.user.name}</span>来说，亲密度最高的另有其人呢）<br><br>`;
+                            coreInteractionsText += `（不过，对<span class="highlight-text">${topCloseness.user.name}</span>来说<br>亲密度最高的另有其人呢）<br><br>`;
                         }
                     }
                     
@@ -1455,18 +1533,18 @@
                         if (interactions.closeness_rankings.length > 2) {
                             const thirdCloseness = interactions.closeness_rankings[2];
                             const thirdScore = Math.round(thirdCloseness.closeness_index * 100);
-                            coreInteractionsText += `其次则是<span class="highlight-text">${secondCloseness.user.name}</span>（${secondScore}分）和<span class="highlight-text">${thirdCloseness.user.name}</span>（${thirdScore}分）！`;
+                            coreInteractionsText += `其次则是<br><span class="highlight-text">${secondCloseness.user.name}</span>（${secondScore}分）和<br><span class="highlight-text">${thirdCloseness.user.name}</span>（${thirdScore}分）！`;
                         } else {
-                            coreInteractionsText += `其次则是<span class="highlight-text">${secondCloseness.user.name}</span>（${secondScore}分）！`;
+                            coreInteractionsText += `其次则是<br><span class="highlight-text">${secondCloseness.user.name}</span>（${secondScore}分）！`;
                         }
                     }
                 } else {
                     coreInteractionsText += '<br><br><span style="font-weight: bold; font-size: 1.1rem;">亲密度？！</span><br>';
-                    coreInteractionsText += `tg分析了你的互动数据，发现你与群友的亲密度指数都比较低，还需要多多互动哦！`;
+                    coreInteractionsText += `tg分析了你的互动数据<br>发现你与群友的亲密度指数<br>都比较低<br>还需要多多互动哦！`;
                 }
             } else {
                 coreInteractionsText += '<br><br><span style="font-weight: bold; font-size: 1.1rem;">亲密度？！</span><br>';
-                coreInteractionsText += `暂无足够的互动数据来计算亲密度指数`;
+                coreInteractionsText += `暂无足够的互动数据<br>来计算亲密度指数`;
             }
             
             document.getElementById('core-interactions-text').innerHTML = coreInteractionsText;
