@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAa美甲师后援会 - 星引擎游戏组队聊天群</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-content">
+                <div class="logo" id="navLogo">AAa美甲师后援会</div>
+            </div>
+        </nav>
+
+        <!-- 主要内容 -->
+        <div class="main-content">
+            <!-- 群信息卡片 -->
+            <div class="card group-info">
+                <div class="group-avatar" id="groupAvatar">A</div>
+                <h1 class="group-name" id="groupName">加载中...</h1>
+                <p class="group-description" id="groupDescription">加载中...</p>
+                <div class="group-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="memberCount">--</div>
+                        <div class="stat-label">群成员</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="establishedDate">--</div>
+                        <div class="stat-label">成立时间</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">活跃</div>
+                        <div class="stat-label">群状态</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 加群区域 -->
+            <div class="card join-section qr-card">
+                <h2 class="join-title">加入群聊</h2>
+                <div class="qq-number" id="qqNumber">QQ群: 加载中...</div>
+                <div class="qr-code" id="qrCode">二维码<br>加载中...</div>
+                <p style="font-size: 12px; color: #666;">扫码或搜索群号加入</p>
+            </div>
+        </div>
+
+        <!-- 特色和公告 -->
+        <div class="features-announcements">
+            <!-- 群特色 -->
+            <div class="card features-card">
+                <h3 class="section-title">群特色</h3>
+                <div class="feature-tags-container">
+                    <div class="feature-category">
+                        <span class="category-label">主题</span>
+                        <div class="category-tags">
+                            <span class="tag theme-tag" id="groupTheme">加载中...</span>
+                        </div>
+                    </div>
+                    <div class="feature-category">
+                        <span class="category-label">氛围</span>
+                        <div class="category-tags">
+                            <span class="tag atmosphere-tag" id="groupAtmosphere">加载中...</span>
+                        </div>
+                    </div>
+                    <div class="feature-category">
+                        <span class="category-label">活动</span>
+                        <div class="category-tags" id="featureTags">
+                            <span class="tag">加载中...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 群公告 -->
+            <div class="card announcements-card">
+                <h3 class="section-title">群公告</h3>
+                <div id="announcements">
+                    <div class="announcement">
+                        <div class="announcement-title">加载中...</div>
+                        <div class="announcement-content">正在获取最新公告...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部信息 -->
+        <div class="footer">
+            <div class="join-requirements" id="joinRequirements">加载中...</div>
+            <p>联系方式: <span id="contactMethod">加载中...</span></p>
+        </div>
+
+        <!-- Powered by 标识 -->
+        <div class="powered-by">
+            <span>powered by 天官</span>
+        </div>
+    </div>
+
+    <!-- 引入配置文件 -->
+    <script src="config.js"></script>
+</body>
+</html>
