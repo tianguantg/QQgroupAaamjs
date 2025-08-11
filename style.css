@@ -1019,18 +1019,19 @@ body::before {
     }
     
     .nav-btn-text {
-        display: none; /* 移动端隐藏文字，只显示图标 */
+        display: block; /* 所有屏幕尺寸都显示文字 */
+        font-size: 14px; /* 小屏幕使用字体 */
     }
     
-    /* 中等屏幕及以上显示文字 */
+    /* 中等屏幕及以上使用更大的样式 */
     @media (min-width: 600px) {
-        .nav-btn-text {
-            display: block;
-        }
-        
         .nav-btn {
             padding: 10px 16px; /* 恢复桌面端的padding */
             font-size: 14px; /* 恢复桌面端的字体大小 */
+        }
+        
+        .nav-btn-text {
+            font-size: 14px; /* 恢复桌面端的文字大小 */
         }
     }
     
