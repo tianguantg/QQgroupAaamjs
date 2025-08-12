@@ -938,6 +938,11 @@
             }
         }
         
+        .back-btn-container {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
         .back-btn {
             background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 255, 255, 0.12);
@@ -948,8 +953,9 @@
             cursor: pointer;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
-            display: block;
-            margin: 0 auto;
+            display: inline-block;
+            position: relative;
+            z-index: 10;
         }
         
         .back-btn:hover {
@@ -1103,6 +1109,17 @@
         
         <!-- 用户数据展示区域 -->
         <div class="user-data" id="user-data">
+            <!-- 返回按钮 - 独立放置在卡片上方 -->
+            <div class="back-btn-container" id="back-btn-container" style="display: none;">
+                <button class="back-btn" onclick="toggleAIAnalysis()">返回数据分析</button>
+            </div>
+            
+            <!-- AI分析卡片 - 置顶 -->
+            <div class="ai-analysis-card" id="ai-analysis-card" style="display: none;">
+                <h3>AI个人分析报告</h3>
+                <div id="ai-analysis-content"></div>
+            </div>
+            
             <!-- 用户标签展示 -->
             <div class="user-tags">
                 <div class="user-tag" id="user-tag"></div>
@@ -1139,12 +1156,7 @@
                 </button>
             </div>
             
-            <!-- AI分析卡片 -->
-            <div class="ai-analysis-card" id="ai-analysis-card" style="display: none;">
-                <h3>AI个人分析报告</h3>
-                <div id="ai-analysis-content"></div>
-                <button class="back-btn" onclick="toggleAIAnalysis()">返回数据分析</button>
-            </div>
+
         </div>
     </main>
     
@@ -1807,10 +1819,11 @@
             const userDataCards = document.querySelectorAll('.user-summary, .user-engagement, .active-periods, .core-interactions');
             const userTags = document.querySelector('.user-tags');
             const aiAnalysisCard = document.getElementById('ai-analysis-card');
+            const backBtnContainer = document.getElementById('back-btn-container');
             const aiAnalysisBtn = document.getElementById('ai-analysis-btn');
             
             if (!isAIAnalysisVisible) {
-                // 显示AI分析卡片，隐藏其他卡片和用户标签
+                // 显示AI分析卡片和返回按钮，隐藏其他卡片和用户标签
                 userDataCards.forEach(card => {
                     card.style.display = 'none';
                 });
@@ -1818,6 +1831,7 @@
                     userTags.style.display = 'none';
                 }
                 aiAnalysisCard.style.display = 'block';
+                backBtnContainer.style.display = 'block';
                 aiAnalysisBtn.innerHTML = '返回分析';
                 
                 // 加载AI分析内容
@@ -1830,8 +1844,9 @@
                     currentTypewriterTimer = null;
                 }
                 
-                // 隐藏AI分析卡片
+                // 隐藏AI分析卡片和返回按钮
                 aiAnalysisCard.style.display = 'none';
+                backBtnContainer.style.display = 'none';
                 
                 // 获取用户数据容器
                 const userDataContainer = document.querySelector('.user-data');
