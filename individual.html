@@ -1932,6 +1932,38 @@
             });
         }
 
+        // AI分析索引缓存
+        let aiAnalysisIndex = null;
+        
+        // 加载AI分析索引
+        async function loadAIAnalysisIndex() {
+            if (aiAnalysisIndex) {
+                return aiAnalysisIndex; // 使用缓存
+            }
+            
+            try {
+                const response = await fetch('./ai_analysis_index.json');
+                if (response.ok) {
+                    aiAnalysisIndex = await response.json();
+                    console.log(`AI分析索引加载成功，共${aiAnalysisIndex.total_count}个分析`);
+                    return aiAnalysisIndex;
+                }
+            } catch (error) {
+                console.log('AI分析索引加载失败:', error);
+            }
+            
+            return null;
+        }
+        
+        // 检查是否有AI分析
+        function hasAIAnalysis(qqHash) {
+            if (!aiAnalysisIndex || !aiAnalysisIndex.analyses) {
+                return false;
+            }
+            
+            return aiAnalysisIndex.analyses.some(analysis => analysis.qq_hash === qqHash);
+        }
+
         async function loadAIAnalysis() {
             const qqInput = document.getElementById('qq-input');
             const qq = qqInput.value.trim();
@@ -1951,12 +1983,22 @@
             await typewriterEffect(document.getElementById('ai-analysis-content'), 'AI正在分析你的数据...');
             
             try {
+                // 先加载AI分析索引
+                const index = await loadAIAnalysisIndex();
+                
                 // 使用相同的加密算法对QQ号进行加密
                 const encryptedQQ = await calculateQQHash(qq);
-                const fileName = `${encryptedQQ}.json`;
                 
-                // 尝试读取AI分析文件
+                // 检查索引中是否有这个QQ的分析
+                if (!index || !hasAIAnalysis(encryptedQQ)) {
+                    await typewriterEffect(document.getElementById('ai-analysis-content'), '暂时没有你的AI分析哦');
+                    return;
+                }
+                
+                // 如果索引中有，再去加载具体文件
+                const fileName = `${encryptedQQ}.json`;
                 const response = await fetch(`./ai_analysis/${fileName}`);
+                
                 if (!response.ok) {
                     throw new Error('文件不存在');
                 }
@@ -1971,7 +2013,7 @@
                     await typewriterEffect(document.getElementById('ai-analysis-content'), '暂时没有你的AI分析哦');
                 }
             } catch (error) {
-                console.log('AI分析文件读取失败:', error);
+                console.log('AI分析加载失败:', error);
                 await typewriterEffect(document.getElementById('ai-analysis-content'), '暂时没有你的AI分析哦');
             }
         }
