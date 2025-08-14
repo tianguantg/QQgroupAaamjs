@@ -25,17 +25,18 @@ const groupConfig = {
     // 群公告
     announcements: [
         {
-            title: "笨蛋秋叶あき葉 23:20",
-            content: `吾日三省吾身：诱拐萌新而不带之，萌新发言而不理之，萌新欲趴而无人之，是铸也。`
+            title: "你复活辣!!!!! 2025/8/14 23:31",
+            content: `首先各位小伙伴欢迎进群哇(≧▽≦)——
+本群主要用于寻找趴友开趴聊天及闲聊（当然聊什么都可以只要不违规>M<)
+进群后建议把名字改成趴名+ID（方便对应寻找哇)
+最后希望大家在群里趴得开心聊得愉快哇（要是不愉快的话！瓦塔西！！！)
+！检测到蒸蛋，开始传教：“搜查，分析，解明”
+PS：本群严厉禁止聊及互联网恶俗话题（包括但不限于开盒、引战等），违者直接飞机票。
+（该公告来自秋叶，解释权归管理层所有）`
         },
         {
-            title: "笨蛋秋叶あき葉 2025/05/08 12:11",
-            content: `首先各位小伙伴欢迎进群哇(✧∇✧)——
-本群主要用于寻找趴友开趴聊天及闲聊（当然聊什么都可以只要不违规˃ʍ˂）
-进群后可以建议把名字改成趴名+ID（方便对应寻找哇）
-最后希望大家在群里趴得开心聊得愉快哇（要是不愉快的话！瓦塔西！！！）
-！检测到蒸蛋，开始传教："搜查，分析，解明"
-PS：本群严厉禁止聊及互联网恶俗话题（包括但不限于开盒、引战等），违者直接飞机票。`
+            title: "笨蛋秋叶あき葉 2025/8/14 23:20",
+            content: `吾日三省吾身：诱拐萌新而不带之，萌新发言而不理之，萌新欲趴而无人之，是铸也。`
         }
     ],
 
@@ -148,7 +149,7 @@ function updatePageContent() {
     // 更新二维码
     const qrCode = document.getElementById('qrCode');
     if (groupConfig.assets.qrcode && checkImageExists(groupConfig.assets.qrcode)) {
-        qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}?v=202508111730" alt="群二维码">`;
+        qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}?v=20250814" alt="群二维码">`;
     } else {
         qrCode.innerHTML = '二维码<br>暂未上传';
     }
