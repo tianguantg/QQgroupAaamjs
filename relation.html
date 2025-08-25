@@ -6,20 +6,50 @@
   <title>群成员关系图</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f7fafc; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
-    .header { text-align: center; margin-bottom: 12px; }
-    .subtitle { color: #718096; font-size: 14px; }
-    #graph { width: 100%; height: 80vh; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
-    .note { color: #4a5568; font-size: 12px; margin-top: 8px; text-align: center; }
-  </style>
++    body { font-family: 'Microsoft YaHei', Arial, sans-serif; }
++    :root {
++      --gradient1-x: 20%; --gradient1-y: 20%;
++      --gradient2-x: 80%; --gradient2-y: 80%;
++      --gradient3-x: 40%; --gradient3-y: 60%;
++      --gradient4-x: 60%; --gradient4-y: 40%;
++      --gradient5-x: 80%; --gradient5-y: 20%;
++      --gradient6-x: 20%; --gradient6-y: 80%;
++    }
+     .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+     .header { 
+       text-align: center; 
+       margin-bottom: 12px; 
+       background: rgba(255, 255, 255, 0.85);
+       border: 1px solid rgba(255, 255, 255, 0.6);
+       border-radius: 12px;
+       padding: 10px 14px;
+       box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+       backdrop-filter: blur(6px);
+       -webkit-backdrop-filter: blur(6px);
+     }
+     .subtitle { color: #4a5568; font-size: 14px; }
+     #graph { width: 100%; height: 80vh; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+     .note { 
+       color: #4a5568; 
+       font-size: 12px; 
+       margin-top: 8px; 
+       text-align: center; 
+       background: rgba(255, 255, 255, 0.88);
+       border: 1px solid rgba(255, 255, 255, 0.65);
+       border-radius: 10px;
+       padding: 8px 12px;
+       box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+       backdrop-filter: blur(6px);
+       -webkit-backdrop-filter: blur(6px);
+     }
+   </style>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 </head>
 <body>
   <div class="container">
     <div class="header">
       <h2>群成员关系图</h2>
-      <div class="subtitle">节点大小代表活跃度（engagement_score），连线粗细代表亲密度（closeness_index）</div>
+      <div class="subtitle">连线粗细代表亲密度</div>
     </div>
     <div id="graph"></div>
     <div class="note">提示：图可拖拽/缩放，点击节点可查看提示信息。</div>
@@ -153,12 +183,14 @@
       const echartsLinks = edgesClean.map(e => {
         const w = Number(e.closeness_index);
         const t = (wMax === wMin) ? 0.5 : Math.max(0, Math.min(1, (w - wMin) / (wMax - wMin)));
-        const width = Math.max(0.8, isFinite(w) ? (1 + t * 6) : 0.8);
+        const width = Math.max(1.2, isFinite(w) ? (1.5 + t * 7) : 1.2);
         return {
           source: e.source,
           target: e.target,
           value: isFinite(w) ? w : 0,
-          lineStyle: { width, opacity: 0.25 + t * 0.6, color: edgeColor(isFinite(w) ? w : wMin) }
+          lineStyle: { width, opacity: 0.25 + t * 0.6, color: edgeColor(isFinite(w) ? w : wMin) },
+          // 悬停节点时，相连边明显加粗并提高不透明度
+          emphasis: { lineStyle: { width: Math.max(width + 3, 4), opacity: 1 } }
         };
       });
 
@@ -225,10 +257,17 @@
           links: graphData.links,
           categories: graphData.categories,
           roam: true,
-          draggable: true,
+          draggable: false,
           label: { show: true },
           edgeSymbol: ['none', 'none'],
-          emphasis: { disabled: true },
+          // 开启邻接高亮，高亮线宽在每条边的 emphasis 中定义
+          emphasis: { focus: 'adjacency' },
+          // 非焦点元素更淡化，突出焦点邻接关系
+          blur: {
+            itemStyle: { opacity: 0.12 },
+            lineStyle: { opacity: 0.04 },
+            label: { opacity: 0.35 }
+          },
           lineStyle: { curveness: 0.15 },
           // 关键：使用我们提供的 x/y 作为力导初始布局，避免所有点从同一处爆炸式分散
           force: {
@@ -243,7 +282,37 @@
       };
   
       chart.setOption(option);
-  
+
+      // 显式：当鼠标悬停在节点上时，高亮其邻接边与节点；移出时取消。
+      // 同时禁止边悬停触发高亮，确保只有节点悬停才会高亮关联边。
+      chart.on('mouseover', function (params) {
+        const targetType = params && params.event && params.event.target && params.event.target.type;
+        if (params.dataType === 'edge') {
+          // 阻止边自身进入强调状态与邻接高亮
+          chart.dispatchAction({ type: 'unfocusNodeAdjacency', seriesIndex: 0 });
+          chart.dispatchAction({ type: 'downplay', seriesIndex: 0, dataIndex: params.dataIndex });
+        } else if (params.dataType === 'node') {
+          // 仅当悬停在节点图形（非标签文本）上时才触发高亮
+          if (targetType === 'text') return;
+          chart.dispatchAction({
+            type: 'focusNodeAdjacency',
+            seriesIndex: 0,
+            dataIndex: params.dataIndex
+          });
+        }
+      });
+      chart.on('mouseout', function (params) {
+        const targetType = params && params.event && params.event.target && params.event.target.type;
+        if (params.dataType === 'node') {
+          // 仅当从节点图形移出时才取消高亮；从标签移出无需处理
+          if (targetType === 'text') return;
+          chart.dispatchAction({
+            type: 'unfocusNodeAdjacency',
+            seriesIndex: 0
+          });
+        }
+      });
+
       window.addEventListener('resize', () => {
         chart.resize();
         centerAndFixTop();
