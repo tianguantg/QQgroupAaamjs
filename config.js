@@ -4,7 +4,7 @@ const groupConfig = {
     basic_info: {
         name: "AAa美甲师后援会",
         description: "星引擎游戏组队聊天群！",
-        member_count: "60+",
+        member_count: "70+",
         established_date: "2025/4/29",
         qq_number: "1043179137"
     },

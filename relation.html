@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>群成员关系图</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: 'Microsoft YaHei', Arial, sans-serif; background: #f7fafc; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .header { text-align: center; margin-bottom: 12px; }
+    .subtitle { color: #718096; font-size: 14px; }
+    #graph { width: 100%; height: 80vh; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+    .note { color: #4a5568; font-size: 12px; margin-top: 8px; text-align: center; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>群成员关系图</h2>
+      <div class="subtitle">节点大小代表活跃度（engagement_score），连线粗细代表亲密度（closeness_index）</div>
+    </div>
+    <div id="graph"></div>
+    <div class="note">提示：图可拖拽/缩放，点击节点可查看提示信息。</div>
+  </div>
+
+  <script>
+    async function loadData() {
+      const res = await fetch('relationship_graph.json');
+      if (!res.ok) throw new Error('关系数据加载失败');
+      const data = await res.json();
+      return data;
+    }
+
+    function scaleLinear(value, inMin, inMax, outMin, outMax) {
+      if (inMax === inMin) return (outMin + outMax) / 2;
+      const t = (value - inMin) / (inMax - inMin);
+      return outMin + t * (outMax - outMin);
+    }
+
+    // 新增：分位数、颜色插值与配色
+    function quantile(arr, p) {
+      if (!arr.length) return 0;
+      const sorted = arr.slice().sort((a,b) => a - b);
+      const idx = Math.max(0, Math.min(sorted.length - 1, Math.floor(p * (sorted.length - 1))));
+      return sorted[idx];
+    }
+    function hexToRgb(hex){
+      const m = hex.replace('#','');
+      const bigint = parseInt(m, 16);
+      return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+    }
+    function rgbToHex(r,g,b){
+      const toHex = (v) => v.toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+    function lerp(a,b,t){ return a + (b - a) * t; }
+    function mixColor(c1, c2, t){
+      const a = hexToRgb(c1), b = hexToRgb(c2);
+      return rgbToHex(Math.round(lerp(a.r,b.r,t)), Math.round(lerp(a.g,b.g,t)), Math.round(lerp(a.b,b.b,t)));
+    }
+
+    function buildGraph(dataset) {
+      const nodesRaw = Array.isArray(dataset.nodes) ? dataset.nodes : [];
+      const edgesRaw = Array.isArray(dataset.edges) ? dataset.edges : (Array.isArray(dataset.links) ? dataset.links : []);
+
+      // 过滤无效节点
+      const nodes = nodesRaw
+        .filter(n => n && (n.id || n.name))
+        .map(n => ({ id: n.id || n.name, name: n.name || n.id, engagement_score: Number(n.engagement_score) || 0 }));
+
+      // 计算节点大小与类别的比例
+      const es = nodes.map(n => n.engagement_score);
+      const esMin = Math.min(...es, 0);
+      const esMax = Math.max(...es, 1);
+      const q1 = quantile(es, 0.25);
+      const q2 = quantile(es, 0.50);
+      const q3 = quantile(es, 0.75);
+
+      // 类别配色：潜水/偶尔活跃/活跃/核心
+      const categoriesAll = [
+        { name: '潜水', itemStyle: { color: '#93C5FD' } },
+        { name: '偶尔活跃', itemStyle: { color: '#34D399' } },
+        { name: '活跃', itemStyle: { color: '#F59E0B' } },
+        { name: '核心', itemStyle: { color: '#EF4444' } }
+      ];
+
+      // 先计算所有节点（含类别），稍后根据需求过滤
+      const allNodes = nodes.map(n => {
+        const size = Math.round(scaleLinear(n.engagement_score, esMin, esMax, 12, 36));
+        let catIdx = 0;
+        if (n.engagement_score <= q1) catIdx = 0;
+        else if (n.engagement_score <= q2) catIdx = 1;
+        else if (n.engagement_score <= q3) catIdx = 2;
+        else catIdx = 3;
+        const color = categoriesAll[catIdx].itemStyle.color;
+        return {
+          id: n.id,
+          name: n.name,
+          value: n.engagement_score,
+          symbolSize: size,
+          category: catIdx,
+          itemStyle: {
+            color,
+            borderColor: '#ffffff',
+            borderWidth: 1.5,
+            shadowBlur: 6,
+            shadowColor: 'rgba(0,0,0,0.08)'
+          },
+          label: {
+            show: true,
+            position: 'right',
+            color: '#2d3748',
+            fontSize: 12,
+            backgroundColor: 'rgba(255,255,255,0.86)',
+            borderRadius: 4,
+            padding: [2, 4],
+            offset: [6, 0],
+            textBorderColor: 'rgba(255,255,255,0.95)',
+            textBorderWidth: 2
+          }
+        };
+      });
+
+      // 需求：不显示“潜水(0)”和“偶尔活跃(1)”——仅保留“活跃(2)”和“核心(3)”
+      const keptCategories = [categoriesAll[2], categoriesAll[3]];
+      const keptNodes = allNodes.filter(n => n.category >= 2);
+      // 重新映射类别索引：2->0（活跃）、3->1（核心）
+      const echartsNodes = keptNodes.map(n => ({
+        ...n,
+        category: n.category - 2,
+        // 保持颜色，但也可依据新 categories 覆盖
+        itemStyle: { ...n.itemStyle, color: keptCategories[n.category - 2].itemStyle.color }
+      }));
+
+      // 过滤无效边，且两端都在保留的节点集合中
+      const keptIdSet = new Set(echartsNodes.map(n => n.id));
+      const edgesClean = edgesRaw.filter(e => e && e.source && e.target && keptIdSet.has(e.source) && keptIdSet.has(e.target));
+
+      // 边权范围基于过滤后的边
+      const weights = edgesClean.map(e => Number(e.closeness_index) || 0);
+      const wMin = Math.min(...weights, 0);
+      const wMax = Math.max(...weights, 1);
+
+      // 边颜色渐变：低(灰) -> 中(紫) -> 高(红)
+      const lowC = '#CBD5E1', midC = '#7C3AED', highC = '#EF4444';
+      function edgeColor(w){
+        const t = (wMax === wMin) ? 0.5 : Math.max(0, Math.min(1, (w - wMin) / (wMax - wMin)));
+        return t < 0.5 ? mixColor(lowC, midC, t / 0.5) : mixColor(midC, highC, (t - 0.5) / 0.5);
+      }
+
+      const echartsLinks = edgesClean.map(e => {
+        const w = Number(e.closeness_index);
+        const t = (wMax === wMin) ? 0.5 : Math.max(0, Math.min(1, (w - wMin) / (wMax - wMin)));
+        const width = Math.max(0.8, isFinite(w) ? (1 + t * 6) : 0.8);
+        return {
+          source: e.source,
+          target: e.target,
+          value: isFinite(w) ? w : 0,
+          lineStyle: { width, opacity: 0.25 + t * 0.6, color: edgeColor(isFinite(w) ? w : wMin) }
+        };
+      });
+
+      // 第1名（在保留的节点中）固定中间
+      let topId = null;
+      if (echartsNodes.length) {
+        const topNode = echartsNodes.reduce((best, cur) => (cur.value > best.value ? cur : best), echartsNodes[0]);
+        topId = topNode.id;
+      }
+
+      return { nodes: echartsNodes, links: echartsLinks, categories: keptCategories, topId };
+    }
+
+    function initChart(graphData) {
+      const dom = document.getElementById('graph');
+      const chart = echarts.init(dom);
+  
+      // 在设置图表前，将第1名固定到容器中心
+      function centerAndFixTop() {
+        if (!graphData.topId) return;
+        const cx = dom.clientWidth / 2;
+        const cy = dom.clientHeight / 2;
+        const idx = graphData.nodes.findIndex(n => n.id === graphData.topId);
+        if (idx >= 0) {
+          graphData.nodes[idx].x = cx;
+          graphData.nodes[idx].y = cy;
+          graphData.nodes[idx].fixed = true;
+          graphData.nodes[idx].itemStyle = Object.assign({}, graphData.nodes[idx].itemStyle, { borderWidth: 2 });
+        }
+      }
+  
+      // 新增：为其他节点提供稳定的初始位置（环形种子），减少初始抽搐
+      function seedInitialPositions() {
+        const cx = dom.clientWidth / 2;
+        const cy = dom.clientHeight / 2;
+        const radius = Math.max(80, Math.min(dom.clientWidth, dom.clientHeight) * 0.34);
+        const others = graphData.nodes.filter(n => n.id !== graphData.topId);
+        const m = Math.max(1, others.length);
+        for (let i = 0; i < others.length; i++) {
+          const theta = (2 * Math.PI * i) / m;
+          // 添加轻微随机扰动，避免完全同角度重叠
+          const jitterR = radius * (0.94 + Math.random() * 0.12);
+          const jitterA = theta + (Math.random() - 0.5) * 0.06;
+          others[i].x = cx + jitterR * Math.cos(jitterA);
+          others[i].y = cy + jitterR * Math.sin(jitterA);
+          others[i].fixed = false;
+        }
+      }
+  
+      centerAndFixTop();
+      seedInitialPositions();
+  
+      const option = {
+        tooltip: { show: false },
+        legend: [{
+          data: graphData.categories.map(c => c.name),
+          bottom: 10,
+          textStyle: { color: '#4a5568' }
+        }],
+        series: [{
+          type: 'graph',
+          layout: 'force',
+          data: graphData.nodes,
+          links: graphData.links,
+          categories: graphData.categories,
+          roam: true,
+          draggable: true,
+          label: { show: true },
+          edgeSymbol: ['none', 'none'],
+          emphasis: { disabled: true },
+          lineStyle: { curveness: 0.15 },
+          // 关键：使用我们提供的 x/y 作为力导初始布局，避免所有点从同一处爆炸式分散
+          force: {
+            initLayout: 'none',
+            repulsion: 900,
+            gravity: 0.08,
+            edgeLength: 120
+          },
+          // 降低初始布局动画感知（可按需开启）
+          // layoutAnimation: false,
+        }]
+      };
+  
+      chart.setOption(option);
+  
+      window.addEventListener('resize', () => {
+        chart.resize();
+        centerAndFixTop();
+        chart.setOption({ series: [{ data: graphData.nodes }] });
+      });
+    }
+
+    (async function main() {
+      try {
+        const dataset = await loadData();
+        const graph = buildGraph(dataset);
+        initChart(graph);
+      } catch (err) {
+        console.error(err);
+        const box = document.getElementById('graph');
+        box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#c53030;">数据加载失败</div>';
+      }
+    })();
+  </script>
+</body>
+</html>
