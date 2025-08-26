@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>群公告 - AAa美甲师后援会</title>
+  <link rel="stylesheet" href="style.css?v=202508261613" />
+  <style>
+    /* 页面内轻量增强样式（不改动全局） */
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+    .back-btn { background: linear-gradient(135deg, #8b9cf4 0%, #a8b5f7 100%); color:#fff; border:none; border-radius:12px; padding:8px 12px; font-size:13px; cursor:pointer; box-shadow:0 4px 12px rgba(139,156,244,.25); }
+    .back-btn:hover { transform: translateY(-2px); }
+    .ann-list { display:flex; flex-direction:column; gap:10px; }
+    .ann-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .pin-badge { display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:10px; font-size:12px; font-weight:600; color:#5a67d8; background:rgba(102,126,234,0.12); border:1px solid rgba(102,126,234,0.25); }
+    .ann-meta { font-size:12px; color:#6b7280; margin-left:auto; }
+    .announcement .announcement-content { white-space: normal; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar" onclick="window.location.href='main.html'">
+      <div class="nav-content">
+        <div class="logo">AAa美甲师后援会</div>
+        <div class="nav-buttons">
+          <button class="nav-btn" onclick="event.stopPropagation(); window.location.href='index.html'">
+            <span class="nav-btn-text">返回主页</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="card">
+      <div class="page-header">
+        <h3 class="section-title" style="margin:0;">群公告</h3>
+      </div>
+      <div id="announcementsAll" class="ann-list"></div>
+    </div>
+
+    <div class="powered-by"><span>powered by ttttg</span></div>
+  </div>
+
+  <script src="config.js?v=202508261613"></script>
+  <script>
+    (function(){
+      function toHtml(text){
+        if(typeof text !== 'string') return '';
+        return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+      }
+      function normalize(ann, idx){
+        return {
+          id: ann.id || String(idx+1),
+          title: ann.title || '未命名公告',
+          content: typeof ann.content === 'string' ? ann.content : '',
+          pinned: Boolean(ann.pinned),
+          date: ann.date || ''
+        };
+      }
+      function render(){
+        var list = Array.isArray(groupConfig && groupConfig.announcements) ? groupConfig.announcements.slice() : [];
+        var norm = list.map(normalize);
+        // 带置顶排序：置顶优先，其余保持原有顺序
+        norm.sort(function(a,b){ return (b.pinned?1:0) - (a.pinned?1:0); });
+        var box = document.getElementById('announcementsAll');
+        box.innerHTML='';
+        if(!norm.length){
+          box.innerHTML = '<div class="announcement">暂无公告</div>';
+          return;
+        }
+        norm.forEach(function(item){
+          var wrap = document.createElement('div');
+          wrap.className = 'announcement';
+          var titleHtml = toHtml(item.title);
+          var contentHtml = toHtml(item.content);
+          var head = '<div class="ann-head">' +
+                     (item.pinned ? '<span class="pin-badge">置顶</span>' : '') +
+                     '<div class="announcement-title">' + titleHtml + '</div>' +
+                     (item.date ? '<div class="ann-meta">' + toHtml(item.date) + '</div>' : '') +
+                     '</div>';
+          wrap.innerHTML = head + '<div class="announcement-content">' + contentHtml + '</div>';
+          wrap.id = 'ann-'+item.id;
+          box.appendChild(wrap);
+        });
+        // 深链接定位（?id=xxx）
+        try{
+          var params = new URLSearchParams(location.search);
+          var targetId = params.get('id');
+          if(targetId){
+            var target = document.getElementById('ann-'+targetId);
+            if(target){ target.scrollIntoView({behavior:'smooth', block:'start'}); target.style.boxShadow='0 0 0 2px rgba(90,103,216,0.35) inset'; }
+          }
+        }catch(e){}
+      }
+      if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', render); else render();
+    })();
+  </script>
+</body>
+</html>

@@ -60,7 +60,7 @@
         <h2 style="margin: 0;">群成员关系图</h2>
         <div class="subtitle">连线粗细代表亲密度</div>
       </div>
-      <div class="note">提示：图可拖拽/缩放，点击节点可查看提示信息。</div>
+      <div class="note">提示：图可拖拽/缩放，点击节点可查看关联节点。</div>
     </div>
     <div id="graph"></div>
   </div>
@@ -256,9 +256,15 @@
           edgeSymbol: ['none', 'none'],
           emphasis: { focus: 'adjacency' },
           blur: {
-            itemStyle: { opacity: 0.12 },
-            lineStyle: { opacity: 0.04 },
-            label: { opacity: 0.35 }
+            itemStyle: {
+              opacity: 0.2,
+            },
+            lineStyle: {
+              opacity: 0.05,
+            },
+            label: {
+              show: false,
+            },
           },
           lineStyle: { curveness: 0.15 },
           force: {
@@ -273,12 +279,7 @@
       chart.setOption(option);
 
       chart.on('mouseover', function (params) {
-        const targetType = params && params.event && params.event.target && params.event.target.type;
-        if (params.dataType === 'edge') {
-          chart.dispatchAction({ type: 'unfocusNodeAdjacency', seriesIndex: 0 });
-          chart.dispatchAction({ type: 'downplay', seriesIndex: 0, dataIndex: params.dataIndex });
-        } else if (params.dataType === 'node') {
-          if (targetType === 'text') return;
+        if (params.dataType === 'node') {
           chart.dispatchAction({
             type: 'focusNodeAdjacency',
             seriesIndex: 0,
@@ -287,9 +288,7 @@
         }
       });
       chart.on('mouseout', function (params) {
-        const targetType = params && params.event && params.event.target && params.event.target.type;
         if (params.dataType === 'node') {
-          if (targetType === 'text') return;
           chart.dispatchAction({ type: 'unfocusNodeAdjacency', seriesIndex: 0 });
         }
       });

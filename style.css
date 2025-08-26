@@ -1326,3 +1326,84 @@ body::before {
         font-size: 10px;
     }
 }
+
+/* 词云与关系图并排布局 */
+.wordcloud-relation {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+  align-items: stretch;
+}
+/* 让并排卡片填满网格行高 */
+.wordcloud-relation .card { height: 100%; }
+/* 去掉单独卡片额外外边距，避免并排时出现不齐 */
+.wordcloud-card { margin-bottom: 0; }
+.relation-preview-card { margin-top: 0; }
+/* 禁用并排区域卡片悬停位移和缩放，避免重叠 */
+.wordcloud-relation .card:hover,
+.wordcloud-relation .card:active,
+.wordcloud-relation .card:focus { transform: none; }
+
+@media (max-width: 768px) {
+  .wordcloud-relation {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* 词云卡片样式（通用） */
+.wordcloud-wrapper {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, var(--glass-opacity-secondary));
+  backdrop-filter: blur(var(--glass-blur-secondary));
+  border: 1px solid rgba(255, 255, 255, var(--glass-border-light));
+  padding: 8px;
+  height: 420px; /* 与关系图预览一致 */
+}
+.wordcloud-wrapper img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 768px) {
+  /* 移动端统一两张卡片高度，避免重叠 */
+  .wordcloud-wrapper { height: 320px; }
+  .wordcloud-wrapper img { max-height: 300px; }
+}
+
+/* 关系图预览卡片 */
+.relation-preview-card {
+  margin-top: 0; /* 修复原先 24px 导致的下移 */
+}
+.relation-preview-wrapper {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  border-radius: 16px;
+  background: rgba(255,255,255,var(--glass-opacity-secondary,0.55));
+  -webkit-backdrop-filter: blur(var(--glass-blur-secondary,10px));
+  backdrop-filter: blur(var(--glass-blur-secondary,10px));
+  border: 1px solid var(--glass-border-light, rgba(255,255,255,0.55));
+  overflow: hidden;
+}
+.relation-preview-wrapper #relationPreview {
+  position: absolute;
+  inset: 0;
+}
+.relation-preview-card:hover { cursor: pointer; }
+
+@media (max-width: 768px) {
+  .relation-preview-wrapper { height: 320px; }
+}

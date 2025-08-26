@@ -3,38 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>页面已关闭</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 100px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #666;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        p {
-            color: #999;
-            font-size: 16px;
-            line-height: 1.5;
-        }
-    </style>
+    <title>AAa美甲师后援会 - 星引擎游戏组队聊天群</title>
+    <link rel="stylesheet" href="style.css?v=202508261613">
 </head>
 <body>
     <div class="container">
-        <h1>页面已关闭</h1>
-        <p>感谢您的访问。</p>
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-content">
+                <div class="logo" id="navLogo">AAa美甲师后援会</div>
+                <div class="nav-buttons">
+                    <button class="nav-btn" onclick="window.location.href='individual.html'">
+                        <span class="nav-btn-icon"></span>
+                        <span class="nav-btn-text">个人数据分析</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主要内容 -->
+        <div class="main-content">
+            <!-- 群信息卡片 -->
+            <div class="card group-info">
+                <div class="group-avatar" id="groupAvatar">A</div>
+                <h1 class="group-name" id="groupName">加载中...</h1>
+                <p class="group-description" id="groupDescription">加载中...</p>
+                <div class="group-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="memberCount">--</div>
+                        <div class="stat-label">群成员</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="establishedDate">--</div>
+                        <div class="stat-label">成立时间</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">活跃</div>
+                        <div class="stat-label">群状态</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 加群区域 -->
+            <div class="card join-section qr-card">
+                <h2 class="join-title">加入群聊</h2>
+                <div class="qq-number" id="qqNumber">QQ群: 加载中...</div>
+                <div class="qr-code" id="qrCode">二维码<br>加载中...</div>
+                <div class="join-button" id="joinButton" onclick="window.open('https://qm.qq.com/q/3h1K7pJ6ha', '_blank')">点击直接加群</div>
+            </div>
+        </div>
+
+        <!-- 特色和公告 -->
+        <div class="features-announcements">
+            <!-- 群特色 -->
+            <div class="card features-card">
+                <h3 class="section-title">群特色</h3>
+                <div class="feature-tags-container">
+                    <div class="feature-category">
+                        <span class="category-label">主题</span>
+                        <div class="category-tags">
+                            <span class="tag theme-tag" id="groupTheme">加载中...</span>
+                        </div>
+                    </div>
+                    <div class="feature-category">
+                        <span class="category-label">氛围</span>
+                        <div class="category-tags">
+                            <span class="tag atmosphere-tag" id="groupAtmosphere">加载中...</span>
+                        </div>
+                    </div>
+                    <div class="feature-category">
+                        <span class="category-label">活动</span>
+                        <div class="category-tags" id="featureTags">
+                            <span class="tag">加载中...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 群公告 -->
+            <div class="card announcements-card" onclick="window.location.href='announcements.html'">
+                <h3 class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                  <span>群公告</span>
+                  <button class="nav-btn" style="margin-left:12px;" onclick="event.stopPropagation(); window.location.href='announcements.html'">
+                    <span class="nav-btn-text">查看全部</span>
+                  </button>
+                </h3>
+                <div id="announcements" onclick="event.stopPropagation();">
+                    <div class="announcement">
+                        <div class="announcement-title">加载中...</div>
+                        <div class="announcement-content">正在获取最新公告...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关系图 + 词云并排 -->
+        <div class="wordcloud-relation">
+            <!-- 关系图预览（无交互） -->
+            <div class="card relation-preview-card" style="cursor: default;">
+                <h3 class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>成员关系图</span>
+                    <button class="nav-btn" style="margin-left:12px;" onclick="window.location.href='relation.html'">
+                        <span class="nav-btn-text">查看全图</span>
+                    </button>
+                </h3>
+                <div class="relation-preview-wrapper">
+                    <div id="relationPreview"></div>
+                </div>
+            </div>
+
+            <!-- 词云图 -->
+            <div class="card wordcloud-card">
+                <h3 class="section-title">群词云</h3>
+                <div class="wordcloud-wrapper">
+                    <img src="images/wordcloud.png" alt="群词云" loading="lazy">
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部信息 -->
+        <div class="footer">
+            <div class="join-requirements" id="joinRequirements">加载中...</div>
+            <p>联系方式: <span id="contactMethod">加载中...</span></p>
+        </div>
+
+        <!-- Powered by 标识 -->
+        <div class="powered-by">
+            <span>powered by ttttg</span>
+        </div>
     </div>
+
+    <!-- 图表库与初始化脚本 -->
+    <script src="echarts.min.js"></script>
+    <script>
+      (function(){
+        async function loadData(){
+          const res = await fetch('relationship_graph.json');
+          if(!res.ok) throw new Error('关系数据加载失败');
+          return await res.json();
+        }
+        function scaleLinear(value, inMin, inMax, outMin, outMax){
+          if(inMax === inMin) return (outMin + outMax)/2;
+          const t = (value - inMin) / (inMax - inMin);
+          return outMin + t * (outMax - outMin);
+        }
+        function quantile(arr, p){
+          if(!arr.length) return 0;
+          const sorted = arr.slice().sort((a,b)=>a-b);
+          const idx = Math.max(0, Math.min(sorted.length-1, Math.floor(p*(sorted.length-1))));
+          return sorted[idx];
+        }
+        function buildGraph(dataset){
+          const nodesRaw = Array.isArray(dataset.nodes) ? dataset.nodes : [];
+          const edgesRaw = Array.isArray(dataset.edges) ? dataset.edges : (Array.isArray(dataset.links) ? dataset.links : []);
+          const nodes = nodesRaw.filter(n=>n && (n.id||n.name)).map(n=>({id:n.id||n.name, name:n.name||n.id, engagement_score:Number(n.engagement_score)||0}));
+          const es = nodes.map(n=>n.engagement_score);
+          const esMin = Math.min(...es,0), esMax = Math.max(...es,1);
+          const q1 = quantile(es,0.25), q2 = quantile(es,0.50), q3 = quantile(es,0.75);
+          const categoriesAll = [
+            { name:'潜水', itemStyle:{color:'#93C5FD'} },
+            { name:'偶尔活跃', itemStyle:{color:'#34D399'} },
+            { name:'活跃', itemStyle:{color:'#F59E0B'} },
+            { name:'核心', itemStyle:{color:'#EF4444'} }
+          ];
+          const allNodes = nodes.map(n=>{
+            const size = Math.round(scaleLinear(n.engagement_score, esMin, esMax, 12, 36));
+            let catIdx = 0;
+            if(n.engagement_score <= q1) catIdx = 0;
+            else if(n.engagement_score <= q2) catIdx = 1;
+            else if(n.engagement_score <= q3) catIdx = 2;
+            else catIdx = 3;
+            return {
+              id:n.id, name:n.name, value:n.engagement_score, symbolSize:size, category:catIdx,
+              itemStyle:{ color: categoriesAll[catIdx].itemStyle.color, borderColor:'#fff', borderWidth:1.5 }
+            };
+          });
+          const keptCategories = [categoriesAll[2], categoriesAll[3]];
+          const keptNodes = allNodes.filter(n=>n.category>=2);
+          const echartsNodes = keptNodes.map(n=>({...n, category:n.category-2, itemStyle:{...n.itemStyle, color: keptCategories[n.category-2].itemStyle.color}}));
+          const keptIdSet = new Set(echartsNodes.map(n=>n.id));
+          const edgesClean = edgesRaw.filter(e=>e && e.source && e.target && keptIdSet.has(e.source) && keptIdSet.has(e.target));
+          // 边样式简单化（预览用）
+          const echartsLinks = edgesClean.map(e=>({ source:e.source, target:e.target, lineStyle:{ width:1.5, opacity:0.35 } }));
+          let topId = null;
+          if(echartsNodes.length){
+            const topNode = echartsNodes.reduce((best,cur)=> (cur.value>best.value?cur:best), echartsNodes[0]);
+            topId = topNode.id;
+          }
+          return { nodes:echartsNodes, links:echartsLinks, categories:keptCategories, topId };
+        }
+        function centerAndSeed(graphData, dom){
+          if(!graphData.nodes.length) return;
+          const cx = dom.clientWidth/2, cy = dom.clientHeight/2;
+          // 居中并固定最高活跃节点
+          const i = graphData.nodes.findIndex(n=>n.id === graphData.topId);
+          if(i>=0){ graphData.nodes[i].x=cx; graphData.nodes[i].y=cy; graphData.nodes[i].fixed=true; graphData.nodes[i].itemStyle = Object.assign({}, graphData.nodes[i].itemStyle, { borderWidth:2 }); }
+          // 将其他节点种子分布成圆环
+          const others = graphData.nodes.filter(n=>n.id !== graphData.topId);
+          const radius = Math.max(80, Math.min(dom.clientWidth, dom.clientHeight)*0.34);
+          const m = Math.max(1, others.length);
+          for(let k=0;k<others.length;k++){
+            const theta = (2*Math.PI*k)/m;
+            const r = radius * (0.94 + Math.random()*0.12);
+            const a = theta + (Math.random()-0.5)*0.06;
+            others[k].x = cx + r * Math.cos(a);
+            others[k].y = cy + r * Math.sin(a);
+            others[k].fixed = false;
+          }
+        }
+        async function init(){
+          try{
+            const dataset = await loadData();
+            const graph = buildGraph(dataset);
+            const dom = document.getElementById('relationPreview');
+            if(!dom) return;
+            const chart = echarts.init(dom);
+            centerAndSeed(graph, dom);
+            const option = {
+              animation: true,
+              tooltip: { show: false },
+              legend: [{ show:false }],
+              series: [{
+                type: 'graph',
+                layout: 'force',
+                data: graph.nodes,
+                links: graph.links,
+                categories: graph.categories,
+                roam: false,
+                draggable: false,
+                label: { show: true, color: '#2d3748', fontSize: 10 },
+                edgeSymbol: ['none','none'],
+                emphasis: { disabled: true },
+                lineStyle: { curveness: 0.12, opacity: 0.35 },
+                force: { initLayout: 'none', repulsion: 700, gravity: 0.08, edgeLength: 110 }
+              }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', ()=>{ chart.resize(); });
+          }catch(e){
+            console.error(e);
+            const box = document.getElementById('relationPreview');
+            if(box) box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#c53030;">预览加载失败</div>';
+          }
+        }
+        if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+      })();
+    </script>
+
+    <!-- 引入配置文件 -->
+    <script src="config.js?v=202508261613"></script>
 </body>
 </html>

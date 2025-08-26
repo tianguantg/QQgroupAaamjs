@@ -100,67 +100,87 @@ document.addEventListener('DOMContentLoaded', function() {
 // 更新页面内容的函数
 function updatePageContent() {
     // 更新基本信息
-    document.getElementById('groupName').textContent = groupConfig.basic_info.name;
-    document.getElementById('groupDescription').textContent = groupConfig.basic_info.description;
-    document.getElementById('memberCount').textContent = groupConfig.basic_info.member_count;
-    document.getElementById('establishedDate').textContent = groupConfig.basic_info.established_date;
-    document.getElementById('qqNumber').textContent = `QQ群: ${groupConfig.basic_info.qq_number}`;
+    const elGroupName = document.getElementById('groupName');
+    if (elGroupName) elGroupName.textContent = groupConfig.basic_info.name;
+    const elGroupDescription = document.getElementById('groupDescription');
+    if (elGroupDescription) elGroupDescription.textContent = groupConfig.basic_info.description;
+    const elMemberCount = document.getElementById('memberCount');
+    if (elMemberCount) elMemberCount.textContent = groupConfig.basic_info.member_count;
+    const elEstablishedDate = document.getElementById('establishedDate');
+    if (elEstablishedDate) elEstablishedDate.textContent = groupConfig.basic_info.established_date;
+    const elQqNumber = document.getElementById('qqNumber');
+    if (elQqNumber) elQqNumber.textContent = `QQ群: ${groupConfig.basic_info.qq_number}`;
 
     // 更新群特色
-    document.getElementById('groupTheme').textContent = groupConfig.features.theme;
-    document.getElementById('groupAtmosphere').textContent = groupConfig.features.atmosphere;
+    const elGroupTheme = document.getElementById('groupTheme');
+    if (elGroupTheme) elGroupTheme.textContent = groupConfig.features.theme;
+    const elGroupAtmosphere = document.getElementById('groupAtmosphere');
+    if (elGroupAtmosphere) elGroupAtmosphere.textContent = groupConfig.features.atmosphere;
 
     // 更新活动标签
     const tagsContainer = document.getElementById('featureTags');
-    tagsContainer.innerHTML = '';
-    groupConfig.features.main_activities.forEach(activity => {
-        const tag = document.createElement('span');
-        tag.className = 'tag';
-        tag.textContent = activity;
-        tagsContainer.appendChild(tag);
-    });
+    if (tagsContainer) {
+        tagsContainer.innerHTML = '';
+        groupConfig.features.main_activities.forEach(activity => {
+            const tag = document.createElement('span');
+            tag.className = 'tag';
+            tag.textContent = activity;
+            tagsContainer.appendChild(tag);
+        });
+    }
 
-    // 更新群公告
+    // 更新群公告（主页预览容器存在时才渲染）
     const announcementsContainer = document.getElementById('announcements');
-    announcementsContainer.innerHTML = '';
-    groupConfig.announcements.forEach(announcement => {
-        const announcementDiv = document.createElement('div');
-        announcementDiv.className = 'announcement';
-        announcementDiv.innerHTML = `
-            <div class="announcement-title">${announcement.title}</div>
-            <div class="announcement-content">${announcement.content}</div>
-        `;
-        announcementsContainer.appendChild(announcementDiv);
-    });
+    if (announcementsContainer) {
+        announcementsContainer.innerHTML = '';
+        // 基础版：置顶优先 + 仅展示前3条
+        const anns = Array.isArray(groupConfig.announcements) ? groupConfig.announcements.slice() : [];
+        anns.sort((a,b)=> (b.pinned?1:0) - (a.pinned?1:0));
+        anns.slice(0,3).forEach(announcement => {
+            const announcementDiv = document.createElement('div');
+            announcementDiv.className = 'announcement';
+            announcementDiv.innerHTML = `
+                <div class="announcement-title">${announcement.pinned ? '【置顶】 ' : ''}${announcement.title}</div>
+                <div class="announcement-content">${announcement.content}</div>
+            `;
+            announcementsContainer.appendChild(announcementDiv);
+        });
+    }
 
     // 更新联系信息
-    document.getElementById('joinRequirements').textContent = groupConfig.contact.join_requirements;
-    document.getElementById('contactMethod').textContent = groupConfig.contact.contact_method;
+    const elJoinRequirements = document.getElementById('joinRequirements');
+    if (elJoinRequirements) elJoinRequirements.textContent = groupConfig.contact.join_requirements;
+    const elContactMethod = document.getElementById('contactMethod');
+    if (elContactMethod) elContactMethod.textContent = groupConfig.contact.contact_method;
 
     // 更新头像
     const groupAvatar = document.getElementById('groupAvatar');
-    if (groupConfig.assets.avatar && checkImageExists(groupConfig.assets.avatar)) {
-        groupAvatar.innerHTML = `<img src="${groupConfig.assets.avatar}?v=202508111730" alt="群头像">`;
-    } else {
-        // 使用默认头像（群名首字母）
-        groupAvatar.innerHTML = groupConfig.basic_info.name.charAt(0);
+    if (groupAvatar) {
+        if (groupConfig.assets.avatar && checkImageExists(groupConfig.assets.avatar)) {
+            groupAvatar.innerHTML = `<img src="${groupConfig.assets.avatar}?v=202508111730" alt="群头像">`;
+        } else {
+            groupAvatar.innerHTML = groupConfig.basic_info.name.charAt(0);
+        }
     }
 
     // 更新二维码
     const qrCode = document.getElementById('qrCode');
-    if (groupConfig.assets.qrcode && checkImageExists(groupConfig.assets.qrcode)) {
-        qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}?v=20250814" alt="群二维码">`;
-    } else {
-        qrCode.innerHTML = '二维码<br>暂未上传';
+    if (qrCode) {
+        if (groupConfig.assets.qrcode && checkImageExists(groupConfig.assets.qrcode)) {
+            qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}?v=20250814" alt="群二维码">`;
+        } else {
+            qrCode.innerHTML = '二维码<br>暂未上传';
+        }
     }
 
     // 添加复制群号功能
-    const qqNumberElement = document.getElementById('qqNumber');
-    qqNumberElement.style.cursor = 'pointer';
-    qqNumberElement.title = '点击复制群号';
-    qqNumberElement.addEventListener('click', function() {
-        copyToClipboard(groupConfig.basic_info.qq_number);
-    });
+    if (elQqNumber) {
+        elQqNumber.style.cursor = 'pointer';
+        elQqNumber.title = '点击复制群号';
+        elQqNumber.addEventListener('click', function() {
+            copyToClipboard(groupConfig.basic_info.qq_number);
+        });
+    }
 }
 
 // 检查图片是否存在的函数
