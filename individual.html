@@ -147,7 +147,7 @@
                 rgba(255, 255, 255, 0.6) 0%, 
                 rgba(240, 248, 255, 0.6) 50%, 
                 rgba(255, 255, 255, 0.6) 100%);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), var(--glass-shadow);
         }
         
         .countdown-timer:active {
@@ -1115,11 +1115,31 @@
         
         .period-buttons {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
             gap: 0.8rem;
             max-width: 800px;
             margin: 0 auto;
+            overflow-x: auto;
+            padding: 0.5rem 0;
+        }
+        
+        .period-buttons::-webkit-scrollbar {
+            height: 6px;
+        }
+        
+        .period-buttons::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        
+        .period-buttons::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+        
+        .period-buttons::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
         
         .period-btn {
@@ -1136,8 +1156,10 @@
             box-shadow: var(--glass-shadow);
             outline: none;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             white-space: nowrap;
+            flex-shrink: 0;
+            min-width: fit-content;
         }
         
         .period-btn:hover {
@@ -1605,7 +1627,7 @@
     <!-- 署名 -->
     <div class="footer-container">
         <div class="footer">
-            Powered by TGW~ ——致每一个在群聊里留下足迹的群友<br>（感谢苏晨提供的早期聊天记录~）
+            Powered by TGW~ ——致每一个在群聊里留下足迹的群友
         </div>
     </div>
     
@@ -2067,10 +2089,10 @@
                     }
                 }, 1000);
                 
-                // 点击倒计时跳过
+                // 倒计时数字点击事件 - 直接跳过
                 timer.addEventListener('click', () => {
                     clearInterval(countdownInterval);
-                    closeModal(false);
+                    closeModal(true);
                 });
                 
                 // 跳过按钮事件（彩蛋逻辑）
@@ -2090,7 +2112,7 @@
                     
                     if (skipClickCount === 1) {
                         // 首次点击
-                        showEasterEggAlert('嗯？这一会儿都等不了吗？');
+                        showEasterEggAlert('欸？这一会儿都等不了吗？');
                         
                         setTimeout(() => {
                             skipBtn.disabled = false;
@@ -2100,7 +2122,7 @@
                         }, 1500);
                     } else if (skipClickCount === 2) {
                         // 第二次点击
-                        showEasterEggAlert('说了没用就是没用，不要点了');
+                        showEasterEggAlert('说了没用就是没用呢');
                         
                         setTimeout(() => {
                             skipBtn.disabled = false;
@@ -2110,7 +2132,7 @@
                         }, 1500);
                     } else if (skipClickCount === 3) {
                         // 第三次点击
-                        showEasterEggAlert('嗯？这可是你选的，那再多陪我等几秒');
+                        showEasterEggAlert('这可是你选的，那再多陪我等几秒');
                         
                         setTimeout(() => {
                             skipBtn.disabled = false;
@@ -2131,7 +2153,7 @@
                     } else if (skipClickCount >= 5 && skipClickCount <= 9) {
                         // 第5-9次点击
                         const repeatCount = skipClickCount - 4; // 从第5次开始计算重复次数
-                        const message = repeatCount === 1 ? '按钮真的为空，再按也没用' : `按钮真的为空，再按也没用*${repeatCount}`;
+                        const message = repeatCount === 1 ? '按钮真的空了，再按也没用' : `按钮真的空了，再按也没用*${repeatCount}`;
                         showEasterEggAlert(message);
                         
                         setTimeout(() => {
@@ -2186,7 +2208,7 @@
                         if (skipBtn.textContent === '我是笨蛋') {
                             // 第11次点击（主按钮为"我是笨蛋"时）
                             const userName = userData && userData.user_data && currentUserHash ? 
-                                (userData.user_data[currentUserHash]?.basic_info?.name || '用户') : '用户';
+                                (userData.user_data[currentUserHash]?.basic_info?.name || '你') : '你';
                             
                             message = `哈哈，${userName}是笨蛋`;
                             addTime = 4.5;
@@ -2208,8 +2230,8 @@
                             message = '诶~别急！这波不能跳过！很关键！';
                             addTime = 3;
                             cooldownTime = 1500;
-                            newButtonText = '跳过剧情';
-                        } else if (skipBtn.textContent === '跳过剧情') {
+                            newButtonText = '跳过剧情！';
+                        } else if (skipBtn.textContent === '跳过剧情！') {
                             // 第14次点击
                             message = '跳过人生！';
                             addTime = 3;
@@ -2241,7 +2263,7 @@
                             newButtonText = '……'; // 按钮无变化
                         } else if (skipBtn.textContent === '……' && skipClickCount === 19) {
                             // 第19次点击
-                            message = '那你就点着玩吧';
+                            message = '那就点着玩吧';
                             addTime = 3;
                             cooldownTime = 1500;
                             newButtonText = '……'; // 按钮无变化
@@ -2286,6 +2308,14 @@
                 
                 // 彩蛋弹窗函数
                 function showEasterEggAlert(message) {
+                    // 清除所有现有的彩蛋弹窗
+                    const existingAlerts = document.querySelectorAll('.easter-egg-alert');
+                    existingAlerts.forEach(alert => {
+                        if (alert.parentNode) {
+                            alert.parentNode.removeChild(alert);
+                        }
+                    });
+                    
                     const alertHTML = `
                         <div class="easter-egg-alert" id="easter-egg-alert-${Date.now()}">
                             <div class="easter-egg-content">
@@ -2432,7 +2462,7 @@
                 } else {
                     // 重新显示用户数据（不包含过渡效果的初始化）
                     await displayUserDataWithTransition(userInfo, currentUserHash);
-                    showMessage(`已切换到 ${period.name} `, 'success');
+                    showMessage(`已切换到 ${period.name} 时期`, 'success');
                 }
                 
             } catch (error) {

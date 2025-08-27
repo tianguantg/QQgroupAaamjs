@@ -177,15 +177,13 @@
 <body>
     <div class="easter-egg-container">
         <div class="card easter-egg-card">
-            <h1 class="easter-egg-title">这是一个彩蛋卡片</h1>
+            <h1 class="easter-egg-title">这是一个随机的彩蛋卡片</h1>
             
             <div class="stat-content" id="statContent">
                 <div class="stat-type">加载中...</div>
                 <div class="stat-main"></div>
                 <div class="stat-detail">正在获取随机统计数据</div>
             </div>
-            
-
             
             <a href="index.html" class="back-link">◀ 返回主页</a>
         </div>
@@ -233,7 +231,7 @@
                 getValue: (stats) => {
                     const pair = stats.top_closeness_pair;
                     if (pair?.user_a && pair?.user_b) {
-                        return `${pair.user_a} & ${pair.user_b}`;
+                        return `${pair.user_a} <br>&<br> ${pair.user_b}`;
                     }
                     return '未知组合';
                 },
