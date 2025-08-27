@@ -2428,11 +2428,11 @@
                 if (!userInfo) {
                     // 即使没有用户数据，也要显示时期切换成功，并显示空数据状态
                     await displayEmptyUserData(period.name);
-                    showMessage(`已切换到${period.name}，但在此时期未找到你的数据记录`, 'warning');
+                    showMessage(`已切换到 ${period.name} 时期，但在此时期未找到你的数据记录`, 'warning');
                 } else {
                     // 重新显示用户数据（不包含过渡效果的初始化）
                     await displayUserDataWithTransition(userInfo, currentUserHash);
-                    showMessage(`已切换到${period.name}`, 'success');
+                    showMessage(`已切换到 ${period.name} `, 'success');
                 }
                 
             } catch (error) {
@@ -2486,7 +2486,7 @@
         async function displayEmptyUserData(periodName) {
             // 清空所有数据显示区域
             document.getElementById('user-tag').textContent = '无数据';
-            document.getElementById('user-summary-text').innerHTML = `在${periodName}中未找到你的聊天记录<br>可能是因为在此时期内你没有发言或数据未被收录`;
+            document.getElementById('user-summary-text').innerHTML = `在 ${periodName} 时期中未找到你的聊天记录<br>可能是因为在此时期内你没有发言或数据未被收录`;
             document.getElementById('user-engagement-text').innerHTML = '暂无参与度数据';
             document.getElementById('active-periods-text').innerHTML = '暂无活跃时段数据';
             document.getElementById('core-interactions-text').innerHTML = '暂无互动关系数据';
