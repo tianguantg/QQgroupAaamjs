@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>群聊彩蛋 - AAa美甲师后援会</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .easter-egg-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .easter-egg-card {
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            animation: cardFadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes cardFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .easter-egg-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-content {
+            margin: 40px 0;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 200px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-type {
+            font-size: 18px;
+            color: #000;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .stat-main {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 15px 0;
+            background: linear-gradient(135deg, #f093fb, #f5576c, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+            animation: numberPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes numberPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .stat-detail {
+            font-size: 16px;
+            color: #000;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .user-highlight {
+            color: #667eea;
+            font-weight: bold;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 2px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin: 0 4px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, #8b9cf4 0%, #a8b5f7 50%, #f5a7fb 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 4px 16px rgba(139, 156, 244, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 24px rgba(139, 156, 244, 0.4);
+            background: linear-gradient(135deg, #a8b5f7 0%, #f5a7fb 50%, #8b9cf4 100%);
+        }
+
+        .back-link {
+            color: #000;
+            text-decoration: none;
+            font-size: 14px;
+            margin-top: 20px;
+            display: inline-block;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: #667eea;
+        }
+
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .easter-egg-card {
+                margin: 0 10px;
+            }
+            
+            .easter-egg-title {
+                font-size: 20px;
+            }
+            
+            .stat-main {
+                font-size: 28px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="easter-egg-container">
+        <div class="card easter-egg-card">
+            <h1 class="easter-egg-title">这是一个彩蛋卡片</h1>
+            
+            <div class="stat-content" id="statContent">
+                <div class="stat-type">加载中...</div>
+                <div class="stat-main"></div>
+                <div class="stat-detail">正在获取随机统计数据</div>
+            </div>
+            
+
+            
+            <a href="index.html" class="back-link">◀ 返回主页</a>
+        </div>
+    </div>
+
+    <script>
+        let basicStats = null;
+        let currentStatIndex = -1;
+        
+        // 统计信息配置
+        const statConfigs = [
+            {
+                key: 'total_messages',
+                type: '群聊活跃度',
+                getValue: (stats) => stats.total_messages?.toLocaleString() || '未知',
+                getDetail: (stats) => '群聊历史总消息数量'
+            },
+            {
+                key: 'top_user',
+                type: '年度最高频发言贡献奖',
+                getValue: (stats) => stats.top_user?.name || '未知用户',
+                getDetail: (stats) => `发送了 ${stats.top_user?.message_count?.toLocaleString() || 0} 条消息`
+            },
+            {
+                key: 'top_mention_user',
+                type: '年度最佳@奖',
+                getValue: (stats) => stats.top_mention_user?.name || '未知用户',
+                getDetail: (stats) => `@了他人 ${stats.top_mention_user?.mention_count?.toLocaleString() || 0} 次`
+            },
+            {
+                key: 'top_mentioned_user',
+                type: '年度最受@焦点人物',
+                getValue: (stats) => stats.top_mentioned_user?.name || '未知用户',
+                getDetail: (stats) => `被@了 ${stats.top_mentioned_user?.mentioned_count?.toLocaleString() || 0} 次`
+            },
+            {
+                key: 'top_poked_user',
+                type: '年度最受"戳一戳"对象',
+                getValue: (stats) => stats.top_poked_user?.name || '未知用户',
+                getDetail: (stats) => `被戳了 ${stats.top_poked_user?.poked_count?.toLocaleString() || 0} 次`
+            },
+            {
+                key: 'top_closeness_pair',
+                type: '年度最佳组合',
+                getValue: (stats) => {
+                    const pair = stats.top_closeness_pair;
+                    if (pair?.user_a && pair?.user_b) {
+                        return `${pair.user_a} & ${pair.user_b}`;
+                    }
+                    return '未知组合';
+                },
+                getDetail: (stats) => {
+                    const index = stats.top_closeness_pair?.closeness_index;
+                    return index ? `亲密度指数: ${Math.round(index * 100)}%` : '亲密度未知';
+                }
+            },
+            {
+                key: 'active_hours',
+                type: '24小时活跃度分析',
+                getValue: (stats) => '活跃时间分布图',
+                getDetail: (stats) => {
+                    const hourlyData = stats.active_hours?.hourly || [];
+                    const maxHour = hourlyData.reduce((max, curr) => 
+                        curr.count > max.count ? curr : max, {hour: 0, count: 0});
+                    return `最活跃时段: ${maxHour.hour}:00 (${maxHour.count?.toLocaleString() || 0} 条消息)`;
+                },
+                isChart: true
+            }
+        ];
+
+        async function loadBasicStats() {
+            try {
+                const response = await fetch(`assets/data/global_data/global_data.json?t=${Date.now()}`);
+                if (!response.ok) throw new Error('数据加载失败');
+                const data = await response.json();
+                basicStats = data.basic_stats;
+                return true;
+            } catch (error) {
+                console.error('加载统计数据失败:', error);
+                return false;
+            }
+        }
+
+        function getRandomStatIndex() {
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * statConfigs.length);
+            } while (newIndex === currentStatIndex && statConfigs.length > 1);
+            return newIndex;
+        }
+
+        function displayStat(statIndex) {
+            if (!basicStats || statIndex < 0 || statIndex >= statConfigs.length) {
+                displayError();
+                return;
+            }
+
+            const config = statConfigs[statIndex];
+            const statContent = document.getElementById('statContent');
+            
+            // 添加加载动画
+            statContent.classList.add('loading');
+            
+            setTimeout(() => {
+                const value = config.getValue(basicStats);
+                const detail = config.getDetail(basicStats);
+                
+                if (config.isChart) {
+                    // 显示图表
+                    statContent.innerHTML = `
+                        <div class="stat-type">${config.type}</div>
+                        <div class="chart-container">
+                            <canvas class="chart-canvas" id="activityChart"></canvas>
+                        </div>
+                        <div class="stat-detail">${detail}</div>
+                    `;
+                    
+                    // 绘制24小时活跃度折线图
+                    setTimeout(() => drawActivityChart(), 100);
+                } else {
+                    // 处理用户名高亮
+                    const highlightedValue = value.includes('&') 
+                        ? value.split(' & ').map(name => `<span class="user-highlight">${name}</span>`).join(' & ')
+                        : (config.key !== 'total_messages' && config.key !== 'active_hours' ? `<span class="user-highlight">${value}</span>` : value);
+                    
+                    statContent.innerHTML = `
+                        <div class="stat-type">${config.type}</div>
+                        <div class="stat-main">${highlightedValue}</div>
+                        <div class="stat-detail">${detail}</div>
+                    `;
+                }
+                
+                statContent.classList.remove('loading');
+                currentStatIndex = statIndex;
+            }, 300);
+        }
+
+        function displayError() {
+            const statContent = document.getElementById('statContent');
+            statContent.innerHTML = `
+                <div class="stat-type">数据加载失败</div>
+                <div class="stat-main">😅</div>
+                <div class="stat-detail">请稍后重试</div>
+            `;
+        }
+
+        async function loadRandomStat() {
+            if (!basicStats) {
+                const success = await loadBasicStats();
+                if (!success) {
+                    displayError();
+                    return;
+                }
+            }
+            
+            const randomIndex = getRandomStatIndex();
+            displayStat(randomIndex);
+        }
+
+        function drawActivityChart() {
+            const canvas = document.getElementById('activityChart');
+            if (!canvas || !basicStats?.active_hours?.hourly) return;
+            
+            const ctx = canvas.getContext('2d');
+            const hourlyData = basicStats.active_hours.hourly;
+            
+            // 设置canvas尺寸
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            
+            const width = rect.width;
+            const height = rect.height;
+            const padding = 40;
+            const chartWidth = width - padding * 2;
+            const chartHeight = height - padding * 2;
+            
+            // 找到最大值用于缩放
+            const maxCount = Math.max(...hourlyData.map(d => d.count));
+            
+            // 清空画布
+            ctx.clearRect(0, 0, width, height);
+            
+            // 绘制网格线
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            
+            // 水平网格线
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (chartHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding, y);
+                ctx.lineTo(width - padding, y);
+                ctx.stroke();
+            }
+            
+            // 垂直网格线
+            for (let i = 0; i <= 6; i++) {
+                const x = padding + (chartWidth / 6) * i;
+                ctx.beginPath();
+                ctx.moveTo(x, padding);
+                ctx.lineTo(x, height - padding);
+                ctx.stroke();
+            }
+            
+            // 绘制折线
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            ctx.beginPath();
+            hourlyData.forEach((data, index) => {
+                const x = padding + (chartWidth / 23) * index;
+                const y = height - padding - (data.count / maxCount) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            
+            // 绘制数据点
+            ctx.fillStyle = '#667eea';
+            hourlyData.forEach((data, index) => {
+                const x = padding + (chartWidth / 23) * index;
+                const y = height - padding - (data.count / maxCount) * chartHeight;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // 绘制坐标轴标签
+             ctx.fillStyle = '#000';
+             ctx.font = '12px Arial';
+             ctx.textAlign = 'center';
+            
+            // X轴标签（时间）
+            for (let i = 0; i < 24; i += 4) {
+                const x = padding + (chartWidth / 23) * i;
+                ctx.fillText(`${i}:00`, x, height - 10);
+            }
+            
+            // Y轴标签（消息数）
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 4; i++) {
+                const y = padding + (chartHeight / 4) * i;
+                const value = Math.round(maxCount * (4 - i) / 4);
+                ctx.fillText(value.toLocaleString(), padding - 10, y + 4);
+            }
+        }
+
+        // 页面加载时自动显示随机统计
+        document.addEventListener('DOMContentLoaded', loadRandomStat);
+        
+        // 窗口大小改变时重绘图表
+         window.addEventListener('resize', () => {
+             if (currentStatIndex >= 0 && statConfigs[currentStatIndex]?.isChart) {
+                 setTimeout(() => drawActivityChart(), 100);
+             }
+         });
+    </script>
+</body>
+</html>

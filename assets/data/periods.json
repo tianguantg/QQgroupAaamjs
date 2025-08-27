@@ -1,0 +1,51 @@
+{
+  "periods": [
+    {
+      "id": "1",
+      "name": "全部数据",
+      "description": "包含所有时期的完整数据",
+      "start_date": "2025-05-01",
+      "end_date": "2025-08-26",
+      "folder": "1_all",
+      "status": "ongoing"
+    },
+    {
+      "id": "2",
+      "name": "地灵殿 - 秋叶",
+      "description": "秋叶担任群主期间的数据",
+      "start_date": "2025-05-01",
+      "end_date": "2025-06-01",
+      "folder": "2_qiuye",
+      "status": "completed"
+    },
+    {
+      "id": "3",
+      "name": "教令院 - 安颜",
+      "description": "安颜担任群主期间的数据",
+      "start_date": "2025-06-02",
+      "end_date": "2025-07-09",
+      "folder": "3_anyan",
+      "status": "completed"
+    },
+    {
+      "id": "4",
+      "name": "往世乐土 - 天晴",
+      "description": "天晴担任群主期间的数据",
+      "start_date": "2025-07-10",
+      "end_date": "2025-08-06",
+      "folder": "4_tianqing",
+      "status": "completed"
+    },
+    {
+      "id": "5",
+      "name": "红魔馆 - 复活",
+      "description": "复活担任群主期间的数据",
+      "start_date": "2025-08-07",
+      "end_date": "2025-08-25",
+      "folder": "5_fuhuo",
+      "status": "ongoing"
+    }
+  ],
+  "default_period": "1_all",
+  "last_updated": "2024-08-25"
+}

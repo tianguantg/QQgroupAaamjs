@@ -57,20 +57,24 @@
   <div class="container">
     <div class="topbar">
       <div class="header">
-        <h2 style="margin: 0;">群成员关系图</h2>
-        <div class="subtitle">连线粗细代表亲密度</div>
-      </div>
-      <div class="note">提示：图可拖拽/缩放，点击节点可查看关联节点。</div>
+          <div class="nav-content">
+            <div style="text-align: center;">
+              <h2 style="margin: 0; cursor: pointer;" onclick="window.location.href='index.html';">AAa美甲师后援会</h2>
+              <div class="subtitle">关系图 - 连线粗细代表亲密度</div>
+            </div>
+          </div>
+        </div>
+      <div class="note">图可拖拽/缩放，点击节点可查看关联节点。</div>
     </div>
     <div id="graph"></div>
   </div>
 
   <script>
     async function loadData() {
-      const res = await fetch('relationship_graph.json');
+      const res = await fetch(`assets/data/global_data/global_data.json?t=${Date.now()}`);
       if (!res.ok) throw new Error('关系数据加载失败');
       const data = await res.json();
-      return data;
+      return data.relationship_graph;
     }
 
     function scaleLinear(value, inMin, inMax, outMin, outMax) {

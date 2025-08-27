@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AAa美甲师后援会 - 星引擎游戏组队聊天群</title>
-    <link rel="stylesheet" href="style.css?v=202508261613">
+    <link rel="stylesheet" href="style.css?v=202508272235">
 </head>
 <body>
     <div class="container">
@@ -129,7 +129,7 @@
 
         <!-- Powered by 标识 -->
         <div class="powered-by">
-            <span>powered by ttttg</span>
+            <span>powered by TGW~<br>（感谢苏晨提供的早期聊天记录~）</span>
         </div>
     </div>
 
@@ -138,9 +138,10 @@
     <script>
       (function(){
         async function loadData(){
-          const res = await fetch('relationship_graph.json');
+          const res = await fetch(`assets/data/global_data/global_data.json?t=${Date.now()}`);
           if(!res.ok) throw new Error('关系数据加载失败');
-          return await res.json();
+          const data = await res.json();
+          return data.relationship_graph;
         }
         function scaleLinear(value, inMin, inMax, outMin, outMax){
           if(inMax === inMin) return (outMin + outMax)/2;
@@ -251,6 +252,6 @@
     </script>
 
     <!-- 引入配置文件 -->
-    <script src="config.js?v=202508261613"></script>
+    <script src="config.js?v=202508272235"></script>
 </body>
 </html>

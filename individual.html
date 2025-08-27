@@ -39,6 +39,259 @@
             background-size: 100% 100%;
         }
         
+        /* 倒计时弹窗样式 - 低调版本 */
+        .countdown-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(var(--blur-amount));
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .countdown-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .countdown-modal-overlay.hide {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .countdown-modal {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, var(--panel-opacity)) 0%, 
+                rgba(240, 248, 255, var(--panel-opacity)) 50%, 
+                rgba(255, 255, 255, var(--panel-opacity)) 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 320px;
+            width: 85%;
+            text-align: center;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border: 1px solid var(--glass-border);
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: visible;
+        }
+        
+        .countdown-modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.3) 0%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(255, 255, 255, 0.35) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .countdown-modal > * {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .countdown-modal-overlay.show .countdown-modal {
+            transform: translateY(0);
+        }
+        
+        .countdown-header {
+            margin-bottom: 1rem;
+        }
+        
+        .countdown-header h3 {
+            margin: 0 0 0.8rem 0;
+            font-size: 1.2rem;
+            color: #000;
+            font-weight: 500;
+        }
+        
+        .countdown-timer {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.4) 0%, 
+                rgba(240, 248, 255, 0.4) 50%, 
+                rgba(255, 255, 255, 0.4) 100%);
+            color: #000;
+            border-radius: 50%;
+            font-size: 1.3rem;
+            font-weight: 600;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(var(--blur-amount));
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease;
+        }
+        
+        .countdown-content {
+            margin: 1rem 0;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        
+        .tips-icon {
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+            opacity: 0.8;
+        }
+        
+        .tips-text {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #000;
+            line-height: 1.5;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+        
+        .countdown-footer {
+            margin-top: 1rem;
+            position: relative;
+        }
+        
+        .skip-btn {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.4) 0%, 
+                rgba(240, 248, 255, 0.4) 50%, 
+                rgba(255, 255, 255, 0.4) 100%);
+            color: #000;
+            border: 1px solid var(--glass-border);
+            padding: 0.6rem 1.5rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(var(--blur-amount));
+        }
+        
+        .skip-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.5) 0%, 
+                rgba(240, 248, 255, 0.5) 50%, 
+                rgba(255, 255, 255, 0.5) 100%);
+        }
+        
+        .skip-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* 彩蛋弹窗样式 */
+        .easter-egg-alert {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-50%) scale(0.8);
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .easter-egg-alert.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(-50%) scale(1);
+        }
+        
+        .easter-egg-alert.hide {
+            opacity: 0;
+            visibility: hidden;
+            transform: translateX(-50%) translateY(-50%) scale(0.9);
+        }
+        
+        .easter-egg-content {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(240, 248, 255, 0.9) 50%, 
+                rgba(255, 255, 255, 0.9) 100%);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+            max-width: 300px;
+            text-align: center;
+        }
+        
+        .easter-egg-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.3) 0%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(255, 255, 255, 0.35) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .easter-egg-content p {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #000;
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+            opacity: 0.9;
+        }
+        
+        .side-btn {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            border-radius: 8px;
+            padding: 8px 16px;
+            color: #000;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--glass-shadow);
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-top: 15px;
+            z-index: 1000;
+            width: auto;
+            white-space: nowrap;
+        }
+        
+
+        
+        .side-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
         /* 粒子效果层 */
         body::before {
             content: '';
@@ -348,8 +601,8 @@
         /* 用户数据展示区域 */
         .user-data {
             opacity: 0;
-            transform: translateY(30px);
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(15px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
         }
         
@@ -364,8 +617,8 @@
             text-align: center;
             margin: 1rem 0;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             transition-delay: 0.1s;
         }
         
@@ -426,6 +679,10 @@
             background: linear-gradient(135deg, rgba(246, 211, 101, var(--panel-opacity)) 0%, rgba(253, 160, 133, var(--panel-opacity)) 100%);
         }
         
+        .tag-no-data {
+            background: linear-gradient(135deg, rgba(150, 150, 150, var(--panel-opacity)) 0%, rgba(180, 180, 180, var(--panel-opacity)) 100%);
+        }
+        
         /* 用户统计摘要 */
         .user-summary {
             background: linear-gradient(135deg, 
@@ -448,8 +705,8 @@
             position: relative;
             overflow: hidden;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             transition-delay: 0.2s;
         }
         
@@ -513,9 +770,9 @@
             position: relative;
             overflow: hidden;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            transition-delay: 0.3s;
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-delay: 0.15s;
         }
         
         .user-data.active .user-engagement {
@@ -578,9 +835,9 @@
             position: relative;
             overflow: hidden;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            transition-delay: 0.4s;
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-delay: 0.2s;
         }
         
         .user-data.active .active-periods {
@@ -643,9 +900,9 @@
             position: relative;
             overflow: hidden;
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            transition-delay: 0.5s;
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-delay: 0.25s;
         }
         
         .user-data.active .core-interactions {
@@ -726,14 +983,15 @@
             padding: 8px 16px;
             margin: 20px auto 0;
             font-size: 11px;
-            color: #666;
-            background: rgba(255, 255, 255, 0.15);
+            color: #333;
+            background: rgba(255, 255, 255, 0.25);
             border-radius: 20px;
             backdrop-filter: blur(12px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(255, 255, 255, 0.15);
             position: relative;
             overflow: hidden;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
         }
         
         .footer::before {
@@ -744,9 +1002,9 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.2) 0%, 
-                rgba(255, 255, 255, 0.1) 50%, 
-                rgba(255, 255, 255, 0.25) 100%);
+                rgba(255, 255, 255, 0.3) 0%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(255, 255, 255, 0.35) 100%);
             pointer-events: none;
             z-index: 1;
         }
@@ -815,6 +1073,133 @@
         
         .ai-icon {
             font-size: 1.2rem;
+        }
+        
+        /* 时期选择器 */
+        .period-selector {
+            margin: 1rem 0 1.5rem 0;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition-delay: 0.05s;
+        }
+        
+        .user-data.active .period-selector {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .period-selector-label {
+            display: block;
+            font-size: 1rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.8rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .period-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.8rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .period-btn {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            border-radius: 12px;
+            padding: 0.8rem 1.2rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--glass-shadow);
+            outline: none;
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .period-btn:hover {
+            background: rgba(255, 255, 255, 0.35);
+            border-color: rgba(255, 255, 255, 0.45);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), var(--glass-shadow);
+        }
+        
+        .period-btn.active {
+            background: rgba(33, 150, 243, 0.45);
+            border-color: rgba(33, 150, 243, 0.65);
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.5), var(--glass-shadow);
+            color: rgba(255, 255, 255, 0.98);
+        }
+        
+        .period-btn:active {
+            transform: translateY(0);
+        }
+        
+        .period-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .period-btn:disabled:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.35);
+            transform: none;
+        }
+        
+        .period-item-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            display: block;
+        }
+        
+        .period-item-desc {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            line-height: 1.3;
+        }
+        
+        .period-item-date {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.2rem;
+            font-style: italic;
+        }
+        
+        /* 按钮禁用状态 */
+        .period-dropdown-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .period-dropdown-btn:disabled:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: none !important;
+            box-shadow: var(--glass-shadow);
+        }
+        
+        .period-select:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .period-select:disabled:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: none;
         }
         
         /* AI分析卡片样式 */
@@ -1012,6 +1397,16 @@
                 padding: 0.8rem 1.5rem;
                 font-size: 1rem;
             }
+            
+            /* 时期按钮在平板上的优化 */
+            .period-buttons {
+                gap: 0.6rem;
+            }
+            
+            .period-btn {
+                padding: 0.7rem 1rem;
+                font-size: 0.85rem;
+            }
         }
         
         /* 更小屏幕的额外优化 */
@@ -1061,6 +1456,24 @@
                 margin: 1rem 0;
             }
             
+            /* 时期按钮在手机上的优化 */
+            .period-buttons {
+                gap: 0.5rem;
+                max-width: 100%;
+            }
+            
+            .period-btn {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.8rem;
+                min-width: auto;
+                flex: 1;
+            }
+            
+            .period-selector-label {
+                font-size: 0.9rem;
+                margin-bottom: 0.6rem;
+            }
+            
             .ai-analysis-card h3 {
                 font-size: 1.3rem;
             }
@@ -1092,9 +1505,16 @@
 </head>
 <body>
     <header class="user-header">
-        <div class="group-name" id="group-name"></div>
-        <h1 style="font-size: 1.6rem; margin: 0.5rem 0;" id="main-title">个人数据分析</h1>
-        <p style="margin: 0; opacity: 0.8;" id="subtitle"></p>
+        <div class="nav-content">
+            <div style="position: absolute; top: 20px; left: 20px;">
+                <button onclick="window.location.href='index.html'; event.stopPropagation();" style="padding: 12px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 20px; font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(102, 126, 234, 0.4)'; this.style.background='linear-gradient(135deg, #7c8ef0 0%, #8a5cb8 100%)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)';">◀</button>
+            </div>
+            <div style="text-align: center;">
+                <div class="group-name" id="group-name"></div>
+                <h1 style="font-size: 1.6rem; margin: 0.5rem 0;" id="main-title">个人数据分析</h1>
+                <p style="margin: 0; opacity: 0.8;" id="subtitle"></p>
+            </div>
+        </div>
     </header>
 
     <main class="container">
@@ -1118,6 +1538,14 @@
             <div class="ai-analysis-card" id="ai-analysis-card" style="display: none;">
                 <h3>AI个人分析报告</h3>
                 <div id="ai-analysis-content"></div>
+            </div>
+            
+            <!-- 时期选择器 -->
+            <div class="period-selector" id="period-selector">
+                <label class="period-selector-label">选择数据时期</label>
+                <div class="period-buttons" id="period-buttons">
+                    <!-- 动态生成的时期按钮 -->
+                </div>
             </div>
             
             <!-- 用户标签展示 -->
@@ -1163,13 +1591,16 @@
     <!-- 署名 -->
     <div class="footer-container">
         <div class="footer">
-            Powered by tttg
+            Powered by TGW~ ——致每一个在群聊里留下足迹的群友
         </div>
     </div>
     
     <script>
-        // 全局数据变量
+        // 全局变量
         let userData = null;
+        let periodsData = null;        // 时期配置数据
+        let currentPeriodId = '1_all';  // 当前选中的时期ID
+        let currentUserHash = null;     // 当前用户哈希值
         
         // 动态背景控制
         const gradientColors = [
@@ -1467,7 +1898,6 @@
                 const userInfo = userData.user_data[hash];
                 if (userInfo) {
                     showMessage('数据加载成功！', 'success');
-                    displayUserData(userInfo, hash);
                     
                     // 为用户选择器添加淡出动画
                     const userSelector = document.querySelector('.user-selector');
@@ -1479,6 +1909,7 @@
                         // 减少header的下边距，消除多余空白
                         document.querySelector('.user-header').style.marginBottom = '0.5rem';
                         // 显示用户数据区域
+                        displayUserData(userInfo, hash);
                         document.getElementById('user-data').classList.add('active');
                     }, 300); // 与CSS动画时间一致
                 } else {
@@ -1541,29 +1972,478 @@
         }
         
         // 加载数据
-        async function loadData() {
+        async function loadData(periodFolder = '1_all') {
             try {
-                const response = await fetch('data.json');
+                const dataPath = `assets/data/${periodFolder}/data.json`;
+                // 添加时间戳参数防止浏览器缓存
+                const cacheBuster = `?t=${Date.now()}`;
+                const response = await fetch(dataPath + cacheBuster);
                 userData = await response.json();
                 
                 // 设置页面标题
                 if (userData.group_info && userData.group_info.name) {
-                    document.title = userData.group_info.name + ' - 个人分析';
+                    document.title = userData.group_info.name;
                     // 同时更新页面顶部显示的主标题
-                    document.getElementById('main-title').textContent = userData.group_info.name + ' - 个人分析';
+                    document.getElementById('main-title').textContent = userData.group_info.name;
                 }
                 
             } catch (error) {
                 console.error('加载数据失败:', error);
-                showMessage('数据加载失败，请检查data.json文件', 'error');
+                showMessage(`数据加载失败，请检查${periodFolder}时期的数据文件`, 'error');
+            }
+        }
+        
+        // 显示倒计时弹窗
+        async function showCountdownModal() {
+            return new Promise((resolve) => {
+                // TIPS数组
+                const tips = [
+                    '为什么要展示tips？',
+                    '如果不想等，可以试试点击"跳过"，或许有用',
+                    '你正在阅读一条tips'
+                ];
+                
+                // 随机选择一条TIPS
+                const randomTip = tips[Math.floor(Math.random() * tips.length)];
+                
+                // 创建弹窗HTML
+                const modalHTML = `
+                    <div class="countdown-modal-overlay" id="countdown-modal">
+                        <div class="countdown-modal">
+                            <div class="countdown-header">
+                                <h3>数据切换中...</h3>
+                                <div class="countdown-timer" id="countdown-timer">2</div>
+                            </div>
+                            <div class="countdown-content">
+                                <div class="tips-icon">tip</div>
+                                <p class="tips-text">${randomTip}</p>
+                            </div>
+                            <div class="countdown-footer">
+                                <button class="skip-btn" id="skip-btn">跳过</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // 添加到页面
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                const modal = document.getElementById('countdown-modal');
+                const timer = document.getElementById('countdown-timer');
+                const skipBtn = document.getElementById('skip-btn');
+                
+                let countdown = 2;
+                let isSkipped = false;
+                let skipClickCount = 0;
+                
+                // 显示弹窗
+                setTimeout(() => {
+                    modal.classList.add('show');
+                }, 10);
+                
+                // 倒计时逻辑
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    timer.textContent = countdown;
+                    
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        closeModal(false);
+                    }
+                }, 1000);
+                
+                // 跳过按钮事件（彩蛋逻辑）
+                skipBtn.addEventListener('click', () => {
+                    if (skipBtn.disabled) return;
+                    
+                    skipClickCount++;
+                    
+                    // 禁用按钮1.5秒
+                    skipBtn.disabled = true;
+                    skipBtn.style.opacity = '0.5';
+                    skipBtn.style.cursor = 'not-allowed';
+                    
+                    // 增加等待时间
+                    countdown += 3;
+                    timer.textContent = countdown;
+                    
+                    if (skipClickCount === 1) {
+                        // 首次点击
+                        showEasterEggAlert('嗯？这一会儿都等不了吗？');
+                        
+                        setTimeout(() => {
+                            skipBtn.disabled = false;
+                            skipBtn.style.opacity = '1';
+                            skipBtn.style.cursor = 'pointer';
+                            skipBtn.textContent = '跳过（没用的）';
+                        }, 1500);
+                    } else if (skipClickCount === 2) {
+                        // 第二次点击
+                        showEasterEggAlert('说了没用就是没用，不要点了');
+                        
+                        setTimeout(() => {
+                            skipBtn.disabled = false;
+                            skipBtn.style.opacity = '1';
+                            skipBtn.style.cursor = 'pointer';
+                            skipBtn.textContent = '不跳过';
+                        }, 1500);
+                    } else if (skipClickCount === 3) {
+                        // 第三次点击
+                        showEasterEggAlert('嗯？这可是你选的，那再多陪我等几秒');
+                        
+                        setTimeout(() => {
+                            skipBtn.disabled = false;
+                            skipBtn.style.opacity = '1';
+                            skipBtn.style.cursor = 'pointer';
+                            skipBtn.textContent = '  '; // 两个空格
+                        }, 1500);
+                    } else if (skipClickCount === 4) {
+                        // 第四次点击
+                        showEasterEggAlert('按钮为空');
+                        
+                        setTimeout(() => {
+                            skipBtn.disabled = false;
+                            skipBtn.style.opacity = '1';
+                            skipBtn.style.cursor = 'pointer';
+                            // 按钮文字保持不变（两个空格）
+                        }, 1500);
+                    } else if (skipClickCount >= 5 && skipClickCount <= 9) {
+                        // 第5-9次点击
+                        const repeatCount = skipClickCount - 4; // 从第5次开始计算重复次数
+                        const message = repeatCount === 1 ? '按钮真的为空，再按也没用' : `按钮真的为空，再按也没用*${repeatCount}`;
+                        showEasterEggAlert(message);
+                        
+                        setTimeout(() => {
+                            skipBtn.disabled = false;
+                            skipBtn.style.opacity = '1';
+                            skipBtn.style.cursor = 'pointer';
+                            // 按钮文字保持不变（两个空格）
+                        }, 500); // 冷却时间改为0.5秒
+                    } else if (skipClickCount === 10) {
+                        // 第10次点击
+                        const repeatCount = skipClickCount - 4; // 第10次是第6次重复
+                        showEasterEggAlert(`按钮真的为空，再按也没用*${repeatCount}`);
+                        
+                        setTimeout(() => {
+                            skipBtn.disabled = false;
+                            skipBtn.style.opacity = '1';
+                            skipBtn.style.cursor = 'pointer';
+                            skipBtn.textContent = '我是笨蛋';
+                            
+                            // 创建附按钮
+                            const sideBtn = document.createElement('button');
+                            sideBtn.textContent = '你是笨蛋';
+                            sideBtn.className = 'side-btn';
+                            sideBtn.id = 'side-btn';
+                            
+                            // 将附按钮添加到主按钮旁边
+                            skipBtn.parentNode.appendChild(sideBtn);
+                            
+                            // 附按钮点击事件
+                            sideBtn.addEventListener('click', () => {
+                                if (sideBtn.disabled) return;
+                                
+                                showEasterEggAlert('我不是！');
+                                countdown += 3;
+                                timer.textContent = countdown;
+                                
+                                // 移除附按钮
+                                sideBtn.remove();
+                                
+                                // 主按钮变为"点击启动星趴"
+                                skipBtn.textContent = '点击启动星趴';
+                            });
+                            
+                        }, 500); // 冷却时间保持0.5秒
+                    } else {
+                        // 第11次及以后
+                        let cooldownTime = 3000; // 默认冷却时间
+                        let addTime = 3; // 默认增加时间
+                        let message = '';
+                        let newButtonText = '';
+                        
+                        if (skipBtn.textContent === '我是笨蛋') {
+                            // 第11次点击（主按钮为"我是笨蛋"时）
+                            const userName = userData && userData.user_data && currentUserHash ? 
+                                (userData.user_data[currentUserHash]?.basic_info?.name || '用户') : '用户';
+                            
+                            message = `哈哈，${userName}是笨蛋`;
+                            addTime = 4.5;
+                            newButtonText = '点击启动星趴';
+                            
+                            // 移除附按钮（如果存在）
+                            const sideBtn = document.getElementById('side-btn');
+                            if (sideBtn) {
+                                sideBtn.remove();
+                            }
+                        } else if (skipBtn.textContent === '点击启动星趴') {
+                            // 第12次点击
+                            message = '去群里，帮你@全体成员';
+                            addTime = 3;
+                            cooldownTime = 1500;
+                            newButtonText = '这波能跳过吗？';
+                        } else if (skipBtn.textContent === '这波能跳过吗？') {
+                            // 第13次点击
+                            message = '诶~别急！这波不能跳过！很关键！';
+                            addTime = 3;
+                            cooldownTime = 1500;
+                            newButtonText = '跳过剧情';
+                        } else if (skipBtn.textContent === '跳过剧情') {
+                            // 第14次点击
+                            message = '跳过人生！';
+                            addTime = 3;
+                            cooldownTime = 1500;
+                            newButtonText = '……';
+                        } else if (skipBtn.textContent === '……' && skipClickCount === 15) {
+                            // 第15次点击
+                            message = '……';
+                            addTime = 3;
+                            cooldownTime = 1500;
+                            newButtonText = '……'; // 按钮无变化
+                        } else if (skipBtn.textContent === '……' && skipClickCount === 16) {
+                            // 第16次点击
+                            message = '真的没有了';
+                            addTime = 3;
+                            cooldownTime = 1500;
+                            newButtonText = '……'; // 按钮无变化
+                        } else if (skipBtn.textContent === '……' && skipClickCount === 17) {
+                            // 第17次点击
+                            message = '没人会设计这么长的彩蛋的';
+                            addTime = 3;
+                            cooldownTime = 1500;
+                            newButtonText = '……'; // 按钮无变化
+                        } else if (skipBtn.textContent === '……' && skipClickCount === 18) {
+                            // 第18次点击
+                            message = '……';
+                            addTime = 3;
+                            cooldownTime = 1500;
+                            newButtonText = '……'; // 按钮无变化
+                        } else if (skipBtn.textContent === '……' && skipClickCount === 19) {
+                            // 第19次点击
+                            message = '那你就点着玩吧';
+                            addTime = 3;
+                            cooldownTime = 1500;
+                            newButtonText = '……'; // 按钮无变化
+                        } else if (skipBtn.textContent === '……' && skipClickCount >= 20) {
+                            // 第20次及以后点击
+                            const clickNumber = skipClickCount - 19; // 从第20次开始计算
+                            
+                            // 检查是否连续点击了15次（从第20次开始算起）
+                            if (clickNumber === 15) {
+                                // 连续点击15次，跳转到彩蛋界面
+                                message = '恭喜你发现了隐藏界面！';
+                                showEasterEggAlert(message);
+                                
+                                // 延迟跳转到彩蛋界面
+                                setTimeout(() => {
+                                    window.location.href = 'easter-egg.html';
+                                }, 1500);
+                                
+                                return; // 不再执行后续逻辑
+                            }
+                            
+                            message = `${clickNumber}次`;
+                            addTime = 1;
+                            cooldownTime = 100; // 0.1秒
+                            newButtonText = '……'; // 按钮无变化
+                        }
+                        
+                        showEasterEggAlert(message);
+                        countdown += addTime;
+                        timer.textContent = Math.ceil(countdown);
+                        
+                        setTimeout(() => {
+                            skipBtn.disabled = false;
+                            skipBtn.style.opacity = '1';
+                            skipBtn.style.cursor = 'pointer';
+                            if (newButtonText) {
+                                skipBtn.textContent = newButtonText;
+                            }
+                        }, cooldownTime);
+                    }
+                });
+                
+                // 彩蛋弹窗函数
+                function showEasterEggAlert(message) {
+                    const alertHTML = `
+                        <div class="easter-egg-alert" id="easter-egg-alert-${Date.now()}">
+                            <div class="easter-egg-content">
+                                <p>${message}</p>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.body.insertAdjacentHTML('beforeend', alertHTML);
+                    const alert = document.body.lastElementChild;
+                    
+                    setTimeout(() => {
+                        alert.classList.add('show');
+                    }, 10);
+                    
+                    setTimeout(() => {
+                        alert.classList.add('hide');
+                        setTimeout(() => {
+                            if (alert.parentNode) {
+                                alert.parentNode.removeChild(alert);
+                            }
+                        }, 300);
+                    }, 2000);
+                }
+                
+                // 关闭弹窗函数
+                function closeModal(skipped) {
+                    modal.classList.add('hide');
+                    setTimeout(() => {
+                        if (modal.parentNode) {
+                            modal.parentNode.removeChild(modal);
+                        }
+                        resolve(skipped);
+                    }, 300);
+                }
+            });
+        }
+        
+        // 加载时期配置
+        async function loadPeriodsConfig() {
+            if (periodsData) {
+                return periodsData; // 使用缓存
+            }
+            
+            try {
+                // 添加时间戳参数防止浏览器缓存
+                const cacheBuster = `?t=${Date.now()}`;
+                const response = await fetch('assets/data/periods.json' + cacheBuster);
+                periodsData = await response.json();
+                console.log(`时期配置加载成功，共${periodsData.periods.length}个时期`);
+                
+                // 设置默认时期为最后一个时期
+                const availablePeriods = periodsData.periods.filter(p => p.status === 'completed' || p.status === 'ongoing');
+                if (availablePeriods.length > 0) {
+                    // 使用最后一个可用时期作为默认时期
+                    const lastPeriod = availablePeriods[availablePeriods.length - 1];
+                    currentPeriodId = lastPeriod.id;
+                    console.log(`默认时期设置为: ${lastPeriod.name} (${lastPeriod.id})`);
+                }
+                
+                return periodsData;
+            } catch (error) {
+                console.error('时期配置加载失败:', error);
+                // 如果配置加载失败，创建默认配置
+                periodsData = {
+                    default_period: '1_all',
+                    periods: [{
+                        id: '1_all',
+                        name: '全部数据',
+                        description: '包含所有时期的完整数据',
+                        folder: '1_all',
+                        status: 'active'
+                    }]
+                };
+                return periodsData;
+            }
+        }
+        
+        // 时期切换函数
+        async function switchPeriod(periodId) {
+            if (!currentUserHash || periodId === currentPeriodId) {
+                return;
+            }
+            
+            // 获取所有时期按钮和数据容器
+            const periodButtons = document.querySelectorAll('.period-btn');
+            const userDataContainer = document.querySelector('.user-data');
+            
+            try {
+                // 禁用所有按钮防止重复点击
+                periodButtons.forEach(btn => btn.disabled = true);
+                
+                // 显示倒计时弹窗
+                const shouldSkip = await showCountdownModal();
+                
+                if (!shouldSkip) {
+                    // 显示加载状态
+                    showMessage('正在切换数据时期...', 'info');
+                    
+                    // 添加淡出效果
+                    if (userDataContainer) {
+                        userDataContainer.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                        userDataContainer.style.opacity = '0.3';
+                        userDataContainer.style.transform = 'translateY(10px)';
+                    }
+                    
+                    // 等待淡出动画完成
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                } else {
+                    // 跳过动画，直接切换
+                    if (userDataContainer) {
+                        userDataContainer.style.transition = 'none';
+                        userDataContainer.style.opacity = '0.3';
+                        userDataContainer.style.transform = 'translateY(10px)';
+                    }
+                }
+                
+                // 获取时期配置
+                const period = periodsData.periods.find(p => p.id === periodId);
+                if (!period) {
+                    throw new Error('未找到指定时期配置');
+                }
+                
+                // 加载新时期的数据
+                await loadData(period.folder);
+                
+                // 更新当前时期ID
+                currentPeriodId = periodId;
+                
+                // 更新按钮的选中状态
+                periodButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.periodId === periodId) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // 查找当前用户在新数据中的信息
+                const userInfo = userData.user_data[currentUserHash];
+                if (!userInfo) {
+                    // 即使没有用户数据，也要显示时期切换成功，并显示空数据状态
+                    await displayEmptyUserData(period.name);
+                    showMessage(`已切换到${period.name}，但在此时期未找到你的数据记录`, 'warning');
+                } else {
+                    // 重新显示用户数据（不包含过渡效果的初始化）
+                    await displayUserDataWithTransition(userInfo, currentUserHash);
+                    showMessage(`已切换到${period.name}`, 'success');
+                }
+                
+            } catch (error) {
+                console.error('时期切换失败:', error);
+                showMessage('时期切换失败，请重试', 'error');
+                
+                // 错误时恢复界面状态
+                if (userDataContainer) {
+                    userDataContainer.style.opacity = '1';
+                    userDataContainer.style.transform = 'translateY(0)';
+                }
+            } finally {
+                // 重新启用所有按钮
+                const periodButtons = document.querySelectorAll('.period-btn');
+                periodButtons.forEach(btn => btn.disabled = false);
             }
         }
         
         // 显示用户数据
-        function displayUserData(data, qq) {
+        async function displayUserData(data, qq) {
+            // 保存当前用户哈希值
+            currentUserHash = qq;
+            
             // 更新页面标题为用户昵称
             const userName = data.basic_info?.name || '未知用户';
             document.getElementById('main-title').textContent = userName;
+            
+            // 初始化时期选择器（仅在首次显示时）
+            const buttonsContainer = document.getElementById('period-buttons');
+            if (!buttonsContainer || buttonsContainer.children.length === 0) {
+                await initializePeriodSelector();
+            }
             
             // 显示用户标签
             displayUserTag(data);
@@ -1580,6 +2460,107 @@
             // 显示核心互动关系
             displayCoreInteractions(data);
         }
+        
+        // 显示空数据状态
+        async function displayEmptyUserData(periodName) {
+            // 清空所有数据显示区域
+            document.getElementById('user-tag').textContent = '无数据';
+            document.getElementById('user-summary-text').innerHTML = `在${periodName}中未找到你的聊天记录<br>可能是因为在此时期内你没有发言或数据未被收录`;
+            document.getElementById('user-engagement-text').innerHTML = '暂无参与度数据';
+            document.getElementById('active-periods-text').innerHTML = '暂无活跃时段数据';
+            document.getElementById('core-interactions-text').innerHTML = '暂无互动关系数据';
+            
+            // 设置用户标签样式为无数据状态
+            const userTag = document.getElementById('user-tag');
+            userTag.className = 'user-tag tag-no-data';
+            
+            // 添加淡入效果
+            const userDataContainer = document.querySelector('.user-data');
+            if (userDataContainer) {
+                // 等待一小段时间确保内容已更新
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                // 应用淡入效果
+                userDataContainer.style.transition = 'opacity 0.4s ease-in, transform 0.4s ease-in';
+                userDataContainer.style.opacity = '1';
+                userDataContainer.style.transform = 'translateY(0)';
+            }
+        }
+        
+        // 带过渡效果的显示用户数据
+        async function displayUserDataWithTransition(data, qq) {
+            // 更新数据内容
+            await displayUserData(data, qq);
+            
+            // 添加淡入效果
+            const userDataContainer = document.querySelector('.user-data');
+            if (userDataContainer) {
+                // 等待一小段时间确保内容已更新
+                await new Promise(resolve => setTimeout(resolve, 50));
+                
+                // 应用淡入效果
+                userDataContainer.style.transition = 'opacity 0.4s ease-in, transform 0.4s ease-in';
+                userDataContainer.style.opacity = '1';
+                userDataContainer.style.transform = 'translateY(0)';
+            }
+        }
+        
+        // 初始化时期选择器
+        async function initializePeriodSelector() {
+            try {
+                // 加载时期配置
+                await loadPeriodsConfig();
+                
+                // 填充按钮容器
+                const buttonsContainer = document.getElementById('period-buttons');
+                buttonsContainer.innerHTML = '';
+                
+                periodsData.periods.forEach(period => {
+                    // 显示所有已完成和进行中的时期
+                    if (period.status === 'completed' || period.status === 'ongoing') {
+                        const button = document.createElement('button');
+                        button.className = 'period-btn';
+                        button.dataset.periodId = period.id;
+                        
+                        // 为ongoing状态的时期添加截至日期显示
+                        let buttonText = period.name;
+                        if (period.status === 'ongoing' && period.end_date) {
+                            const endDate = new Date(period.end_date);
+                            const month = (endDate.getMonth() + 1).toString().padStart(2, '0');
+                            const day = endDate.getDate().toString().padStart(2, '0');
+                            buttonText += `（截至${month}/${day}）`;
+                        }
+                        
+                        button.textContent = buttonText;
+                        button.title = `${period.description} (${period.start_date} ~ ${period.end_date})`;
+                        
+                        // 设置当前选中状态
+                        if (period.id === currentPeriodId) {
+                            button.classList.add('active');
+                        }
+                        
+                        // 添加点击事件
+                        button.addEventListener('click', () => {
+                            if (period.id !== currentPeriodId) {
+                                switchPeriod(period.id);
+                            }
+                        });
+                        
+                        buttonsContainer.appendChild(button);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('时期选择器初始化失败:', error);
+                // 隐藏时期选择器
+                const periodSelector = document.getElementById('period-selector');
+                if (periodSelector) {
+                    periodSelector.style.display = 'none';
+                }
+            }
+        }
+        
+
         
         // 显示用户标签
         function displayUserTag(data) {
@@ -1623,6 +2604,34 @@
                 const previousUser = basicInfo.previous_user;
                 const difference = previousUser.message_count - totalMessages;
                 summaryText += `<br><br>与前一名<br>（<span class="highlight-text">${previousUser.name}</span>）<br>相差 <span class="highlight-number">${difference}</span> 条消息！`;
+            }
+            
+            // 添加词语频率统计
+            const wordFrequency = data.word_frequency || {};
+            if (Object.keys(wordFrequency).length > 0) {
+                // 按频率排序，只取频率大于5的词语
+                const sortedWords = Object.entries(wordFrequency)
+                    .filter(([word, freq]) => freq > 5)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+                
+                if (sortedWords.length > 0) {
+                    summaryText += '<br><br>';
+                    
+                    // 第一个词语（频率最高）
+                    const [firstWord, firstFreq] = sortedWords[0];
+                    summaryText += `你的发言里，<span class="highlight-text">${firstWord}</span> 出现频率最高`;
+                    
+                    // 第二个和第三个词语
+                    if (sortedWords.length > 1) {
+                        const additionalWords = sortedWords.slice(1).map(([word, freq]) => 
+                            `<span class="highlight-text">${word}</span>`
+                        ).join(' 和 ');
+                        summaryText += `<br>紧接着就是 ${additionalWords}`;
+                    }
+                    
+                    summaryText += '！';
+                }
             }
             
             document.getElementById('user-summary-text').innerHTML = summaryText;
@@ -1821,14 +2830,18 @@
             const aiAnalysisCard = document.getElementById('ai-analysis-card');
             const backBtnContainer = document.getElementById('back-btn-container');
             const aiAnalysisBtn = document.getElementById('ai-analysis-btn');
+            const periodSelector = document.getElementById('period-selector');
             
             if (!isAIAnalysisVisible) {
-                // 显示AI分析卡片和返回按钮，隐藏其他卡片和用户标签
+                // 显示AI分析卡片和返回按钮，隐藏其他卡片、用户标签和时期选择器
                 userDataCards.forEach(card => {
                     card.style.display = 'none';
                 });
                 if (userTags) {
                     userTags.style.display = 'none';
+                }
+                if (periodSelector) {
+                    periodSelector.style.display = 'none';
                 }
                 aiAnalysisCard.style.display = 'block';
                 backBtnContainer.style.display = 'block';
@@ -1862,6 +2875,9 @@
                 if (userTags) {
                     userTags.classList.remove('active');
                     userTags.style.display = 'block';
+                }
+                if (periodSelector) {
+                    periodSelector.style.display = 'block';
                 }
                 
                 // 短暂延迟后重新添加active类，触发淡入动画
@@ -1957,7 +2973,7 @@
             }
             
             try {
-                const response = await fetch('./ai_analysis_index.json');
+                const response = await fetch(`./ai_analysis_index.json?t=${Date.now()}`);
                 if (response.ok) {
                     aiAnalysisIndex = await response.json();
                     console.log(`AI分析索引加载成功，共${aiAnalysisIndex.total_count}个分析`);
@@ -2012,7 +3028,7 @@
                 
                 // 如果索引中有，再去加载具体文件
                 const fileName = `${encryptedQQ}.json`;
-                const response = await fetch(`./ai_analysis/${fileName}`);
+                const response = await fetch(`./ai_analysis/${fileName}?t=${Date.now()}`);
                 
                 if (!response.ok) {
                     throw new Error('文件不存在');
@@ -2020,10 +3036,26 @@
                 
                 const data = await response.json();
                 if (data.content) {
+                    // 获取文件的最后修改时间
+                    const lastModified = response.headers.get('Last-Modified');
+                    let updateTimeText = '';
+                    
+                    if (lastModified) {
+                        const updateDate = new Date(lastModified);
+                        const formattedDate = updateDate.toLocaleDateString('zh-CN', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                        updateTimeText = `<div style="text-align: right; font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem; font-style: italic;">更新于 ${formattedDate}</div>`;
+                    }
+                    
                     // 使用marked库渲染Markdown内容
                     const htmlContent = marked.parse(data.content);
-                    // 使用打字机效果显示内容
-                    await typewriterEffect(document.getElementById('ai-analysis-content'), htmlContent);
+                    // 在内容前添加更新时间，使用打字机效果显示
+                    await typewriterEffect(document.getElementById('ai-analysis-content'), updateTimeText + htmlContent);
                 } else {
                     await typewriterEffect(document.getElementById('ai-analysis-content'), '暂时没有你的AI分析哦');
                 }
@@ -2048,8 +3080,21 @@
         }
 
         // 页面加载完成后初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            loadData();
+        document.addEventListener('DOMContentLoaded', async function() {
+            // 先加载时期配置，确定默认时期
+            await loadPeriodsConfig();
+            
+            // 使用正确的默认时期加载数据
+            const defaultPeriod = periodsData.periods.find(p => p.id === currentPeriodId);
+            if (defaultPeriod) {
+                await loadData(defaultPeriod.folder);
+                console.log(`页面初始化使用时期: ${defaultPeriod.name} (${defaultPeriod.id})`);
+            } else {
+                // 如果没有找到默认时期，使用全部数据
+                await loadData();
+                console.log('页面初始化使用默认数据: 1_all');
+            }
+            
             initializeSearch();
             // 只在非低性能设备上初始化动态背景
             if (!isLowPerformanceDevice()) {
