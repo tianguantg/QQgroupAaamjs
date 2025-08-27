@@ -137,7 +137,21 @@
             box-shadow: var(--glass-shadow);
             backdrop-filter: blur(var(--blur-amount));
             border: 1px solid var(--glass-border);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .countdown-timer:hover {
+            transform: scale(1.1);
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.6) 0%, 
+                rgba(240, 248, 255, 0.6) 50%, 
+                rgba(255, 255, 255, 0.6) 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .countdown-timer:active {
+            transform: scale(0.95);
         }
         
         .countdown-content {
@@ -1591,7 +1605,7 @@
     <!-- 署名 -->
     <div class="footer-container">
         <div class="footer">
-            Powered by TGW~ ——致每一个在群聊里留下足迹的群友
+            Powered by TGW~ ——致每一个在群聊里留下足迹的群友<br>（感谢苏晨提供的早期聊天记录~）
         </div>
     </div>
     
@@ -2000,7 +2014,8 @@
                 const tips = [
                     '为什么要展示tips？',
                     '如果不想等，可以试试点击"跳过"，或许有用',
-                    '你正在阅读一条tips'
+                    '你正在阅读一条tips',
+                    '真正的跳过按钮在哪呢'
                 ];
                 
                 // 随机选择一条TIPS
@@ -2051,6 +2066,12 @@
                         closeModal(false);
                     }
                 }, 1000);
+                
+                // 点击倒计时跳过
+                timer.addEventListener('click', () => {
+                    clearInterval(countdownInterval);
+                    closeModal(false);
+                });
                 
                 // 跳过按钮事件（彩蛋逻辑）
                 skipBtn.addEventListener('click', () => {
