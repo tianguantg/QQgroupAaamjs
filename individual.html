@@ -1535,6 +1535,117 @@
                 line-height: 1.6;
             }
         }
+        
+        /* 访问限制页面样式 */
+        .access-restriction {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+        }
+        
+        .restriction-content {
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.9) 0%, 
+                rgba(240, 248, 255, 0.9) 50%, 
+                rgba(255, 255, 255, 0.9) 100%);
+            border-radius: 20px;
+            padding: 3rem 2rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            animation: restrictionFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes restrictionFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .restriction-title {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .restriction-message {
+            font-size: 1.2rem;
+            color: #4a5568;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .countdown-container {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        .countdown-label {
+            font-size: 1rem;
+            color: #718096;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+        
+        .countdown-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        }
+        
+        .restriction-footer {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        
+        .restriction-note {
+            font-size: 0.95rem;
+            color: #a0aec0;
+            font-style: italic;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .restriction-content {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+            
+            .restriction-title {
+                font-size: 1.8rem;
+            }
+            
+            .restriction-message {
+                font-size: 1.1rem;
+            }
+            
+            .countdown-display {
+                font-size: 1.5rem;
+            }
+        }
     </style>
     <!-- Markdown解析库 - 本地版本 -->
     <script src="./marked.min.js"></script>
@@ -1632,11 +1743,126 @@
     </div>
     
     <script>
+        // 访问控制配置
+        const ACCESS_CONFIG = {
+            // 是否启用访问时间限制
+            enableTimeRestriction: true,
+            // 允许访问的星期几 (0=周日, 1=周一, ..., 6=周六)
+            allowedDays: [0, 6], // 周日和周六
+            // 自定义限制消息
+            restrictionMessage: '该页面在周六和周日开放',
+            // 是否显示倒计时到下次可访问时间
+            showCountdown: false
+        };
+        
         // 全局变量
         let userData = null;
         let periodsData = null;        // 时期配置数据
         let currentPeriodId = '1_all';  // 当前选中的时期ID
         let currentUserHash = null;     // 当前用户哈希值
+        
+        // 访问控制函数
+        function checkAccessPermission() {
+            if (!ACCESS_CONFIG.enableTimeRestriction) {
+                return { allowed: true };
+            }
+            
+            const now = new Date();
+            const currentDay = now.getDay(); // 0=周日, 1=周一, ..., 6=周六
+            
+            if (ACCESS_CONFIG.allowedDays.includes(currentDay)) {
+                return { allowed: true };
+            }
+            
+            // 计算下次可访问时间
+            let nextAccessTime = null;
+            if (ACCESS_CONFIG.showCountdown) {
+                const daysUntilWeekend = getNextWeekendDays(currentDay);
+                nextAccessTime = new Date(now);
+                nextAccessTime.setDate(now.getDate() + daysUntilWeekend);
+                nextAccessTime.setHours(0, 0, 0, 0);
+            }
+            
+            return {
+                allowed: false,
+                message: ACCESS_CONFIG.restrictionMessage,
+                nextAccessTime: nextAccessTime
+            };
+        }
+        
+        function getNextWeekendDays(currentDay) {
+            // 计算距离下个周六的天数
+            if (currentDay === 0) return 6; // 周日到周六
+            if (currentDay <= 6) return 6 - currentDay; // 周一到周五到周六
+            return 0;
+        }
+        
+        function showAccessRestriction(accessResult) {
+            // 隐藏主要内容
+            const mainContent = document.querySelector('.container');
+            if (mainContent) {
+                mainContent.style.display = 'none';
+            }
+            
+            // 创建限制访问页面
+            const restrictionHTML = `
+                <html>
+                <head>
+                    <title>访问受限</title>
+                </head>
+                <body style="margin:0;padding:20px;font-family:Arial,sans-serif;background:#fff;color:#333;">
+                    <h1>访问受限</h1>
+                    <p>${accessResult.message}</p>
+                </body>
+                </html>
+            `;
+            
+            // 替换整个页面内容
+            document.open();
+            document.write(restrictionHTML);
+            document.close();
+            return; // 阻止后续代码执行
+            
+            // 如果需要显示倒计时，启动倒计时功能
+            if (accessResult.nextAccessTime && ACCESS_CONFIG.showCountdown) {
+                startAccessCountdown(accessResult.nextAccessTime);
+            }
+        }
+        
+        function startAccessCountdown(targetTime) {
+            const countdownElement = document.getElementById('access-countdown');
+            if (!countdownElement) return;
+            
+            function updateCountdown() {
+                const now = new Date();
+                const timeDiff = targetTime - now;
+                
+                if (timeDiff <= 0) {
+                    countdownElement.textContent = '现在可以访问了！';
+                    // 可以选择自动刷新页面
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                    return;
+                }
+                
+                const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+                
+                let countdownText = '';
+                if (days > 0) countdownText += `${days}天 `;
+                if (hours > 0) countdownText += `${hours}小时 `;
+                if (minutes > 0) countdownText += `${minutes}分钟 `;
+                countdownText += `${seconds}秒`;
+                
+                countdownElement.textContent = countdownText;
+            }
+            
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        }
         
         // 动态背景控制
         const gradientColors = [
@@ -2408,13 +2634,22 @@
                 // 禁用所有按钮防止重复点击
                 periodButtons.forEach(btn => btn.disabled = true);
                 
-                // 显示倒计时弹窗
-                const shouldSkip = await showCountdownModal();
+                // 获取时期配置
+                const period = periodsData.periods.find(p => p.id === periodId);
+                if (!period) {
+                    throw new Error('未找到指定时期配置');
+                }
+                
+                // 显示加载状态
+                showMessage('正在切换数据时期...', 'info');
+                
+                // 并行执行：显示倒计时弹窗和加载数据
+                const [shouldSkip] = await Promise.all([
+                    showCountdownModal(),
+                    loadData(period.folder)
+                ]);
                 
                 if (!shouldSkip) {
-                    // 显示加载状态
-                    showMessage('正在切换数据时期...', 'info');
-                    
                     // 添加淡出效果
                     if (userDataContainer) {
                         userDataContainer.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
@@ -2432,15 +2667,6 @@
                         userDataContainer.style.transform = 'translateY(10px)';
                     }
                 }
-                
-                // 获取时期配置
-                const period = periodsData.periods.find(p => p.id === periodId);
-                if (!period) {
-                    throw new Error('未找到指定时期配置');
-                }
-                
-                // 加载新时期的数据
-                await loadData(period.folder);
                 
                 // 更新当前时期ID
                 currentPeriodId = periodId;
@@ -3132,6 +3358,13 @@
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', async function() {
+            // 首先检查访问权限
+            const accessResult = checkAccessPermission();
+            if (!accessResult.allowed) {
+                showAccessRestriction(accessResult);
+                return; // 如果访问受限，直接返回，不执行后续初始化
+            }
+            
             // 先加载时期配置，确定默认时期
             await loadPeriodsConfig();
             
