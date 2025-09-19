@@ -2278,8 +2278,15 @@
                     '修女受伤-0也掉被动'
                 ];
                 
-                // 随机选择一条TIPS
-                const randomTip = tips[Math.floor(Math.random() * tips.length)];
+                // 使用更好的随机算法选择TIPS
+                // 结合时间戳和多重随机因子提高随机性
+                const now = Date.now();
+                const seed1 = Math.random();
+                const seed2 = Math.random();
+                const seed3 = (now % 1000) / 1000; // 使用毫秒作为种子
+                const combinedSeed = (seed1 + seed2 + seed3) % 1;
+                const randomIndex = Math.floor(combinedSeed * tips.length);
+                const randomTip = tips[randomIndex];
                 
                 // 创建弹窗HTML
                 const modalHTML = `
