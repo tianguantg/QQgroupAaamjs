@@ -406,14 +406,14 @@
         
         /* 用户选择区域 */
         .user-selector {
-            background: rgba(255, 255, 255, var(--search-opacity));
+            background: var(--user-selector-bg);
             border-radius: 30px;
             padding: 1.5rem 2rem;
-            box-shadow: var(--glass-shadow);
+            box-shadow: var(--user-selector-shadow);
             margin: 1.5rem auto;
             max-width: 500px;
-            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
-            border: 1px solid var(--glass-border);
+            backdrop-filter: var(--user-selector-backdrop-filter);
+            border: 1px solid var(--user-selector-border);
             position: relative;
             overflow: hidden;
             opacity: 1;
@@ -423,6 +423,10 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+        }
+        
+        .user-selector:hover {
+            background: var(--user-selector-bg-hover);
         }
         
         .user-selector.fade-out {

@@ -98,7 +98,14 @@ class ThemeSwitcher {
                     '--relation-note-bg': 'rgba(255, 255, 255, 0.95)',
                     '--relation-note-border': 'rgba(255, 255, 255, 0.85)',
                     '--relation-legend-text-color': '#4a5568',
-                    '--relation-preview-label-color': '#2d3748'
+                    '--relation-preview-label-color': '#2d3748',
+                    
+                    // 输入框卡片专用变量
+                    '--user-selector-bg': 'rgba(255, 255, 255, 0.55)',
+                    '--user-selector-bg-hover': 'rgba(255, 255, 255, 0.7)',
+                    '--user-selector-border': 'rgba(255, 255, 255, 0.7)',
+                    '--user-selector-shadow': '0 12px 40px rgba(0, 0, 0, 0.15), 0 4px 16px rgba(255, 255, 255, 0.1)',
+                    '--user-selector-backdrop-filter': 'blur(15px) saturate(180%)'
                 }
             },
 
@@ -190,7 +197,14 @@ class ThemeSwitcher {
                     '--relation-note-border': 'rgba(90, 111, 216, 0.4)',
                     '--relation-note-color': '#9ca3af',
                     '--relation-legend-text-color': '#e0e0e0',
-                    '--relation-preview-label-color': '#e0e0e0'
+                    '--relation-preview-label-color': '#e0e0e0',
+                    
+                    // 输入框卡片专用变量 - 暗黑主题
+                    '--user-selector-bg': 'rgba(40, 40, 40, 0.8)',
+                    '--user-selector-bg-hover': 'rgba(60, 60, 60, 0.9)',
+                    '--user-selector-border': 'rgba(90, 111, 216, 0.3)',
+                    '--user-selector-shadow': '0 12px 40px rgba(0, 0, 0, 0.3), 0 4px 16px rgba(90, 111, 216, 0.1)',
+                    '--user-selector-backdrop-filter': 'blur(15px) saturate(180%)'
                 }
             },
 
@@ -220,7 +234,7 @@ class ThemeSwitcher {
                     '--theme-btn-gradient': 'linear-gradient(135deg, #DC143C 0%, #B22222 50%, #DAA520 100%)',
                     '--theme-btn-gradient-hover': 'linear-gradient(135deg, #B22222 0%, #8B0000 50%, #B8860B 100%)',
                     
-                    // 边框渐变 - 春节色彩
+                    // 边框渐变 - 春季色彩
                     '--theme-border-gradient': 'linear-gradient(45deg, #DC143C, #FFD700, #FF6347, #DAA520, #B22222, #CD5C5C)',
                     
                     // 标签背景 - 淡红色和金色
@@ -259,18 +273,18 @@ class ThemeSwitcher {
                     '--color-error': '#DC143C',
                     '--color-warning': '#FF8C00',
                     
-                    // 春节主题专用标签渐变
+                    // 春季主题专用标签渐变
                     '--theme-tag-gradient-1': 'linear-gradient(135deg, rgba(220, 20, 60, 0.15), rgba(178, 34, 34, 0.15))',
                     '--theme-tag-gradient-2': 'linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(218, 165, 32, 0.2))',
                     '--theme-tag-gradient-3': 'linear-gradient(135deg, rgba(255, 99, 71, 0.15), rgba(205, 92, 92, 0.15))',
                     
-                    // 春节主题专用公告样式
+                    // 春季主题专用公告样式
                     '--announcement-bg-dark': 'rgba(255, 248, 220, 0.9)',
                     '--announcement-border-dark': 'rgba(220, 20, 60, 0.3)',
                     '--announcement-title-color-dark': '#8B0000',
                     '--announcement-content-color-dark': '#A0522D',
                     
-                    // 关系图页面专用变量 - 春节主题
+                    // 关系图页面专用变量 - 春季主题
                     '--relation-header-bg': 'rgba(255, 248, 220, 0.9)',
                     '--relation-header-border': 'rgba(220, 20, 60, 0.3)',
                     '--relation-graph-bg': 'rgba(255, 235, 205, 0.95)',
@@ -278,7 +292,14 @@ class ThemeSwitcher {
                     '--relation-note-border': 'rgba(218, 165, 32, 0.4)',
                     '--relation-note-color': '#A0522D',
                     '--relation-legend-text-color': '#8B0000',
-                    '--relation-preview-label-color': '#A0522D'
+                    '--relation-preview-label-color': '#A0522D',
+                    
+                    // 输入框卡片专用变量 - 春季主题
+                    '--user-selector-bg': 'rgba(255, 248, 220, 0.9)',
+                    '--user-selector-bg-hover': 'rgba(255, 248, 220, 0.95)',
+                    '--user-selector-border': 'rgba(220, 20, 60, 0.3)',
+                    '--user-selector-shadow': '0 12px 40px rgba(220, 20, 60, 0.15), 0 4px 16px rgba(255, 215, 0, 0.1)',
+                    '--user-selector-backdrop-filter': 'blur(15px) saturate(120%)'
                 }
             },
 
@@ -366,7 +387,14 @@ class ThemeSwitcher {
                     '--relation-note-border': 'rgba(105, 105, 105, 0.3)',
                     '--relation-note-color': '#2C2C2C',
                     '--relation-legend-text-color': '#1A1A1A',
-                    '--relation-preview-label-color': '#2C2C2C'
+                    '--relation-preview-label-color': '#2C2C2C',
+                    
+                    // 输入框卡片专用变量 - 卓别林主题
+                    '--user-selector-bg': 'rgba(248, 248, 248, 0.95)',
+                    '--user-selector-bg-hover': 'rgba(250, 250, 250, 0.98)',
+                    '--user-selector-border': 'rgba(44, 44, 44, 0.2)',
+                    '--user-selector-shadow': '0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 16px rgba(44, 44, 44, 0.05)',
+                    '--user-selector-backdrop-filter': 'blur(15px) saturate(120%)'
                 }
             },
 
@@ -452,7 +480,14 @@ class ThemeSwitcher {
                     '--relation-note-bg': 'rgba(255, 248, 240, 0.98)',
                     '--relation-note-border': 'rgba(255, 183, 197, 0.4)',
                     '--relation-legend-text-color': '#6D4C41',
-                    '--relation-preview-label-color': '#5D4037'
+                    '--relation-preview-label-color': '#5D4037',
+                    
+                    // 输入框卡片专用变量 - 樱花主题
+                    '--user-selector-bg': 'rgba(255, 248, 240, 0.9)',
+                    '--user-selector-bg-hover': 'rgba(255, 248, 240, 0.95)',
+                    '--user-selector-border': 'rgba(255, 183, 197, 0.3)',
+                    '--user-selector-shadow': '0 12px 40px rgba(255, 183, 197, 0.15), 0 4px 16px rgba(248, 187, 217, 0.1)',
+                    '--user-selector-backdrop-filter': 'blur(15px) saturate(180%)'
                 }
             },
 
@@ -539,7 +574,14 @@ class ThemeSwitcher {
                     '--relation-note-bg': 'rgba(46, 46, 46, 0.9)',
                     '--relation-note-border': 'rgba(255, 107, 53, 0.5)',
                     '--relation-legend-text-color': '#F5F5F5',
-                    '--relation-preview-label-color': '#FF8F00'
+                    '--relation-preview-label-color': '#FF8F00',
+                    
+                    // 输入框卡片专用变量 - 万圣节主题
+                    '--user-selector-bg': 'rgba(46, 46, 46, 0.95)',
+                    '--user-selector-bg-hover': 'rgba(46, 46, 46, 0.98)',
+                    '--user-selector-border': 'rgba(255, 107, 53, 0.4)',
+                    '--user-selector-shadow': '0 12px 40px rgba(255, 107, 53, 0.2), 0 4px 16px rgba(106, 27, 154, 0.15)',
+                    '--user-selector-backdrop-filter': 'blur(15px) saturate(150%)'
                 }
             },
 
@@ -547,7 +589,7 @@ class ThemeSwitcher {
     }
 
     /**
-     * 初始化主题系统
+     * 初始化主题配置
      */
     init() {
         // 从本地存储加载主题
