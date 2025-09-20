@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>个人数据分析</title>
+    <link rel="stylesheet" href="style.css">
     <style>
         /* CSS变量定义 - 统一透明度控制 */
         :root {
@@ -29,13 +30,13 @@
             overflow-x: hidden;
             /* 多层径向渐变背景 */
             background: 
-                radial-gradient(circle at var(--gradient1-x, 20%) var(--gradient1-y, 20%), #667eea 0%, transparent 50%), 
-                radial-gradient(circle at var(--gradient2-x, 80%) var(--gradient2-y, 80%), #f093fb 0%, transparent 50%), 
-                radial-gradient(circle at var(--gradient3-x, 40%) var(--gradient3-y, 60%), #764ba2 0%, transparent 50%), 
-                radial-gradient(circle at var(--gradient4-x, 70%) var(--gradient4-y, 30%), #f5576c 0%, transparent 50%), 
-                radial-gradient(circle at var(--gradient5-x, 30%) var(--gradient5-y, 70%), #4facfe 0%, transparent 50%), 
-                radial-gradient(circle at var(--gradient6-x, 60%) var(--gradient6-y, 40%), #00f2fe 0%, transparent 50%), 
-                linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+                radial-gradient(circle at var(--gradient1-x, 20%) var(--gradient1-y, 20%), var(--color-primary) 0%, transparent 50%), 
+                radial-gradient(circle at var(--gradient2-x, 80%) var(--gradient2-y, 80%), var(--color-secondary) 0%, transparent 50%), 
+                radial-gradient(circle at var(--gradient3-x, 40%) var(--gradient3-y, 60%), var(--color-primary-dark) 0%, transparent 50%), 
+                radial-gradient(circle at var(--gradient4-x, 70%) var(--gradient4-y, 30%), var(--color-secondary-dark) 0%, transparent 50%), 
+                radial-gradient(circle at var(--gradient5-x, 30%) var(--gradient5-y, 70%), var(--color-accent) 0%, transparent 50%), 
+                radial-gradient(circle at var(--gradient6-x, 60%) var(--gradient6-y, 40%), var(--color-accent-dark) 0%, transparent 50%), 
+                linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 25%, var(--color-secondary) 50%, var(--color-secondary-dark) 75%, var(--color-accent) 100%);
             background-size: 100% 100%;
         }
         
@@ -46,7 +47,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--color-bg-overlay);
             backdrop-filter: blur(var(--blur-amount));
             z-index: 10000;
             display: flex;
@@ -68,10 +69,7 @@
         }
         
         .countdown-modal {
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, var(--panel-opacity)) 0%, 
-                rgba(240, 248, 255, var(--panel-opacity)) 50%, 
-                rgba(255, 255, 255, var(--panel-opacity)) 100%);
+            background: var(--color-bg-primary);
             border-radius: 16px;
             padding: 1.5rem;
             max-width: 320px;
@@ -79,7 +77,7 @@
             text-align: center;
             box-shadow: var(--glass-shadow);
             backdrop-filter: blur(var(--blur-amount)) saturate(180%);
-            border: 1px solid var(--glass-border);
+            border: 1px solid var(--color-border-light);
             transform: translateY(10px);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
@@ -93,10 +91,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.3) 0%, 
-                rgba(255, 255, 255, 0.2) 50%, 
-                rgba(255, 255, 255, 0.35) 100%);
+            background: var(--color-bg-glass);
             pointer-events: none;
             z-index: 1;
         }
@@ -117,7 +112,7 @@
         .countdown-header h3 {
             margin: 0 0 0.8rem 0;
             font-size: 1.2rem;
-            color: #000;
+            color: var(--color-text-primary);
             font-weight: 500;
         }
         
@@ -126,27 +121,21 @@
             width: 40px;
             height: 40px;
             line-height: 40px;
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.4) 0%, 
-                rgba(240, 248, 255, 0.4) 50%, 
-                rgba(255, 255, 255, 0.4) 100%);
-            color: #000;
+            background: var(--color-bg-glass);
+            color: var(--color-text-primary);
             border-radius: 50%;
             font-size: 1.3rem;
             font-weight: 600;
             box-shadow: var(--glass-shadow);
             backdrop-filter: blur(var(--blur-amount));
-            border: 1px solid var(--glass-border);
+            border: 1px solid var(--color-border-light);
             transition: all 0.3s ease;
             cursor: pointer;
         }
         
         .countdown-timer:hover {
             transform: scale(1.1);
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.6) 0%, 
-                rgba(240, 248, 255, 0.6) 50%, 
-                rgba(255, 255, 255, 0.6) 100%);
+            background: var(--color-bg-light);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2), var(--glass-shadow);
         }
         
@@ -157,9 +146,9 @@
         .countdown-content {
             margin: 1rem 0;
             padding: 0.8rem;
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--color-bg-glass);
             border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--color-border-light);
         }
         
         .tips-icon {
@@ -171,7 +160,7 @@
         .tips-text {
             margin: 0;
             font-size: 0.95rem;
-            color: #000;
+            color: var(--color-text-primary);
             line-height: 1.5;
             font-weight: 400;
             opacity: 0.9;
@@ -183,12 +172,9 @@
         }
         
         .skip-btn {
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.4) 0%, 
-                rgba(240, 248, 255, 0.4) 50%, 
-                rgba(255, 255, 255, 0.4) 100%);
-            color: #000;
-            border: 1px solid var(--glass-border);
+            background: var(--color-bg-glass);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border-light);
             padding: 0.6rem 1.5rem;
             border-radius: 20px;
             font-size: 0.9rem;
@@ -201,11 +187,8 @@
         
         .skip-btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.5) 0%, 
-                rgba(240, 248, 255, 0.5) 50%, 
-                rgba(255, 255, 255, 0.5) 100%);
+            box-shadow: 0 4px 12px var(--color-border-light);
+            background: var(--color-bg-light);
         }
         
         .skip-btn:active {
@@ -237,15 +220,12 @@
         }
         
         .easter-egg-content {
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.9) 0%, 
-                rgba(240, 248, 255, 0.9) 50%, 
-                rgba(255, 255, 255, 0.9) 100%);
+            background: var(--color-bg-primary);
             border-radius: 12px;
             padding: 1rem 1.5rem;
             box-shadow: var(--glass-shadow);
             backdrop-filter: blur(var(--blur-amount)) saturate(180%);
-            border: 1px solid var(--glass-border);
+            border: 1px solid var(--color-border-light);
             position: relative;
             overflow: hidden;
             max-width: 300px;
@@ -259,10 +239,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.3) 0%, 
-                rgba(255, 255, 255, 0.2) 50%, 
-                rgba(255, 255, 255, 0.35) 100%);
+            background: var(--color-bg-glass);
             pointer-events: none;
             z-index: 1;
         }
@@ -270,7 +247,7 @@
         .easter-egg-content p {
             margin: 0;
             font-size: 0.95rem;
-            color: #000;
+            color: var(--color-text-primary);
             font-weight: 500;
             position: relative;
             z-index: 2;
@@ -278,26 +255,37 @@
         }
         
         .side-btn {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            background: var(--color-bg-glass);
             backdrop-filter: blur(10px);
-            border: var(--glass-border);
-            border-radius: 8px;
-            padding: 8px 16px;
-            color: #000;
-            font-size: 14px;
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            color: var(--color-text-primary);
+            font-size: var(--font-size-sm);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition-normal);
             box-shadow: var(--glass-shadow);
             position: absolute;
             top: 100%;
             left: 50%;
             transform: translateX(-50%);
-            margin-top: 15px;
+            margin-top: var(--spacing-lg);
             z-index: 1000;
             width: auto;
             white-space: nowrap;
         }
         
+        .side-btn:hover {
+            background: var(--color-bg-light);
+            border-color: var(--color-border-primary);
+            transform: translateX(-50%) translateY(-2px);
+            box-shadow: 0 4px 12px var(--color-border-light);
+        }
+
+        .side-btn:active {
+            background: var(--color-bg-secondary);
+            transform: translateX(-50%) translateY(0);
+        }
 
         
         .side-btn:disabled {
@@ -388,7 +376,7 @@
         
         /* 个人统计页面特殊样式 */
         .user-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 50%, var(--color-secondary) 100%);
             background-size: 400% 400%;
             animation: gradientShift 15s ease-in-out infinite;
             color: white;
@@ -396,6 +384,11 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             text-align: center;
             margin-bottom: 1.5rem;
+        }
+
+        .user-header .nav-content {
+            display: block;
+            text-align: center;
         }
 
         @keyframes gradientShift {
@@ -468,15 +461,15 @@
         }
         
         #qq-input {
-            padding: 12px 20px;
+            padding: var(--spacing-md) var(--spacing-xl);
             border: 2px solid rgba(102, 126, 234, 0.3);
-            border-radius: 20px;
+            border-radius: var(--radius-xl);
             font-size: 1rem;
             background: rgba(255, 255, 255, var(--search-opacity));
             backdrop-filter: blur(var(--blur-amount));
-            color: #333;
+            color: var(--color-text-secondary);
             min-width: 180px;
-            transition: all 0.3s ease;
+            transition: var(--transition-normal);
             position: relative;
             z-index: 2;
         }
@@ -489,19 +482,19 @@
         }
         
         #qq-input::placeholder {
-            color: #999;
+            color: var(--color-text-light);
         }
         
         #search-btn {
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: var(--spacing-md) var(--spacing-xl);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
             color: white;
             border: none;
-            border-radius: 20px;
+            border-radius: var(--radius-xl);
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: var(--transition-normal);
             backdrop-filter: blur(10px);
             position: relative;
             overflow: hidden;
@@ -559,15 +552,15 @@
         }
         
         .search-message.success {
-            background: rgba(76, 175, 80, 0.1);
-            color: #2e7d32;
-            border: 1px solid rgba(76, 175, 80, 0.3);
+            background: var(--color-bg-success);
+            color: var(--color-text-success);
+            border: 1px solid var(--color-border-success);
         }
         
         .search-message.error {
-            background: rgba(244, 67, 54, 0.1);
-            color: #c62828;
-            border: 1px solid rgba(244, 67, 54, 0.3);
+            background: var(--color-bg-error);
+            color: var(--color-text-error);
+            border: 1px solid var(--color-border-error);
         }
         
         /* 弹出提示样式 */
@@ -608,7 +601,7 @@
         
         .search-message.info {
             background: rgba(33, 150, 243, 0.1);
-            color: #1565c0;
+            color: var(--color-text-link);
             border: 1px solid rgba(33, 150, 243, 0.3);
         }
         
@@ -648,7 +641,7 @@
             padding: 1rem 2rem;
             margin: 0.5rem;
             border-radius: 30px;
-            color: #000;
+            color: var(--color-text-primary);
             box-shadow: var(--glass-shadow);
             backdrop-filter: blur(var(--blur-amount)) saturate(180%);
             border: 1px solid var(--glass-border);
@@ -697,7 +690,7 @@
             background: linear-gradient(135deg, rgba(150, 150, 150, var(--panel-opacity)) 0%, rgba(180, 180, 180, var(--panel-opacity)) 100%);
         }
         
-        /* 用户统计摘要 */
+        /* 用户数据卡片特定样式 */
         .user-summary {
             background: linear-gradient(135deg, 
                 rgba(150, 180, 255, var(--panel-opacity)) 0%, 
@@ -712,7 +705,7 @@
             max-width: 650px;
             min-width: 300px;
             text-align: center;
-            color: #000;
+            color: var(--color-text-primary);
             box-shadow: var(--glass-shadow);
             backdrop-filter: blur(var(--blur-amount)) saturate(180%);
             border: 1px solid var(--glass-border);
@@ -729,40 +722,6 @@
             transform: translateY(0);
         }
         
-        .user-summary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.35) 0%, 
-                rgba(255, 255, 255, 0.25) 50%, 
-                rgba(255, 255, 255, 0.4) 100%);
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .user-summary > * {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .user-summary h3 {
-            margin-top: 0;
-            font-size: 1.6rem;
-            color: #000;
-        }
-        
-        .user-summary p {
-            font-size: 1.2rem;
-            color: #000;
-            margin: 0.5rem 0;
-            line-height: 1.8;
-        }
-        
-        /* 用户参与度板块 */
         .user-engagement {
             background: linear-gradient(135deg, 
                 rgba(160, 200, 255, var(--panel-opacity)) 0%, 
@@ -777,7 +736,7 @@
             max-width: 650px;
             min-width: 300px;
             text-align: center;
-            color: #000;
+            color: var(--color-text-primary);
             box-shadow: var(--glass-shadow);
             backdrop-filter: blur(var(--blur-amount)) saturate(180%);
             border: 1px solid var(--glass-border);
@@ -793,7 +752,8 @@
             opacity: 1;
             transform: translateY(0);
         }
-        
+
+        .user-summary::before,
         .user-engagement::before {
             content: '';
             position: absolute;
@@ -808,153 +768,54 @@
             pointer-events: none;
             z-index: 1;
         }
-        
+
+        .user-summary > *,
         .user-engagement > * {
             position: relative;
             z-index: 2;
         }
 
+        .user-summary h3,
         .user-engagement h3 {
             margin-top: 0;
             font-size: 1.6rem;
-            color: #000;
+            color: var(--color-text-primary);
         }
 
+        .user-summary p,
         .user-engagement p {
             font-size: 1.2rem;
-            color: #000;
+            color: var(--color-text-primary);
             margin: 0.5rem 0;
             line-height: 1.8;
         }
         
-        /* 活跃时段板块 */
-        .active-periods {
-            background: linear-gradient(135deg, 
-                rgba(180, 210, 255, var(--panel-opacity)) 0%, 
-                rgba(200, 220, 255, var(--panel-opacity)) 25%, 
-                rgba(220, 230, 255, var(--panel-opacity)) 50%, 
-                rgba(200, 210, 255, var(--panel-opacity)) 75%, 
-                rgba(190, 200, 255, var(--panel-opacity)) 100%);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin: 1rem auto;
-            width: 90%;
-            max-width: 650px;
-            min-width: 300px;
-            text-align: center;
-            color: #000;
-            box-shadow: var(--glass-shadow);
-            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
-            border: 1px solid var(--glass-border);
-            position: relative;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transition-delay: 0.2s;
-        }
-        
-        .user-data.active .active-periods {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .active-periods::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.35) 0%, 
-                rgba(255, 255, 255, 0.25) 50%, 
-                rgba(255, 255, 255, 0.4) 100%);
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .active-periods > * {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .active-periods h3 {
+        /* 活跃时段和核心互动关系卡片的特殊样式 */
+        .card h3 {
             margin-top: 0;
             font-size: 1.6rem;
-            color: #000;
-        }
-        
-        .active-periods p {
-            font-size: 1.2rem;
-            color: #000;
-            margin: 0.5rem 0;
-            line-height: 1.8;
-        }
-        
-        /* 核心互动关系板块 */
-        .core-interactions {
-            background: linear-gradient(135deg, 
-                rgba(170, 190, 255, var(--panel-opacity)) 0%, 
-                rgba(190, 210, 255, var(--panel-opacity)) 25%, 
-                rgba(210, 220, 255, var(--panel-opacity)) 50%, 
-                rgba(180, 200, 255, var(--panel-opacity)) 75%, 
-                rgba(160, 180, 255, var(--panel-opacity)) 100%);
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin: 1rem auto;
-            width: 90%;
-            max-width: 650px;
-            min-width: 300px;
+            color: var(--color-text-primary);
             text-align: center;
-            color: #000;
-            box-shadow: var(--glass-shadow);
-            backdrop-filter: blur(var(--blur-amount)) saturate(180%);
-            border: 1px solid var(--glass-border);
-            position: relative;
-            overflow: hidden;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transition-delay: 0.25s;
         }
         
-        .user-data.active .core-interactions {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .core-interactions::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.35) 0%, 
-                rgba(255, 255, 255, 0.25) 50%, 
-                rgba(255, 255, 255, 0.4) 100%);
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .core-interactions > * {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .core-interactions h3 {
-            margin-top: 0;
-            font-size: 1.6rem;
-            color: #000;
-        }
-        
-        .core-interactions p {
+        .card p {
             font-size: 1.2rem;
-            color: #000;
+            color: var(--color-text-primary);
             margin: 0.5rem 0;
             line-height: 1.8;
+            text-align: center;
+        }
+        
+        /* 取消活跃时段和核心互动关系卡片的悬停效果 */
+        .card:nth-of-type(3):hover,
+        .card:nth-of-type(4):hover {
+            transform: none;
+            background: var(--theme-card-bg-hover);
+            backdrop-filter: var(--card-backdrop-filter);
+            box-shadow: var(--card-shadow), 
+                        0 0 0 1px rgba(255, 255, 255, var(--glass-border-light)),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+            border: var(--card-border);
         }
         
         /* 高亮样式 */
@@ -1108,7 +969,7 @@
             display: block;
             font-size: 1rem;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.9);
+            color: var(--color-text-white);
             margin-bottom: 0.8rem;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
@@ -1122,6 +983,7 @@
             margin: 0 auto;
             overflow-x: auto;
             padding: 0.5rem 0;
+            scroll-behavior: smooth;
         }
         
         .period-buttons::-webkit-scrollbar {
@@ -1129,7 +991,7 @@
         }
         
         .period-buttons::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
+            background: var(--color-bg-glass);
             border-radius: 3px;
         }
         
@@ -1143,37 +1005,67 @@
         }
         
         .period-btn {
-            background: rgba(255, 255, 255, 0.25);
+            background: var(--color-bg-glass);
             backdrop-filter: blur(var(--blur-amount)) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.35);
+            border: 1px solid var(--color-border-light);
             border-radius: 12px;
             padding: 0.8rem 1.2rem;
             font-size: 0.9rem;
             font-weight: 500;
-            color: white;
+            color: var(--color-text-white);
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: var(--glass-shadow);
             outline: none;
             position: relative;
-            overflow: visible;
+            overflow: hidden;
             white-space: nowrap;
             flex-shrink: 0;
             min-width: fit-content;
         }
         
+        .period-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .period-btn:hover::before {
+            left: 100%;
+        }
+        
         .period-btn:hover {
             background: rgba(255, 255, 255, 0.35);
-            border-color: rgba(255, 255, 255, 0.45);
+            border-color: var(--color-border-medium);
             transform: translateY(-2px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), var(--glass-shadow);
         }
         
+        .period-btn.active:hover {
+            background: linear-gradient(135deg, #7c8ef0 0%, #8a5cb8 100%);
+            border: 2px solid #7c8ef0;
+            box-shadow: 0 0 0 3px rgba(124, 142, 240, 0.4), 
+                        0 12px 40px rgba(102, 126, 234, 0.5), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            transform: translateY(-4px) scale(1.08);
+        }
+        
         .period-btn.active {
-            background: rgba(33, 150, 243, 0.45);
-            border-color: rgba(33, 150, 243, 0.65);
-            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.5), var(--glass-shadow);
-            color: rgba(255, 255, 255, 0.98);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 2px solid #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3), 
+                        0 8px 32px rgba(102, 126, 234, 0.4), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            color: var(--color-text-white);
+            font-weight: 600;
+            transform: translateY(-3px) scale(1.05);
+            position: relative;
+            z-index: 10;
         }
         
         .period-btn:active {
@@ -1187,8 +1079,8 @@
         }
         
         .period-btn:disabled:hover {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.35);
+            background: var(--color-bg-glass);
+            border-color: var(--color-border-light);
             transform: none;
         }
         
@@ -1238,21 +1130,22 @@
             transform: none;
         }
         
-        /* AI分析卡片样式 */
+        /* AI分析卡片特定样式 */
         .ai-analysis-card {
-            background: rgba(0, 0, 0, 0.45);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 1.5rem 2rem;
-            margin: 1.5rem auto;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin: 1rem auto;
             width: 90%;
             max-width: 650px;
             min-width: 300px;
-            backdrop-filter: blur(15px) saturate(180%);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 
-                        0 4px 16px rgba(0, 0, 0, 0.3);
             position: relative;
             overflow: hidden;
+            backdrop-filter: blur(15px) saturate(180%);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 
+                        0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             animation: fadeInUp 0.5s ease-out;
         }
         
@@ -1264,9 +1157,10 @@
             right: 0;
             bottom: 0;
             background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.04) 0%, 
-                rgba(255, 255, 255, 0.02) 50%, 
-                rgba(255, 255, 255, 0.06) 100%);
+                rgba(0, 0, 0, 0.02) 0%, 
+                rgba(0, 0, 0, 0.01) 50%, 
+                rgba(0, 0, 0, 0.03) 100%);
+            border-radius: 16px;
             pointer-events: none;
             z-index: 1;
         }
@@ -1277,22 +1171,27 @@
         }
         
         .ai-analysis-card h3 {
-            color: white;
+            color: var(--color-text-primary);
             font-size: 1.5rem;
             margin-bottom: 1.5rem;
             text-align: center;
+            font-weight: bold;
         }
         
         #ai-analysis-content {
-            color: white;
+            color: var(--color-text-primary);
             font-size: 1.1rem;
             line-height: 1.8;
             margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
         }
         
         /* Markdown内容样式 */
         #ai-analysis-content h1 {
-            color: #fff;
+            color: var(--color-text-primary);
             font-size: 1.8rem;
             margin: 1.5rem 0 1rem 0;
             font-weight: bold;
@@ -1300,16 +1199,16 @@
         }
         
         #ai-analysis-content h2 {
-            color: #fff;
+            color: var(--color-text-primary);
             font-size: 1.4rem;
             margin: 1.2rem 0 0.8rem 0;
             font-weight: bold;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            border-bottom: 2px solid rgba(0, 0, 0, 0.2);
             padding-bottom: 0.3rem;
         }
         
         #ai-analysis-content h3 {
-            color: #fff;
+            color: var(--color-text-secondary);
             font-size: 1.2rem;
             margin: 1rem 0 0.6rem 0;
             font-weight: bold;
@@ -1321,7 +1220,7 @@
         }
         
         #ai-analysis-content strong {
-            color: #ffeb3b;
+            color: var(--color-text-error);
             font-weight: bold;
         }
         
@@ -1336,7 +1235,7 @@
         }
         
         #ai-analysis-content blockquote {
-            border-left: 4px solid rgba(255, 255, 255, 0.5);
+            border-left: 4px solid rgba(0, 0, 0, 0.3);
             padding-left: 1rem;
             margin: 1rem 0;
             font-style: italic;
@@ -1408,7 +1307,7 @@
             /* 禁用header的背景动画 */
             .user-header {
                 animation: none !important;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%) !important;
+                background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 50%, var(--color-secondary) 100%) !important;
                 background-size: 100% 100% !important;
             }
             
@@ -1464,7 +1363,7 @@
             
             /* 禁用动态背景，使用静态渐变 */
             body {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%) !important;
+                background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 25%, var(--color-secondary) 50%, var(--color-secondary-dark) 75%, var(--color-accent) 100%) !important;
                 animation: none !important;
             }
             
@@ -1543,7 +1442,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 25%, var(--color-secondary) 50%, var(--color-secondary-dark) 75%, var(--color-accent) 100%);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1580,14 +1479,14 @@
         .restriction-title {
             font-size: 2.2rem;
             font-weight: bold;
-            color: #2d3748;
+            color: var(--color-text-secondary);
             margin-bottom: 1rem;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         .restriction-message {
             font-size: 1.2rem;
-            color: #4a5568;
+            color: var(--color-text-muted);
             margin-bottom: 2rem;
             line-height: 1.6;
         }
@@ -1610,7 +1509,7 @@
         .countdown-display {
             font-size: 1.8rem;
             font-weight: bold;
-            color: #667eea;
+            color: var(--color-primary);
             font-family: 'Courier New', monospace;
             text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
         }
@@ -1623,7 +1522,7 @@
         
         .restriction-note {
             font-size: 0.95rem;
-            color: #a0aec0;
+            color: var(--color-text-light);
             font-style: italic;
         }
         
@@ -1654,7 +1553,7 @@
     <header class="user-header">
         <div class="nav-content">
             <div style="position: absolute; top: 20px; left: 20px;">
-                <button onclick="window.location.href='index.html'; event.stopPropagation();" style="padding: 12px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 20px; font-size: 1.2rem; font-weight: 900; cursor: pointer; transition: all 0.3s ease; backdrop-filter: blur(10px); position: relative; overflow: hidden;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(102, 126, 234, 0.4)'; this.style.background='linear-gradient(135deg, #7c8ef0 0%, #8a5cb8 100%)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.background='linear-gradient(135deg, #667eea 0%, #764ba2 100%)';">◀</button>
+                <button onclick="window.location.href='index.html'; event.stopPropagation();" class="back-button">◀</button>
             </div>
             <div style="text-align: center;">
                 <div class="group-name" id="group-name"></div>
@@ -1682,7 +1581,7 @@
             </div>
             
             <!-- AI分析卡片 - 置顶 -->
-            <div class="ai-analysis-card" id="ai-analysis-card" style="display: none;">
+            <div class="card ai-analysis-card" id="ai-analysis-card" style="display: none;">
                 <h3>AI个人分析报告</h3>
                 <div id="ai-analysis-content"></div>
             </div>
@@ -1701,25 +1600,25 @@
             </div>
             
             <!-- 用户统计摘要 -->
-            <div class="user-summary">
+            <div class="card user-summary">
                 <h3><span class="icon"></span>你的群聊足迹</h3>
                 <p id="user-summary-text"></p>
             </div>
             
             <!-- 用户参与度 -->
-            <div class="user-engagement">
+            <div class="card user-engagement">
                 <h3><span class="icon"></span>你的群聊参与度</h3>
                 <p id="user-engagement-text"></p>
             </div>
             
             <!-- 活跃时段 -->
-            <div class="active-periods">
+            <div class="card active-periods-card">
                 <h3>你的活跃时段</h3>
                 <p id="active-periods-text"></p>
             </div>
             
             <!-- 核心互动关系 -->
-            <div class="core-interactions">
+            <div class="card core-interactions-card">
                 <h3>你的核心互动关系</h3>
                 <p id="core-interactions-text"></p>
             </div>
@@ -1737,8 +1636,8 @@
     
     <!-- 署名 -->
     <div class="footer-container">
-        <div class="footer">
-            Powered by TGW~ ——致每一个在群聊里留下足迹的群友<br>(感谢苏辰提供的聊天记录~)
+        <div class="powered-by">
+            <span>powered by TGW~<br>（感谢苏辰提供的聊天记录~）</span>
         </div>
     </div>
     
@@ -1810,7 +1709,7 @@
                 <head>
                     <title>访问受限</title>
                 </head>
-                <body style="margin:0;padding:20px;font-family:Arial,sans-serif;background:#fff;color:#333;">
+                <body style="margin:0;padding:20px;font-family:Arial,sans-serif;background:var(--color-bg-white);color:var(--color-text-dark);">
                     <h1>访问受限</h1>
                     <p>${accessResult.message}</p>
                 </body>
@@ -2278,14 +2177,19 @@
                     '修女受伤-0也掉被动'
                 ];
                 
-                // 使用更好的随机算法选择TIPS
-                // 结合时间戳和多重随机因子提高随机性
-                const now = Date.now();
-                const seed1 = Math.random();
-                const seed2 = Math.random();
-                const seed3 = (now % 1000) / 1000; // 使用毫秒作为种子
-                const combinedSeed = (seed1 + seed2 + seed3) % 1;
-                const randomIndex = Math.floor(combinedSeed * tips.length);
+                // 使用真正均匀分布的随机算法选择TIPS
+                // 使用加密安全的随机数生成器确保真正的均匀分布
+                let randomIndex;
+                if (window.crypto && window.crypto.getRandomValues) {
+                    // 使用加密安全的随机数生成器
+                    const array = new Uint32Array(1);
+                    window.crypto.getRandomValues(array);
+                    randomIndex = array[0] % tips.length;
+                } else {
+                    // 降级到改进的Math.random()
+                    // 使用单一随机源确保均匀分布
+                    randomIndex = Math.floor(Math.random() * tips.length);
+                }
                 const randomTip = tips[randomIndex];
                 
                 // 创建弹窗HTML
@@ -2846,6 +2750,14 @@
                     }
                 });
                 
+                // 滚动到最右边（最新时期）
+                setTimeout(() => {
+                    const buttonsContainer = document.getElementById('period-buttons');
+                    if (buttonsContainer) {
+                        buttonsContainer.scrollLeft = buttonsContainer.scrollWidth;
+                    }
+                }, 100);
+                
             } catch (error) {
                 console.error('时期选择器初始化失败:', error);
                 // 隐藏时期选择器
@@ -3121,7 +3033,7 @@
         let currentTypewriterTimer = null; // 用于跟踪当前的打字机定时器
         
         function toggleAIAnalysis() {
-            const userDataCards = document.querySelectorAll('.user-summary, .user-engagement, .active-periods, .core-interactions');
+            const userDataCards = document.querySelectorAll('.user-summary, .user-engagement, .card:not(.ai-analysis-card)');
             const userTags = document.querySelector('.user-tags');
             const aiAnalysisCard = document.getElementById('ai-analysis-card');
             const backBtnContainer = document.getElementById('back-btn-container');
@@ -3345,7 +3257,7 @@
                             hour: '2-digit',
                             minute: '2-digit'
                         });
-                        updateTimeText = `<div style="text-align: right; font-size: 0.9rem; color: rgba(255, 255, 255, 0.7); margin-bottom: 1rem; font-style: italic;">更新于 ${formattedDate}</div>`;
+                        updateTimeText = `<div style="text-align: right; font-size: 0.9rem; color: var(--color-text-secondary); margin-bottom: 1rem; font-style: italic;">更新于 ${formattedDate}</div>`;
                     }
                     
                     // 使用marked库渲染Markdown内容
@@ -3407,5 +3319,9 @@
             }
         });
     </script>
+    
+    <!-- 主题切换系统 -->
+    <script src="theme-switcher.js?v=202508272235"></script>
+    <script src="theme-selector.js?v=202508272235"></script>
 </body>
 </html>

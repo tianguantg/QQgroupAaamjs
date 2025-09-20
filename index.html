@@ -5,6 +5,135 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AAa美甲师后援会 - 星引擎游戏组队聊天群</title>
     <link rel="stylesheet" href="style.css?v=202508272235">
+    
+    <!-- 动态背景CSS变量 -->
+    <style>
+        :root {
+            /* 动态背景渐变位置变量 */
+            --gradient1-x: 20%;
+            --gradient1-y: 20%;
+            --gradient2-x: 80%;
+            --gradient2-y: 80%;
+            --gradient3-x: 40%;
+            --gradient3-y: 60%;
+            --gradient4-x: 70%;
+            --gradient4-y: 30%;
+            --gradient5-x: 30%;
+            --gradient5-y: 70%;
+            --gradient6-x: 60%;
+            --gradient6-y: 40%;
+            
+            /* 光晕效果位置变量 */
+            --glow1-x: 25%;
+            --glow1-y: 75%;
+            --glow2-x: 75%;
+            --glow2-y: 25%;
+        }
+        
+        /* 动态背景样式 */
+        body {
+            background: 
+                radial-gradient(circle at var(--gradient1-x, 20%) var(--gradient1-y, 20%), var(--color-primary) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient2-x, 80%) var(--gradient2-y, 80%), var(--color-secondary) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient3-x, 40%) var(--gradient3-y, 60%), var(--color-primary-dark) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient4-x, 70%) var(--gradient4-y, 30%), var(--color-secondary-dark) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient5-x, 30%) var(--gradient5-y, 70%), var(--color-accent) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient6-x, 60%) var(--gradient6-y, 40%), var(--color-accent-dark) 0%, transparent 50%),
+                linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 25%, var(--color-secondary) 50%, var(--color-secondary-dark) 75%, var(--color-accent) 100%);
+            background-size: 100% 100%;
+            background-attachment: fixed;
+            transition: background-position 0.3s ease-out;
+        }
+        
+        /* 动态光晕覆盖层 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at var(--glow1-x, 25%) var(--glow1-y, 75%), rgba(255, 255, 255, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at var(--glow2-x, 75%) var(--glow2-y, 25%), rgba(255, 255, 255, 0.08) 0%, transparent 25%);
+            pointer-events: none;
+            z-index: -1;
+            transition: background-position 0.3s ease-out;
+        }
+    </style>
+    
+    <!-- 主题预加载脚本，防止刷新时闪烁 -->
+    <script>
+        (function() {
+            // 立即从localStorage读取保存的主题
+            const savedTheme = localStorage.getItem('selectedTheme');
+            if (savedTheme && savedTheme !== 'default') {
+                // 如果是暗黑主题，立即应用暗黑主题的CSS变量
+                if (savedTheme === 'dark') {
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        :root {
+                            --color-primary: #2d3748;
+                            --color-primary-dark: #1a202c;
+                            --color-secondary: #4a5568;
+                            --color-secondary-dark: #2d3748;
+                            --color-accent: #1a365d;
+                            --color-accent-dark: #2c5282;
+                            --theme-bg-gradient: radial-gradient(circle at 20% 20%, var(--color-primary) 0%, transparent 50%), radial-gradient(circle at 80% 80%, var(--color-secondary) 0%, transparent 50%), radial-gradient(circle at 40% 60%, var(--color-primary-dark) 0%, transparent 50%), radial-gradient(circle at 70% 30%, var(--color-secondary-dark) 0%, transparent 50%), radial-gradient(circle at 30% 70%, var(--color-accent) 0%, transparent 50%), radial-gradient(circle at 60% 40%, var(--color-accent-dark) 0%, transparent 50%), linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 25%, var(--color-secondary) 50%, var(--color-secondary-dark) 75%, var(--color-accent) 100%);
+                            --theme-bg-overlay: radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.05) 1px, transparent 1px), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0.5px, transparent 0.5px), radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+                            --theme-bg-secondary: linear-gradient(135deg, #16213e 0%, #0f3460 50%, #1a1a2e 100%);
+                            --theme-card-bg: rgba(40, 40, 40, 0.8);
+                            --theme-card-bg-hover: rgba(60, 60, 60, 0.9);
+                            --theme-btn-gradient: linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%);
+                            --theme-btn-gradient-hover: linear-gradient(135deg, #4b5563 0%, #374151 50%, #1f2937 100%);
+                            --theme-border-gradient: linear-gradient(45deg, #5a6fd8, #6b4190, #e081e9, #e3456a, #3d9aec, #00e0ec);
+                            --theme-tag-bg: rgba(90, 111, 216, 0.15);
+                            --theme-tag-bg-hover: rgba(160, 200, 180, 0.8);
+                            --color-text-primary: #f0f0f0;
+              --color-text-secondary: #e0e0e0;
+              --color-text-muted: #d0d0d0;
+                            --color-text-light: #808080;
+                            --color-text-white: #ffffff;
+                            --color-text-black: #e0e0e0;
+                            --color-text-dark: #c0c0c0;
+                            --color-text-info: #7c8ef0;
+                            --color-text-success: #4caf50;
+                            --color-text-error: #f44336;
+                            --color-text-warning: #ff6b6b;
+                            --color-text-link: #64b5f6;
+                            --color-bg-white: rgba(40, 40, 40, 0.9);
+                            --color-bg-light: rgba(60, 60, 60, 0.9);
+                            --color-bg-success: rgba(76, 175, 80, 0.2);
+                            --color-bg-error: rgba(244, 67, 54, 0.2);
+                            --color-bg-info: rgba(90, 111, 216, 0.2);
+                            --color-border-success: rgba(76, 175, 80, 0.4);
+                            --color-border-error: rgba(244, 67, 54, 0.4);
+                            --color-border-info: rgba(90, 111, 216, 0.4);
+                            --color-success: #4caf50;
+                            --color-error: #f44336;
+                            --color-warning: #ff6b6b;
+                            --theme-tag-gradient-1: linear-gradient(135deg, rgba(144, 164, 247, 0.15), rgba(107, 65, 144, 0.15));
+                            --theme-tag-gradient-2: linear-gradient(135deg, rgba(224, 129, 233, 0.15), rgba(227, 69, 106, 0.15));
+                            --theme-tag-gradient-3: linear-gradient(135deg, rgba(61, 154, 236, 0.15), rgba(0, 224, 236, 0.15));
+                            --announcement-bg-dark: rgba(50, 50, 50, 0.8);
+                            --announcement-border-dark: rgba(90, 111, 216, 0.3);
+                            --announcement-title-color-dark: #f0f0f0;
+                            --announcement-content-color-dark: #e0e0e0;
+                            --relation-header-bg: rgba(40, 40, 40, 0.8);
+                            --relation-header-border: rgba(90, 111, 216, 0.3);
+                            --relation-graph-bg: rgba(30, 30, 30, 0.9);
+                            --relation-note-bg: rgba(50, 50, 50, 0.9);
+                            --relation-note-border: rgba(90, 111, 216, 0.4);
+                            --relation-note-color: #9ca3af;
+                            --relation-legend-text-color: #e0e0e0;
+                            --relation-preview-label-color: #e0e0e0;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+        })();
+    </script>
 </head>
 <body>
     <div class="container">
@@ -129,7 +258,7 @@
 
         <!-- Powered by 标识 -->
         <div class="powered-by">
-            <span>powered by TGW~<br>（感谢苏辰提供的聊天记录~）</span>
+            <span>powered by TGW~</span>
         </div>
     </div>
 
@@ -137,6 +266,11 @@
     <script src="echarts.min.js"></script>
     <script>
       (function(){
+        // 获取关系图预览标签颜色的主题变量
+        function getPreviewLabelColor() {
+          return getComputedStyle(document.documentElement).getPropertyValue('--relation-preview-label-color').trim() || '#2d3748';
+        }
+        
         async function loadData(){
           const res = await fetch(`assets/data/global_data/global_data.json?t=${Date.now()}`);
           if(!res.ok) throw new Error('关系数据加载失败');
@@ -232,7 +366,7 @@
                 categories: graph.categories,
                 roam: false,
                 draggable: false,
-                label: { show: true, color: '#2d3748', fontSize: 10 },
+                label: { show: true, color: getPreviewLabelColor(), fontSize: 10 },
                 edgeSymbol: ['none','none'],
                 emphasis: { disabled: true },
                 lineStyle: { curveness: 0.12, opacity: 0.35 },
@@ -241,16 +375,55 @@
             };
             chart.setOption(option);
             window.addEventListener('resize', ()=>{ chart.resize(); });
+            
+            // 将图表实例保存到全局，供主题切换时使用
+            window.relationPreviewChart = chart;
+            
           }catch(e){
             console.error(e);
             const box = document.getElementById('relationPreview');
-            if(box) box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#c53030;">预览加载失败</div>';
+            if(box) box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--color-text-warning);">预览加载失败</div>';
           }
         }
         if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+        
+        // 全局主题切换监听器，在主题系统加载后绑定
+        window.addEventListener('themeChanged', () => {
+          if (window.relationPreviewChart && window.getPreviewLabelColor) {
+            window.relationPreviewChart.setOption({
+              series: [{
+                label: { color: getPreviewLabelColor() }
+              }]
+            });
+          }
+        });
+        
+        // 将函数暴露到全局作用域
+        window.getPreviewLabelColor = getPreviewLabelColor;
       })();
     </script>
 
+    <!-- 主题切换系统 -->
+    <script src="theme-switcher.js?v=202508272235"></script>
+    <script src="theme-selector.js?v=202508272235"></script>
+    
+    <!-- 随机主题初始化 -->
+    <script>
+        // 页面加载完成后尝试应用随机主题
+        document.addEventListener('DOMContentLoaded', function() {
+            // 确保主题切换器已初始化
+            if (window.themeSwitcher) {
+                // 延迟执行，确保所有资源加载完成
+                setTimeout(() => {
+                    window.themeSwitcher.applyRandomTheme();
+                }, 100);
+            }
+        });
+    </script>
+    
+    <!-- 动态背景系统 -->
+    <script src="dynamic-background.js?v=202508272235"></script>
+    
     <!-- 引入配置文件 -->
     <script src="config.js?v=202508272235"></script>
 </body>

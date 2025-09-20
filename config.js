@@ -225,11 +225,11 @@ function showMessage(message) {
         right: 20px;
         background: rgba(90, 103, 216, 0.9);
         color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
+        padding: var(--spacing-md) var(--spacing-xl);
+        border-radius: var(--radius-sm);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         z-index: 10000;
-        font-size: 14px;
+        font-size: var(--font-size-sm);
         backdrop-filter: blur(10px);
         animation: slideIn 0.3s ease-out;
     `;
@@ -431,8 +431,8 @@ function initRandomGradients() {
             background: rgba(90, 103, 216, 0.9);
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 8px;
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: var(--radius-sm);
             cursor: pointer;
             z-index: 10000;
             backdrop-filter: blur(10px);
