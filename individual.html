@@ -467,7 +467,7 @@
             font-size: 1rem;
             background: rgba(255, 255, 255, var(--search-opacity));
             backdrop-filter: blur(var(--blur-amount));
-            color: var(--color-text-secondary);
+            color: var(--color-text-black);
             min-width: 180px;
             transition: var(--transition-normal);
             position: relative;
@@ -479,6 +479,7 @@
             border-color: rgba(102, 126, 234, 0.6);
             background: rgba(255, 255, 255, 0.7);
             box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+            color: var(--color-text-black);
         }
         
         #qq-input::placeholder {
@@ -1395,13 +1396,40 @@
             .period-buttons {
                 gap: 0.5rem;
                 max-width: 100%;
+                justify-content: flex-start;
+                overflow-x: auto;
+                padding: 0.5rem 0;
+                -webkit-overflow-scrolling: touch;
             }
             
             .period-btn {
                 padding: 0.6rem 0.8rem;
                 font-size: 0.8rem;
                 min-width: auto;
-                flex: 1;
+                width: auto;
+                flex: none;
+                flex-shrink: 0;
+                white-space: nowrap;
+                overflow: visible;
+                text-overflow: clip;
+                max-width: none;
+            }
+            
+            /* 在手机端禁用悬停光效和变换效果 */
+            .period-btn::before {
+                display: none;
+            }
+            
+            .period-btn:hover {
+                transform: none;
+                box-shadow: var(--glass-shadow);
+            }
+            
+            .period-btn.active:hover {
+                transform: translateY(-1px) scale(1.02);
+                box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3), 
+                            0 4px 16px rgba(102, 126, 234, 0.3), 
+                            inset 0 1px 0 rgba(255, 255, 255, 0.3);
             }
             
             .period-selector-label {
