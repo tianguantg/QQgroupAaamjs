@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light only">
     <title>AAa美甲师后援会 - 星引擎游戏组队聊天群</title>
     <link rel="stylesheet" href="style.css?v=202508272235">
     
@@ -142,6 +143,10 @@
             <div class="nav-content">
                 <div class="logo" id="navLogo">AAa美甲师后援会</div>
                 <div class="nav-buttons">
+                    <button class="nav-btn" onclick="window.location.href='quiz.html'">
+                        <span class="nav-btn-icon"></span>
+                        <span class="nav-btn-text">星趴小测验</span>
+                    </button>
                     <button class="nav-btn" onclick="window.location.href='individual.html'">
                         <span class="nav-btn-icon"></span>
                         <span class="nav-btn-text">个人数据分析</span>
@@ -258,7 +263,7 @@
 
         <!-- Powered by 标识 -->
         <div class="powered-by">
-            <span>powered by TGW~</span>
+            <span>TGW~</span>
         </div>
     </div>
 
@@ -413,10 +418,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             // 确保主题切换器已初始化
             if (window.themeSwitcher) {
-                // 延迟执行，确保所有资源加载完成
-                setTimeout(() => {
-                    window.themeSwitcher.applyRandomTheme();
-                }, 100);
+                // 不再自动应用随机主题，改为由主题选择器控制
+                console.log('主题切换器已加载，等待用户选择');
             }
         });
     </script>

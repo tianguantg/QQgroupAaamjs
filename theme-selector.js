@@ -88,14 +88,35 @@ class ThemeSelector {
         const optionsContainer = document.getElementById('theme-options');
         const allThemes = window.themeSwitcher.getAvailableThemes();
         const currentTheme = window.themeSwitcher.getCurrentTheme();
+        const isRandomMode = localStorage.getItem('randomThemeMode') === 'true';
+
+        // 添加随机主题选项
+        const randomOption = `
+            <div class="theme-option ${isRandomMode ? 'active' : ''}" 
+                 data-theme="random">
+                <div class="theme-preview">
+                    <div class="theme-preview-bg theme-preview-random"></div>
+                    <div class="theme-preview-card"></div>
+                </div>
+                <div class="theme-info">
+                    <h4>随机主题</h4>
+                    <p>每分钟自动切换随机主题</p>
+                </div>
+                <div class="theme-check">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20,6 9,17 4,12"/>
+                    </svg>
+                </div>
+            </div>
+        `;
 
         // 只显示基础主题（浅色主题和深色主题）
         const basicThemes = allThemes.filter(theme => 
             theme.key === 'default' || theme.key === 'dark'
         );
 
-        optionsContainer.innerHTML = basicThemes.map(theme => `
-            <div class="theme-option ${theme.key === currentTheme ? 'active' : ''}" 
+        const basicOptions = basicThemes.map(theme => `
+            <div class="theme-option ${theme.key === currentTheme && !isRandomMode ? 'active' : ''}" 
                  data-theme="${theme.key}">
                 <div class="theme-preview">
                     <div class="theme-preview-bg theme-preview-${theme.key}"></div>
@@ -112,6 +133,8 @@ class ThemeSelector {
                 </div>
             </div>
         `).join('');
+
+        optionsContainer.innerHTML = randomOption + basicOptions;
 
         // 添加主题预览样式
         this.addThemePreviewStyles();
@@ -198,7 +221,19 @@ class ThemeSelector {
      * 选择主题
      */
     selectTheme(themeName) {
-        window.themeSwitcher.switchTheme(themeName);
+        if (themeName === 'random') {
+            // 启用随机主题模式
+            localStorage.setItem('randomThemeMode', 'true');
+            window.themeSwitcher.startRandomThemeTimer();
+            // 立即应用一个随机主题
+            window.themeSwitcher.applyRandomTheme();
+        } else {
+            // 禁用随机主题模式
+            localStorage.setItem('randomThemeMode', 'false');
+            window.themeSwitcher.stopRandomThemeTimer();
+            // 应用选择的主题
+            window.themeSwitcher.switchTheme(themeName);
+        }
         this.closePanel();
     }
 
@@ -482,6 +517,24 @@ class ThemeSelector {
     addThemePreviewStyles() {
         const style = document.createElement('style');
         style.textContent = `
+            .theme-preview-random {
+                background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%);
+                position: relative;
+                animation: randomThemeGradient 3s ease-in-out infinite;
+            }
+
+            @keyframes randomThemeGradient {
+                0%, 100% {
+                    background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 25%, #45b7d1 50%, #96ceb4 75%, #feca57 100%);
+                }
+                33% {
+                    background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 25%, #ffd3a5 50%, #fd9853 75%, #ff6b6b 100%);
+                }
+                66% {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+                }
+            }
+
             .theme-preview-default {
                 background: linear-gradient(135deg, #8b9cf4 0%, #a8b5f7 50%, #f5a7fb 100%);
             }

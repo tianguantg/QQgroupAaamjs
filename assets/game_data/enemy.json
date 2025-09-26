@@ -1,0 +1,1229 @@
+{
+  "characters": [
+    {
+      "name": "海盗精锐",
+      "title": "海盗精锐",
+      "map_of_appearance": "星趴·梦想号",
+      "star_coin_quantity": 15,
+      "attributes": {
+        "normal": {
+          "attack": 4,
+          "defense": 2,
+          "health": 20
+        },
+        "hard": {
+          "attack": 4,
+          "defense": 2,
+          "health": 27
+        },
+        "nightmare": {
+          "attack": 4,
+          "defense": 2,
+          "health": 33
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 2,
+          "health": 33
+        },
+        "extreme": {
+          "attack": 4,
+          "defense": 2,
+          "health": 35
+        }
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "海盗精锐会因为进度条的推进刷新在场上。",
+          "海盗精锐会主动攻击并且会反击。",
+          "海盗精锐会周期性的使用技能召唤海盗鲨鱼"
+        ]
+      },
+      "active_skill": {
+        "name": "召唤鲨鱼",
+        "description": "每 3 回台，在附近召唤一只鲨鱼海盗"
+      },
+      "passive_skill": {
+        "name": "愤怒",
+        "description": "被挑战后，自身攻击 +1 ，最多叠加 3 次。"
+      },
+      "biography": "海盗精锐是力量的化身。但是除了勇猛强悍外好像智商也不是很高的样子，不过最好不要去主动招惹它！"
+    },
+    {
+      "name": "小偷",
+      "title": "小浣熊",
+      "map_of_appearance": "星趴·梦想号 , 御魂庆典 , 水乡古镇 , 魔法学院 , 龙宫游乐园",
+      "star_coin_quantity": 5,
+      "attributes": {
+        "normal": {
+          "attack": 6,
+          "defense": 0,
+          "health": 0
+        },
+        "hard": {
+          "attack": 6,
+          "defense": 0,
+          "health": 0
+        },
+        "nightmare": {
+          "attack": 6,
+          "defense": 0,
+          "health": 0
+        },
+        "insane": {
+          "attack": 6,
+          "defense": 0,
+          "health": 0
+        },
+        "extreme": {
+          "attack": 6,
+          "defense": 0,
+          "health": 0
+        }
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "小偷会偷取经过角色的星币，最多4枚。",
+          "小偷偷取的星币会累计在身上，当被玩家击倒的时候全部的星币都会给到击倒小偷的玩家。",
+          "小偷刷新时自身携带4枚星币。",
+          "小偷不会主动攻击，但是玩家可以攻击小偷，并且小偷被攻击后不会反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skills": [
+        {
+          "name": "偷窃",
+          "description": "每次路过角色时，偷取 4 星币，不挑战玩家。"
+        },
+        {
+          "name": "健步如飞",
+          "description": "6 格内没有角色时，移动点数 +3"
+        }
+      ],
+      "biography": "对于小浣熊而言，星币并不是什么非常有价值的东西，只是小浣熊对亮晶晶的东西很有占有欲罢了。"
+    },
+    {
+      "name": "天王寺雅央",
+      "title": "海盗王嘎呜",
+      "map_of_appearance": "星趴·梦想号",
+      "star_coin_quantity": null,
+      "attributes": {
+        "normal": {
+          "attack": 5,
+          "defense": 6,
+          "health": 88
+        },
+        "hard": {
+          "attack": 6,
+          "defense": 6,
+          "health": 99
+        },
+        "nightmare": {
+          "attack": 6,
+          "defense": 6,
+          "health": 111
+        },
+        "insane": {
+          "attack": 7,
+          "defense": 6,
+          "health": 122
+        },
+        "extreme": {
+          "attack": 7,
+          "defense": 6,
+          "health": 155
+        }
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "游戏开始海盗嘎鸣会刷新在场上，以休眠的方式，不会移动不会主动攻击。",
+          "海盗嘎鸣会因为进度条的推进而苏醒，苏醒后会主动追击玩家并攻击。",
+          "完成进度任务可以削弱嘎鸣的防御。"
+        ]
+      },
+      "active_skill": {
+        "name": "火枪打击",
+        "description": "每 3 回合对血量最多的角色造成 4 点伤害。"
+      },
+      "passive_skill": null,
+      "biography": "天王寺雅央\n\n生日：5月6日\n\n喜欢的食物：袋装薯片\n\n恋的房东兼游戏搭子，虽然姓天王寺但是恋也并不知晓她的身世。雅央掌管着一栋巨大的公寓和一座浴场。恋和雅央很早之前就认识，两人经常一起玩游戏，所以她们既是对手又是伙伴。雅央不怎么出门，很多人只见过她穿着奇怪睡衣的样子，但听恋说雅央身材非常了得。\n\n之所以变成游戏里怪兽的样子，纯粹是因为恋的恶趣味以及打赌输了的结果。"
+    },
+    {
+      "name": "冰冷蓝灵",
+      "title": "冰冷蓝灵",
+      "map_of_appearance": "御魂庆典",
+      "star_coin_quantity": 6,
+      "attributes": {
+        "normal": {
+          "attack": 4,
+          "defense": 0,
+          "health": 10
+        },
+        "hard": {
+          "attack": 4,
+          "defense": 0,
+          "health": 10
+        },
+        "nightmare": {
+          "attack": 5,
+          "defense": 0,
+          "health": 11
+        },
+        "insane": {
+          "attack": 5,
+          "defense": 0,
+          "health": 11
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "无法反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skill": null,
+      "biography": "四处游荡的蓝色小幽灵。"
+    },
+    {
+      "name": "狂躁红灵",
+      "title": "狂躁红灵",
+      "map_of_appearance": "御魂庆典",
+      "star_coin_quantity": 8,
+      "attributes": {
+        "normal": {
+          "attack": 4,
+          "defense": 4,
+          "health": 5
+        },
+        "hard": {
+          "attack": 5,
+          "defense": 5,
+          "health": 6
+        },
+        "nightmare": {
+          "attack": 5,
+          "defense": 5,
+          "health": 6
+        },
+        "insane": {
+          "attack": 6,
+          "defense": 6,
+          "health": 6
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "不会主动攻击。",
+          "被攻击会反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skill": {
+        "name": "崩解",
+        "description": "移动固定为 3 点，移动过程中如果碰到玩家，则立刻自爆，对周围3格内的玩家角色施加中毒。（每回合失去 1 Hp，持续 3 回合）。"
+      },
+      "biography": "脾气暴躁的红色小幽灵。甚至快把自己气炸了！"
+    },
+    {
+      "name": "刀剑灵体",
+      "title": "刀剑灵体",
+      "map_of_appearance": "御魂庆典",
+      "star_coin_quantity": 12,
+      "attributes": {
+        "normal": {
+          "attack": 4,
+          "defense": 0,
+          "health": 20
+        },
+        "hard": {
+          "attack": 4,
+          "defense": 0,
+          "health": 24
+        },
+        "nightmare": {
+          "attack": 5,
+          "defense": 1,
+          "health": 25
+        },
+        "insane": {
+          "attack": 5,
+          "defense": 2,
+          "health": 29
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "无法反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skills": [
+        {
+          "name": "灵体辅助(刀剑)",
+          "description": "场上每存在一个刀剑灵体，为雅央提供 +2 防御力，玩家每摧毁一个，BOSS失去 10% 的最大生命值。"
+        },
+        {
+          "name": "冰冷触摸",
+          "description": "攻击命中后，施加诅咒。（防御力 -2 ，持续 2 回合）"
+        }
+      ],
+      "biography": "刀剑转化出的灵体，到底是剑上有了灵魂还是原主人的灵魂裹挟了武器就不得而知了。"
+    },
+    {
+      "name": "长戟灵体",
+      "title": "长戟灵体",
+      "map_of_appearance": "御魂庆典",
+      "star_coin_quantity": 12,
+      "attributes": {
+        "normal": {
+          "attack": 5,
+          "defense": 4,
+          "health": 10
+        },
+        "hard": {
+          "attack": 4,
+          "defense": 5,
+          "health": 12
+        },
+        "nightmare": {
+          "attack": 6,
+          "defense": 7,
+          "health": 13
+        },
+        "insane": {
+          "attack": 7,
+          "defense": 8,
+          "health": 15
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "不会主动攻击。",
+          "被攻击会反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "毒性攻击",
+        "description": "对 7 格范围内最高生命值的角色发动攻击：造成 2 点伤害，并附带中毒。（每回合失去 1 Hp，持续 3 回合）"
+      },
+      "passive_skill": {
+        "name": "灵体辅助力 (长戟)",
+        "description": "场上每存在一个长戟灵体，为雅央提供 +2 攻击力，玩家每摧毁一个，雅央失去 10% 的最大生命值。"
+      },
+      "biography": "长戟转化出的灵体，与刀剑灵体相同，只是类型略有区别。"
+    },
+    {
+      "name": "天王寺雅央",
+      "title": "天王寺雅央",
+      "map_of_appearance": "御魂庆典",
+      "star_coin_quantity": null,
+      "attributes": {
+        "normal": {
+          "attack": 3,
+          "defense": 1,
+          "health": 120
+        },
+        "hard": {
+          "attack": 4,
+          "defense": 1,
+          "health": 150
+        },
+        "nightmare": {
+          "attack": 4,
+          "defense": 1,
+          "health": 180
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 1,
+          "health": 240
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "游戏开始时刷新在场上。",
+          "可以反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "灵体降临",
+        "description": "随机召唤一只刀剑或长戟灵体。"
+      },
+      "passive_skill": {
+        "name": "万灵合一",
+        "description": "场上每存在一个长戟灵体，为雅央提供 +2 攻击力。场上每存在一个刀剑灵体，为雅央提供 +2 防御力。玩家每摧毁一个灵体，雅央失去 10% 的最大生命值。"
+      },
+      "biography": "天王寺雅央\n\n生日：5月6日\n\n喜欢的食物：袋装薯片\n\n恋的房东兼游戏搭子，虽然姓天王寺但是恋也并不知晓她的身世。雅央掌管着一栋巨大的公寓和一座浴场。恋和雅央很早之前就认识，两人经常一起玩游戏，所以她们既是对手又是伙伴。雅央不怎么出门，很多人只见过她穿着奇怪睡衣的样子，但听恋说雅央身材非常了得。\n\n之所以变成游戏里怪兽的样子，纯粹是因为恋的恶趣味以及打赌输了的结果。"
+    },
+    {
+      "name": "天王寺雅央",
+      "title": "舞狮嘎呜",
+      "map_of_appearance": "水乡古镇",
+      "star_coin_quantity": null,
+      "attributes": {
+        "normal": {
+          "attack": 3,
+          "defense": 0,
+          "health": 100
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 0,
+          "health": 135
+        },
+        "nightmare": {
+          "attack": 4,
+          "defense": 1,
+          "health": 160
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 1,
+          "health": 188
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "游戏开始一段时间后刷新在场上。",
+          "会主动攻击且被攻击会反击。",
+          "与指挥平台共享生命值。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skill": {
+        "name": "越战越勇",
+        "description": "每次攻击命中，增加自身 2 点攻击力。"
+      },
+      "biography": "天王寺雅央\n\n生日：5月6日\n\n喜欢的食物：袋装薯片\n\n恋的房东兼游戏搭子，虽然姓天王寺但是恋也并不知晓她的身世。雅央掌管着一栋巨大的公寓和一座浴场。恋和雅央很早之前就认识，两人经常一起玩游戏，所以她们既是对手又是伙伴。雅央不怎么出门，很多人只见过她穿着奇怪睡衣的样子，但听恋说雅央身材非常了得。\n\n之所以变成游戏里怪兽的样子，纯粹是因为恋的恶趣味以及打赌输了的结果。"
+    },
+    {
+      "name": "指挥平台",
+      "title": "指挥平台",
+      "map_of_appearance": "水乡古镇",
+      "star_coin_quantity": null,
+      "attributes": {
+        "normal": {
+          "attack": 0,
+          "defense": 0,
+          "health": 100
+        },
+        "hard": {
+          "attack": 0,
+          "defense": 0,
+          "health": 135
+        },
+        "nightmare": {
+          "attack": 0,
+          "defense": 0,
+          "health": 160
+        },
+        "insane": {
+          "attack": 0,
+          "defense": 0,
+          "health": 188
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "游戏开始一段时间后同嘎鸣一同出场。",
+          "不会触发战斗，但可以被技能和卡牌攻击。",
+          "与舞狮嘎鸣共享生命值。"
+        ]
+      },
+      "active_skill": {
+        "name": "过节就是要放烟花！",
+        "description": "召唤一只爆竹呱呱。"
+      },
+      "passive_skill": {
+        "name": "脆弱中枢",
+        "description": "无法被挑战,每次受到伤害,本轮受到伤害 +1 。"
+      },
+      "biography": "氛围组的中枢神经，协调各个部门合理运作！"
+    },
+    {
+      "name": "氛围机器人",
+      "title": "氛围机器人",
+      "map_of_appearance": "水乡古镇",
+      "star_coin_quantity": 15,
+      "attributes": {
+        "normal": {
+          "attack": 3,
+          "defense": 0,
+          "health": 20
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 1,
+          "health": 22
+        },
+        "nightmare": {
+          "attack": 4,
+          "defense": 1,
+          "health": 23
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 1,
+          "health": 25
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "会主动攻击。",
+          "可以反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "炒热气氛",
+        "description": "附近 4 格内的所有怪物，增加 1 点攻击力与防御力"
+      },
+      "passive_skill": null,
+      "biography": "加强活动气氛的机器人！越是吵吵闹闹越好！"
+    },
+    {
+      "name": "爆竹呱呱",
+      "title": "爆竹呱呱",
+      "map_of_appearance": "水乡古镇",
+      "star_coin_quantity": 6,
+      "attributes": {
+        "normal": {
+          "attack": 1,
+          "defense": 1,
+          "health": 6
+        },
+        "hard": {
+          "attack": 1,
+          "defense": 1,
+          "health": 7
+        },
+        "nightmare": {
+          "attack": 1,
+          "defense": 2,
+          "health": 8
+        },
+        "insane": {
+          "attack": 1,
+          "defense": 2,
+          "health": 8
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "不会主动攻击。",
+          "无法反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "不安全燃放",
+        "description": "对 4 格范围内血量最高的角色造成自身攻击力的伤害。"
+      },
+      "passive_skill": {
+        "name": "未燃放爆竹",
+        "description": "被击倒时，给予击倒者一张【高升炮】。"
+      },
+      "biography": "噼里啪啦的不停的放爆竹，很有过节的气氛！"
+    },
+    {
+      "name": "机械蛇龙",
+      "title": "机械蛇龙",
+      "map_of_appearance": "水乡古镇",
+      "star_coin_quantity": 9,
+      "attributes": {
+        "normal": {
+          "attack": 0,
+          "defense": 0,
+          "health": 8
+        },
+        "hard": {
+          "attack": 0,
+          "defense": 0,
+          "health": 9
+        },
+        "nightmare": {
+          "attack": 0,
+          "defense": 0,
+          "health": 9
+        },
+        "insane": {
+          "attack": 0,
+          "defense": 0,
+          "health": 11
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "不会触发战斗。",
+          "会随地图事件刷新。"
+        ]
+      },
+      "active_skill": {
+        "name": "守护宝珠",
+        "description": "使 5 格范围内的随机怪物防御力 +9 ，直到下次受到伤害。"
+      },
+      "passive_skill": {
+        "name": "腾飞",
+        "description": "无法被挑战，被击倒时，给予击倒者一张【高升炮】。"
+      },
+      "biography": "头顶有一颗大宝珠，说不定可以给你带来好运？"
+    },
+    {
+      "name": "天王寺雅央",
+      "title": "学院安全官",
+      "map_of_appearance": "魔法学院",
+      "star_coin_quantity": null,
+      "attributes": {
+        "normal": {
+          "attack": 2,
+          "defense": 1,
+          "health": 88
+        },
+        "hard": {
+          "attack": 2,
+          "defense": 1,
+          "health": 99
+        },
+        "nightmare": {
+          "attack": 3,
+          "defense": 2,
+          "health": 120
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 2,
+          "health": 140
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "会主动攻击且被攻击会反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "指示",
+        "description": "距离雅央最近的角色获得 1 张【是他干的】，如果生命值低于 50% ，则选择两名角色。"
+      },
+      "passive_skill": {
+        "name": "怒火",
+        "description": "场上其他角色每打出 3 张【是他干的】，雅央永久增加 1 点攻击力并召唤一个果冻护卫。雅央攻击 【问题学生】 时，额外增加 2 点攻击力，然后移除目标的 【问题学生】 效果。"
+      },
+      "biography": "天王寺雅央\n\n生日：5月6日\n\n喜欢的食物：袋装薯片\n\n光礼大学是蓝海晴的母校，大学的魔法学院久负盛名。其实这里与三神教也颇有渊源，三神教给光礼大学无偿捐赠过很多古老的魔法卷轴以及材料，因此三神教也算是魔法学院的赞助者之一。\n\n雅央在某个时间段会被家族派去参加学院的一些“扫除”工作。虽然她每次都不情不愿的，但也是她特殊体质少数能派的上用场的时候。"
+    },
+    {
+      "name": "天王寺雅央",
+      "title": "代理院长",
+      "map_of_appearance": "魔法学院",
+      "star_coin_quantity": null,
+      "attributes": {
+        "normal": {
+          "attack": 2,
+          "defense": 2,
+          "health": 99
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 2,
+          "health": 120
+        },
+        "nightmare": {
+          "attack": 3,
+          "defense": 2,
+          "health": 160
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 2,
+          "health": 200
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "会主动攻击且被攻击会反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "下午茶时间",
+        "description": "5 格内存在魔法茶壶，则吸收茶壶，永久增加 1 点攻击力和防御力。 5 格内不存在茶壶则召唤1个魔法茶壶。"
+      },
+      "passive_skill": {
+        "name": "糖分缺失",
+        "description": "如果本回合没有吸收茶壶，回合结束时失去 10% 的最大生命。"
+      },
+      "biography": "天王寺雅央\n\n生日：5月6日\n\n喜欢的食物：袋装薯片\n\n恋的房东兼游戏搭子，虽然姓天王寺但是恋也并不知晓她的身世。雅央掌管着一栋巨大的公寓和一座浴场。恋和雅央很早之前就认识，两人经常一起玩游戏，所以她们既是对手又是伙伴。雅央不怎么出门，很多人只见过她穿着奇怪睡衣的样子，但听恋说雅央身材非常了得。\n\n之所以变成游戏里怪兽的样子，纯粹是因为恋的恶趣味以及打赌输了的结果。"
+    },
+    {
+      "name": "果冻战士",
+      "title": "果冻战士",
+      "map_of_appearance": "魔法学院",
+      "star_coin_quantity": 6,
+      "attributes": {
+        "normal": {
+          "attack": 2,
+          "defense": 6,
+          "health": 32
+        },
+        "hard": {
+          "attack": 2,
+          "defense": 6,
+          "health": 36
+        },
+        "nightmare": {
+          "attack": 3,
+          "defense": 8,
+          "health": 38
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 10,
+          "health": 40
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "会主动攻击且被攻击会反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skill": {
+        "name": "不稳定护甲",
+        "description": "受到伤害时防御力永久 -2 （最低降到0）；回合内未受到伤害时，则永久 +1 攻击力。"
+      },
+      "biography": "虽然是果冻制成的，但盔甲和大斧头可是实实在在的真家伙。"
+    },
+    {
+      "name": "果冻护卫",
+      "title": "果冻护卫",
+      "map_of_appearance": "魔法学院",
+      "star_coin_quantity": 9,
+      "attributes": {
+        "normal": {
+          "attack": 3,
+          "defense": 4,
+          "health": 14
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 4,
+          "health": 16
+        },
+        "nightmare": {
+          "attack": 4,
+          "defense": 4,
+          "health": 18
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 4,
+          "health": 20
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "会主动攻击且被攻击会反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skill": {
+        "name": "脆弱护甲",
+        "description": "受到伤害时防御力永久 -2 （最低降到0）。"
+      },
+      "biography": "随时都保护着召唤者的安全，忠实的护卫！"
+    },
+    {
+      "name": "果冻巫师",
+      "title": "果冻巫师",
+      "map_of_appearance": "魔法学院",
+      "star_coin_quantity": 8,
+      "attributes": {
+        "normal": {
+          "attack": 2,
+          "defense": 1,
+          "health": 15
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 1,
+          "health": 16
+        },
+        "nightmare": {
+          "attack": 3,
+          "defense": 1,
+          "health": 17
+        },
+        "insane": {
+          "attack": 3,
+          "defense": 1,
+          "health": 21
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "会主动攻击。",
+          "无法反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "远程飞弹",
+        "description": "对 5 格范围外最高生命的角色造成 3 点伤害。"
+      },
+      "passive_skill": null,
+      "biography": "别看他走路晃悠悠的，吃它一发魔法可不是闹着玩的。"
+    },
+    {
+      "name": "魔法茶壶",
+      "title": "魔法茶壶",
+      "map_of_appearance": "魔法学院",
+      "star_coin_quantity": 6,
+      "attributes": {
+        "normal": {
+          "attack": 3,
+          "defense": 1,
+          "health": 10
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 1,
+          "health": 11
+        },
+        "nightmare": {
+          "attack": 4,
+          "defense": 1,
+          "health": 11
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 1,
+          "health": 12
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "会主动攻击。",
+          "无法反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skill": {
+        "name": "热茶饮品",
+        "description": "当角色击倒魔法茶壶时回复 2 点生命值。"
+      },
+      "biography": "生气的时候会咕嘟咕嘟冒泡，那可是开水！"
+    },
+    {
+      "name": "变异茶壶",
+      "title": "变异茶壶",
+      "map_of_appearance": "魔法学院",
+      "star_coin_quantity": 8,
+      "attributes": {
+        "normal": {
+          "attack": 4,
+          "defense": 2,
+          "health": 6
+        },
+        "hard": {
+          "attack": 5,
+          "defense": 2,
+          "health": 7
+        },
+        "nightmare": {
+          "attack": 6,
+          "defense": 3,
+          "health": 7
+        },
+        "insane": {
+          "attack": 6,
+          "defense": 3,
+          "health": 8
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "会主动攻击。",
+          "无法反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skill": {
+        "name": "变质的饮品",
+        "description": "当角色击倒变异茶壶时抽取 1 张卡牌。雅央吸取茶壶时无法获得增益。"
+      },
+      "biography": "放的时间太长了以至于里面的饮品都变质了！"
+    },
+    {
+      "name": "海王鲨",
+      "title": "海王鲨",
+      "map_of_appearance": "星趴·梦想号",
+      "star_coin_quantity": 12,
+      "attributes": {
+        "normal": {
+          "attack": null,
+          "defense": null,
+          "health": null
+        },
+        "hard": null,
+        "nightmare": null,
+        "insane": {
+          "attack": 5,
+          "defense": 2,
+          "health": 22
+        },
+        "extreme": {
+          "attack": 6,
+          "defense": 2,
+          "health": 44
+        }
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "会主动攻击。。",
+          "无法反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "海王祝福",
+        "description": "使1个未被强化的怪物攻击力 +1 ，防御力 +1 。"
+      },
+      "passive_skill": null,
+      "biography": "啥都是白捡来的，包括这个奇怪的潜水盔！"
+    },
+    {
+      "name": "天川真梦梓",
+      "title": "天川真梦梓",
+      "map_of_appearance": "龙宫游乐园",
+      "star_coin_quantity": null,
+      "attributes": {
+        "normal": {
+          "attack": 4,
+          "defense": 1,
+          "health": 90
+        },
+        "hard": {
+          "attack": 4,
+          "defense": 1,
+          "health": 99
+        },
+        "nightmare": {
+          "attack": 5,
+          "defense": 2,
+          "health": 120
+        },
+        "insane": {
+          "attack": 6,
+          "defense": 2,
+          "health": 150
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "会主动攻击。",
+          "可以反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "连锁反应",
+        "description": "5 格范围内的所有角色丢弃一张效果牌，如果手牌少于 4 张，造成 3 点伤害。"
+      },
+      "passive_skill": {
+        "name": "湖沼之王",
+        "description": "受到伤害时本轮获得 1 层【逆鳞】，每层 +2 点攻击力，并使受到伤害降低 2 ；如果单次受到大于 20 点伤害，则移除所有层数。【逆鳞】移除时本轮无法施放主动技能。"
+      },
+      "biography": "天川真梦梓\n\n龙崎美咲分家家主的女儿，从小就受到家族的熏陶，立志成为一名可以独当一面的女性。但毕竟年龄尚小，有些时候的急躁也让自己做出过一些出格的行为。为人小心谨慎，做事一丝不苟。小姑是她最亲密的人，但是最近不知为何总是躲着小姑，像是有什么心里事。"
+    },
+    {
+      "name": "天川苍鲤",
+      "title": "天川苍鲤",
+      "map_of_appearance": "龙宫游乐园",
+      "star_coin_quantity": null,
+      "attributes": {
+        "normal": {
+          "attack": 1,
+          "defense": 1,
+          "health": 80
+        },
+        "hard": {
+          "attack": 2,
+          "defense": 2,
+          "health": 90
+        },
+        "nightmare": {
+          "attack": 3,
+          "defense": 3,
+          "health": 110
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 4,
+          "health": 135
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "会主动攻击。",
+          "可以反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "召唤眷属",
+        "description": "召唤金小鱼。"
+      },
+      "passive_skill": {
+        "name": "川流之主",
+        "description": "反击时，获得 2 层【金鳞】，每层增加 1 点攻击和防御。"
+      },
+      "biography": "天川苍鲤\n\n龙崎美咲分家家主的妹妹，真梦梓的小姑，是真正意义上看着真梦梓长大的人。一直都很喜欢这个小侄女。为人大大咧咧，一点也没有继承天川家族那种古板的性格。苍鲤本人对家族的事情管理的不是很多，自从大学毕业开了个小酒吧之后就没怎么管理过家事。不过知道侄女成为分家法定的继承人之后也是给予了很多的帮助。"
+    },
+    {
+      "name": "蟹布罗",
+      "title": "蟹布罗",
+      "map_of_appearance": "龙宫游乐园",
+      "star_coin_quantity": 6,
+      "attributes": {
+        "normal": {
+          "attack": 2,
+          "defense": 1,
+          "health": 7
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 1,
+          "health": 8
+        },
+        "nightmare": {
+          "attack": 3,
+          "defense": 2,
+          "health": 8
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 2,
+          "health": 9
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "会主动攻击。",
+          "无法反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skill": {
+        "name": "逆势而上",
+        "description": "受到伤害后，攻击力永久 +1 。"
+      },
+      "biography": "其实是个工作人员客串的消防员。"
+    },
+    {
+      "name": "虾布罗",
+      "title": "虾布罗",
+      "map_of_appearance": "龙宫游乐园",
+      "star_coin_quantity": 8,
+      "attributes": {
+        "normal": {
+          "attack": 3,
+          "defense": 1,
+          "health": 18
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 2,
+          "health": 20
+        },
+        "nightmare": {
+          "attack": 4,
+          "defense": 2,
+          "health": 24
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 2,
+          "health": 26
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "会主动攻击且被攻击会反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "碾压打击",
+        "description": "对手牌数低于 4 的角色，攻击力 +3 。"
+      },
+      "passive_skill": null,
+      "biography": "其实就是个群众演员。"
+    },
+    {
+      "name": "金小鱼",
+      "title": "金小鱼",
+      "map_of_appearance": "龙宫游乐园",
+      "star_coin_quantity": 5,
+      "attributes": {
+        "normal": {
+          "attack": 2,
+          "defense": 0,
+          "health": 6
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 0,
+          "health": 7
+        },
+        "nightmare": {
+          "attack": 5,
+          "defense": 0,
+          "health": 8
+        },
+        "insane": {
+          "attack": 6,
+          "defense": 0,
+          "health": 11
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "会主动攻击。",
+          "可以反击。",
+          "会闪避。"
+        ]
+      },
+      "active_skill": {
+        "name": "眷族支援",
+        "description": "为天川苍鲤施加 1 层【金鳞】。"
+      },
+      "passive_skill": null,
+      "biography": "朋友的表哥的舅舅的外甥的女朋友。"
+    },
+    {
+      "name": "大嗓门",
+      "title": "大嗓门",
+      "map_of_appearance": "龙宫游乐园",
+      "star_coin_quantity": 8,
+      "attributes": {
+        "normal": {
+          "attack": 3,
+          "defense": 0,
+          "health": 15
+        },
+        "hard": {
+          "attack": 3,
+          "defense": 0,
+          "health": 16
+        },
+        "nightmare": {
+          "attack": 4,
+          "defense": 1,
+          "health": 20
+        },
+        "insane": {
+          "attack": 4,
+          "defense": 1,
+          "health": 24
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": false,
+        "description": [
+          "无法反击。"
+        ]
+      },
+      "active_skill": {
+        "name": "尖刺风暴",
+        "description": "对 4 格内所有角色造成 2 点伤害。"
+      },
+      "passive_skill": {
+        "name": "我格挡呢!",
+        "description": "如果练家子被击倒，则攻击力 +2 ，防御力 +2 并可以进行反击。"
+      },
+      "biography": "只是指挥秩序的大哥。"
+    },
+    {
+      "name": "练家子",
+      "title": "练家子",
+      "map_of_appearance": "龙宫游乐园",
+      "star_coin_quantity": 8,
+      "attributes": {
+        "normal": {
+          "attack": 3,
+          "defense": 3,
+          "health": 12
+        },
+        "hard": {
+          "attack": 4,
+          "defense": 4,
+          "health": 13
+        },
+        "nightmare": {
+          "attack": 5,
+          "defense": 4,
+          "health": 15
+        },
+        "insane": {
+          "attack": 5,
+          "defense": 5,
+          "health": 16
+        },
+        "extreme": null
+      },
+      "game_mechanics": {
+        "can_counter": true,
+        "description": [
+          "不会主动攻击。",
+          "可以反击。"
+        ]
+      },
+      "active_skill": null,
+      "passive_skill": {
+        "name": "我兄弟呢!",
+        "description": "如果大嗓门被击倒，则攻击力 +3 并开始移动。"
+      },
+      "biography": "指挥秩序大哥的老弟。"
+    }
+  ]
+}

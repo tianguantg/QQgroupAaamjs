@@ -1,0 +1,86 @@
+[
+  {
+    "name": "疾走",
+    "description": "很急，所有角色下一次的移动骰出2个骰子。",
+    "image_path": "images/events/疾走.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "食品安全",
+    "description": "外卖有问题，所有角色受到1点伤害。持续3回合。",
+    "image_path": "images/events/食品安全.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "天使降临",
+    "description": "所有角色回复2点生命。",
+    "image_path": "images/events/天使降临.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "天崩地裂",
+    "description": "噪音太大震耳欲聋，所有角色受到2点伤害。",
+    "image_path": "images/events/天崩地裂.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "手牌抹X",
+    "description": "所有角色丢弃1张手牌。",
+    "image_path": "images/events/手牌抹X.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "商店大酬宾",
+    "description": "商店大活动，刷出的卡牌数量+2。持续3轮次。",
+    "image_path": "images/events/商店大酬宾.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "拥挤通道",
+    "description": "假期游客暴涨，所有角色传送到彼此相连的随机的4个格子上。",
+    "image_path": "images/events/拥挤通道.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "天降之物",
+    "description": "天上掉下礼物，所有角色获得3星币和1张卡牌。",
+    "image_path": "images/events/天降之物.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "战斗，爽！",
+    "description": "所有角色获得1张牌：攻击（特大）",
+    "image_path": "images/events/战斗，爽！.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "雷暴将至",
+    "description": "进度条+1，所有人获得一张卡牌",
+    "image_path": "images/events/雷暴将至.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "红温警告",
+    "description": "所有角色的下次攻击力+5",
+    "image_path": "images/events/红温警告.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "小浣熊繁殖季",
+    "description": "随机地块生成2只小浣熊",
+    "image_path": "images/events/小浣熊繁殖季.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "海盗偷袭",
+    "description": "随机地块生成2只鲨鱼海盗",
+    "image_path": "images/events/海盗偷袭.png",
+    "map_exclusive": "龙宫游乐园,梦想号"
+  },
+  {
+    "name": "天降神兵",
+    "description": "进度条-1",
+    "image_path": "images/events/天降神兵.png",
+    "map_exclusive": null
+  }
+]

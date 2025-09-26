@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light only">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>星趴小测验 - AAa美甲师后援会</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* 字体定义 */
+    @font-face {
+      font-family: 'Blippo';
+      src: url('assets/fonts/Blippo.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    
+    /* 背景固定样式 */
+    body {
+      background: var(--theme-bg-gradient);
+      background-size: 100% 100%;
+      background-attachment: fixed;
+    }
+    
+    /* 移动端背景优化 */
+    @media (max-width: 768px) {
+      body {
+        background: var(--theme-bg-gradient);
+        background-size: 100% 100%;
+        background-attachment: scroll; /* 移动端使用scroll避免性能问题 */
+      }
+    }
+    
+    /* 页面特定样式，尽量复用现主题变量 */
+    .quiz-container { padding: 24px 0 80px; }
+    .quiz-header { 
+      display: flex; 
+      flex-direction: column;
+      align-items: center; 
+      text-align: center;
+    }
+    .quiz-controls { 
+      display: flex; 
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+    
+    /* 难度按钮样式 */
+    .difficulty-buttons {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      text-align: center;
+    }
+    .difficulty-btn {
+      margin: 0;
+      min-width: 200px;
+      text-align: center;
+    }
+    
+    .difficulty-btn .nav-btn-text {
+      text-align: center;
+      width: 100%;
+      display: block;
+    }
+    
+    /* 主流做题界面布局 */
+    .quiz-layout { 
+      max-width: 800px; 
+      margin: 0 auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 32px; 
+    }
+    
+    /* 题目区域样式 */
+    .question-section {
+      text-align: center;
+    }
+    .question-area { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      gap: 16px; 
+      padding: 24px; 
+      background: var(--color-bg-white, rgba(255,255,255,0.9));
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .quiz-card-image { 
+      width: 280px; 
+      height: 380px; 
+      object-fit: cover; 
+      border-radius: 12px; 
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25); 
+    }
+    .question-text { 
+      color: var(--color-text-primary, #111); 
+      font-size: 18px; 
+      line-height: 1.6; 
+      text-align: left; 
+      font-weight: 500;
+      max-width: 600px;
+    }
+    
+    /* 选项区域样式 */
+    .options-section {
+      width: 100%;
+    }
+    .options-list { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 12px; 
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .quiz-option { 
+      width: 100%; 
+      padding: 16px 20px; 
+      border-radius: 12px; 
+      border: 2px solid var(--color-bg-light, rgba(0,0,0,0.1)); 
+      background: var(--color-bg-white, rgba(255,255,255,0.9)); 
+      color: var(--color-text-primary, #111); 
+      cursor: pointer; 
+      transition: all .3s ease; 
+      text-align: left; 
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      min-height: 56px;
+    }
+    .quiz-option:hover { 
+      transform: translateY(-2px); 
+      background: var(--color-bg-light, rgba(255,255,255,1)); 
+      border-color: var(--theme-border-gradient, #5a6fd8);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    .quiz-option.correct { 
+      border-color: var(--color-success, #4caf50); 
+      background: var(--color-bg-success, rgba(76,175,80,0.1));
+      box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+    }
+    .quiz-option.incorrect { 
+      border-color: var(--color-error, #f44336); 
+      background: var(--color-bg-error, rgba(244,67,54,0.1));
+      box-shadow: 0 4px 16px rgba(244,67,54,0.3);
+    }
+    
+    /* 选项标签样式 */
+    .choice-badge { 
+      display: inline-flex; 
+      align-items: center;
+      justify-content: center;
+      min-width: 32px; 
+      height: 32px;
+      text-align: center; 
+      padding: 0 8px; 
+      border-radius: 50%; 
+      font-size: 14px; 
+      font-weight: 600;
+      margin-right: 12px; 
+      color: var(--color-text-primary, #333); 
+      background: var(--theme-tag-bg, rgba(90, 111, 216, 0.8)); 
+      flex-shrink: 0;
+    }
+    
+    /* 状态栏和进度条 */
+    .status-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; color: var(--color-text-secondary, #333); }
+    .progress { height: 8px; background: rgba(0,0,0,0.08); border-radius: 999px; overflow: hidden; }
+    .progress > div { height: 100%; background: linear-gradient(90deg, #5a6fd8, #e081e9); width: 0%; transition: width .3s ease; }
+    .muted { color: var(--color-text-light, #666); font-size: 14px; }
+    .separator { height: 1px; background: rgba(0,0,0,0.08); margin: 12px 0; }
+    .image-wrapper { display:flex; align-items:center; justify-content:center; padding: 8px; }
+    .control-right { display:flex; gap:8px; }
+    .mode-select { display:flex; gap:8px; align-items:center; }
+    .mode-select label { color: var(--color-text-secondary, #333); }
+    .stat { color: var(--color-text-secondary); }
+    
+    /* 简单卡片样式 */
+    .simple-quiz-card {
+      background: var(--theme-card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      margin: 16px auto;
+      max-width: 800px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .simple-quiz-card:hover {
+      /* 移除悬停效果 */
+    }
+    
+    /* 得分动画效果 */
+    .score-animation {
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      display: inline-block;
+      position: relative;
+    }
+    
+    .score-animation.animate {
+      transform: scale(1.5) rotate(5deg);
+      color: #FFD700;
+      text-shadow: 
+        0 0 20px rgba(255, 215, 0, 0.8),
+        0 0 40px rgba(255, 215, 0, 0.6),
+        0 0 60px rgba(255, 215, 0, 0.4);
+      filter: brightness(1.3);
+    }
+    
+    /* 得分增加时的粒子效果 */
+    .score-animation.animate::before {
+      content: '+';
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #FFD700;
+      font-size: 1.2em;
+      font-weight: bold;
+      animation: scoreParticle 0.4s ease-out forwards;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    }
+    
+    @keyframes scoreParticle {
+      0% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(0.5);
+      }
+      50% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-15px) scale(1.2);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-30px) scale(0.8);
+      }
+    }
+    
+    /* 背景闪光效果 */
+    .score-flash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 1000;
+      animation: flashEffect 0.3s ease-out;
+    }
+    
+    @keyframes flashEffect {
+      0% { opacity: 0; }
+      30% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    
+    /* 爆裂彩蛋特效 */
+    .explosion-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 1000;
+    }
+    
+    .explosion-ring {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 3px solid #FFD700;
+      border-radius: 50%;
+      animation: ringExpand 0.4s ease-out forwards;
+    }
+    
+    @keyframes ringExpand {
+      0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+        border-width: 3px;
+      }
+      100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0;
+        border-width: 1px;
+      }
+    }
+    
+    /* 正确选项的特殊发光效果 */
+    .quiz-option.correct-explosion {
+      animation: correctGlow 0.75s ease-out forwards;
+      position: relative;
+      overflow: visible;
+    }
+    
+    @keyframes correctGlow {
+      0% {
+        box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+        transform: scale(1);
+      }
+      25% {
+        box-shadow: 
+          0 0 30px rgba(255, 215, 0, 0.8),
+          0 0 60px rgba(255, 215, 0, 0.6),
+          0 0 90px rgba(255, 215, 0, 0.4);
+        transform: scale(1.05);
+      }
+      50% {
+        box-shadow: 
+          0 0 40px rgba(255, 215, 0, 0.9),
+          0 0 80px rgba(255, 215, 0, 0.7),
+          0 0 120px rgba(255, 215, 0, 0.5);
+        transform: scale(1.08);
+      }
+      100% {
+        box-shadow: 0 4px 16px rgba(76,175,80,0.3);
+        transform: scale(1);
+      }
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 840px) {
+      .quiz-layout { 
+        max-width: 100%; 
+        padding: 0 16px;
+        gap: 24px;
+      }
+      .question-area {
+        padding: 20px 16px;
+      }
+      .quiz-card-image { 
+        width: 240px; 
+        height: 320px; 
+      }
+      .question-text {
+        font-size: 16px;
+      }
+      .options-list {
+        max-width: 100%;
+      }
+      .quiz-option { 
+        text-align: center; 
+        padding: 14px 16px;
+        font-size: 15px;
+      }
+      .choice-badge {
+        min-width: 28px;
+        height: 28px;
+        font-size: 13px;
+      }
+      
+      /* 中等宽度下的图标缩放 */
+      .decision-icon {
+        height: 70px;
+      }
+      
+      /* HP图标中等宽度缩放 */
+      .decision-icon-hp {
+        height: 35px; /* 70px * 1/2 = 35px */
+      }
+      
+      .stat-value-a, .stat-value-d {
+        font-size: 32px;
+      }
+      
+      .stat-value-x, .stat-value-hp {
+        font-size: 50px; /* 增大中等宽度下HP数字的显示 */
+      }
+    }
+    /* 取消quiz卡片的悬停放大效果 */
+    .quiz-card:hover {
+      transform: var(--card-hover-transform) scale(1) !important;
+    }
+    
+    /* 数字高亮样式 */
+    .number-highlight {
+      background: linear-gradient(135deg, #FFD700, #FFA500);
+      color: #333;
+      padding: 2px 4px;
+      border-radius: 4px;
+      font-weight: bold;
+      box-shadow: 0 1px 3px rgba(255, 215, 0, 0.3);
+      border: 1px solid rgba(255, 215, 0, 0.5);
+    }
+    
+    /* 深色主题下的数字高亮 */
+    [data-theme="dark"] .number-highlight {
+      background: linear-gradient(135deg, #FFD700, #FF8C00);
+      color: #1a1a1a;
+      box-shadow: 0 1px 3px rgba(255, 215, 0, 0.4);
+      border: 1px solid rgba(255, 215, 0, 0.6);
+    }
+    
+    /* 加载动画样式 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .loading-content {
+      text-align: center;
+      color: white;
+    }
+    
+    .loading-image {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 16px;
+      animation: flipAnimation 800ms infinite;
+    }
+    
+    @keyframes flipAnimation {
+      0% { transform: scaleX(1); }
+      50% { transform: scaleX(-1); }
+      100% { transform: scaleX(1); }
+    }
+    
+    .loading-text {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+    
+    /* 决策题样式 */
+    .battle-decision-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      margin: 16px 0;
+    }
+    
+    .battle-stats-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    
+    /* 战斗区域标题样式 */
+    .battle-section-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--color-text-primary, #333);
+      margin: 8px 0 4px 0;
+      text-align: left;
+      width: 100%;
+    }
+    
+    /* 战斗分割线样式 */
+    .battle-divider {
+      width: 200px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-text-muted, #666), var(--color-text-muted, #666));
+      margin: 12px 0;
+      border-radius: 1px;
+      align-self: flex-start;
+    }
+    
+    .stats-row {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    
+    .stat-icon-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .stat-icon {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .decision-icon {
+      height: 80px;
+      width: auto;
+      display: block;
+    }
+    
+    /* HP图标特殊样式：高度为原来的1/2 */
+    .decision-icon-hp {
+      height: 40px; /* 80px * 1/2 = 40px */
+      width: auto;
+      display: block;
+    }
+    
+    .stat-value {
+      position: absolute;
+      font-family: 'Blippo', 'Arial Black', Arial, sans-serif !important;
+      font-weight: bold;
+      color: #333;
+      text-shadow: 
+        1px 1px 0 #fff,
+        -1px -1px 0 #fff,
+        1px -1px 0 #fff,
+        -1px 1px 0 #fff,
+        2px 2px 4px rgba(0,0,0,0.3);
+      pointer-events: none;
+      user-select: none;
+    }
+    
+    /* A图标数值位置：13/16处，高度1/2 */
+    .stat-value-a {
+      left: 86.5%; /* 13/16 = 81.25% */
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 35px; 
+      text-align: center;
+      font-weight: normal; /* 覆盖bold设置 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    /* X图标数值位置：中心，高度2/3 */
+    .stat-value-x {
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 58px; /* 80px * 2/3 ≈ 53px */
+      text-shadow: 
+        1px 1px 0 rgb(213,91,255),
+        -1px -1px 0 rgb(213,91,255),
+        1px -1px 0 rgb(213,91,255),
+        -1px 1px 0 rgb(213,91,255),
+        2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    /* D图标数值位置：3/16处，高度1/2 */
+    .stat-value-d {
+      left: 13%; /* 3/16 = 18.75% */
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 35px;
+      text-align: center;
+      font-weight: normal; /* 覆盖bold设置 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    /* HP图标数值位置：5/8处，高度2/3 */
+    .stat-value-hp {
+      left: 62%; /* 5/8 = 62.5% */
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 32px; 
+    }
+    
+    /* 深色主题下的数值样式 */
+    [data-theme="dark"] .stat-value {
+      color: #f0f0f0;
+      text-shadow: 
+        1px 1px 0 #000,
+        -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        2px 2px 4px rgba(255,255,255,0.3);
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      .decision-icon {
+        height: 60px;
+      }
+      
+      /* HP图标响应式缩放 */
+      .decision-icon-hp {
+        height: 30px; /* 60px * 1/2 = 30px */
+      }
+      
+      .stat-value-a, .stat-value-d {
+        font-size: 30px; /* 60px * 1/2 = 30px */
+      }
+      
+      .stat-value-hp {
+        font-size: 25px; /* 增大HP数字在移动端的显示 */
+      }
+      .stat-value-x{
+        font-size: 40px;
+      }
+      .stats-row {
+        gap: 16px;
+      }
+    }
+    
+    /* 结算表格样式 */
+    .result-card {
+      padding: 24px;
+      margin: 0 auto;
+      max-width: 400px;
+    }
+    
+    .result-title {
+      color: var(--color-text-primary, #111);
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 20px 0;
+      text-align: center;
+    }
+    
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+    
+    .result-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    
+    .result-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .result-label {
+      color: var(--color-text-secondary, #666);
+      font-size: 14px;
+      text-align: left;
+      width: 50%;
+    }
+    
+    .result-value {
+      color: var(--color-text-primary, #111);
+      font-size: 16px;
+      font-weight: 600;
+      text-align: right;
+      width: 50%;
+      font-family: 'Blippo', 'Arial Black', Arial, sans-serif;
+    }
+    
+    .result-total .result-label,
+    .result-total .result-value {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: 'Blippo', 'Arial Black', Arial, sans-serif;
+    }
+  </style>
+  </style>
+  
+</head>
+<body>
+  <!-- 加载动画覆盖层 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+      <img src="images/loading.png" alt="Loading" class="loading-image" id="loadingImage">
+    </div>
+  </div>
+
+  <div class="container quiz-container">
+    <!-- 导航栏（复用样式）- 已隐藏 -->
+    <nav class="navbar" style="display: none;">
+      <div class="nav-content">
+        <div class="logo" id="navLogo" onclick="window.location.href='index.html'" style="cursor:pointer">AAa美甲师后援会</div>
+        <div class="nav-buttons">
+          <button class="nav-btn" onclick="window.location.href='index.html'">
+            <span class="nav-btn-text">返回主页</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 测验内容 -->
+    <div class="simple-quiz-card" style="margin-top:16px;">
+      <div class="quiz-header">
+        <h2 class="section-title quiz-main-title">星趴小测验</h2>
+        <div class="quiz-controls">
+          <!-- 难度按钮区域 -->
+          <div id="difficultyButtons" class="difficulty-buttons" style="margin-bottom: 20px;">
+            <button id="normalBtn" class="nav-btn difficulty-btn" data-difficulty="normal">
+              <span class="nav-btn-text">普通</span>
+            </button>
+            <button id="hardBtn" class="nav-btn difficulty-btn" data-difficulty="hard">
+              <span class="nav-btn-text">困难</span>
+            </button>
+            <button id="nightmareBtn" class="nav-btn difficulty-btn" data-difficulty="nightmare">
+              <span class="nav-btn-text">噩梦</span>
+            </button>
+            <button id="dailyChallengeBtn" class="nav-btn difficulty-btn" style="margin-top: 16px;">
+              <span class="nav-btn-text">每日挑战</span>
+            </button>
+          </div>
+          
+
+          
+          <div class="control-right" style="display: none;">
+            <button id="startBtn" class="nav-btn"><span class="nav-btn-text">开始测验</span></button>
+          </div>
+        </div>
+        
+        <!-- 原控制按钮区域 - 已移动到选项下方，此处删除 -->
+      </div>
+
+
+
+      <!-- 控制按钮区域 - 移动到状态栏上方 -->
+      <div class="control-buttons" id="controlButtons" style="margin-top:16px; margin-bottom:16px; display:flex; justify-content:center; gap:16px; align-items:center;">
+        <button id="restartBtn" class="nav-btn secondary" style="display:none;">
+          <span class="nav-btn-text">重新开始</span>
+        </button>
+        <button id="exitBtn" class="nav-btn" style="display:none;">
+          <span class="nav-btn-text">退出</span>
+        </button>
+      </div>
+      
+
+      <div id="statusBar" class="status-bar" style="display:none;">
+        <div class="stat">题目：<span id="qIndex">0</span>/<span id="qTotal">0</span></div>
+        <div class="stat">难度：<span id="currentDifficulty">简单</span></div>
+        <div class="stat">得分：<span id="score" class="score-animation">0</span></div>
+        <div class="stat">用时：<span id="timer">00:00</span></div>
+      </div>
+      <div class="progress" style="margin-top:8px; display:none;">
+        <div id="progressInner"></div>
+      </div>
+
+      <div class="quiz-layout" style="margin-top:24px; display:none;" id="quizLayout">
+        <!-- 题目区域 -->
+        <div class="question-section">
+          <div class="question-area">
+            <div id="questionText" class="question-text" style="display:none;"></div>
+            <div id="questionView" class="image-wrapper muted" style="display: none;"></div>
+          </div>
+        </div>
+        <!-- 选项区域 -->
+        <div class="options-section" style="margin-top:24px;">
+          <div class="options-list">
+            <button class="quiz-option" id="opt0" style="display:none;"><span class="choice-badge">A</span><span class="opt-text"></span></button>
+            <button class="quiz-option" id="opt1" style="display:none;"><span class="choice-badge">B</span><span class="opt-text"></span></button>
+            <button class="quiz-option" id="opt2" style="display:none;"><span class="choice-badge">C</span><span class="opt-text"></span></button>
+            <button class="quiz-option" id="opt3" style="display:none;"><span class="choice-badge">D</span><span class="opt-text"></span></button>
+          </div>
+          
+          <!-- 下一题按钮区域 - 只保留下一题按钮 -->
+          <div class="next-button-area" style="margin-top:20px; display:flex; justify-content:center;">
+            <button id="nextBtn" class="nav-btn primary" style="display:none;">
+              <span class="nav-btn-text">下一题</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="resultView" class="question-text" style="display:none; margin-top:16px;"></div>
+    </div>
+  </div>
+  <div class="powered-by">
+    <span>TGW~</span>
+  </div>
+  <!-- 主题切换与动态背景 -->
+  <script src="theme-switcher.js"></script>
+  <script src="theme-selector.js"></script>
+  <script src="dynamic-background.js"></script>
+  <script src="config.js"></script>
+
+  
+  <script src="quiz.js"></script>
+</body>
+</html>

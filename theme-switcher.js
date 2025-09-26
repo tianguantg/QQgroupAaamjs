@@ -7,6 +7,7 @@ class ThemeSwitcher {
     constructor() {
         this.currentTheme = 'default';
         this.themes = this.initializeThemes();
+        this.randomThemeTimer = null;
         this.init();
     }
 
@@ -38,8 +39,8 @@ class ThemeSwitcher {
                     '--theme-card-bg-hover': 'rgba(255, 255, 255, 0.85)',
                     
                     // 按钮渐变
-                    '--theme-btn-gradient': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    '--theme-btn-gradient-hover': 'linear-gradient(135deg, #7c8ef0 0%, #8a5cb8 100%)',
+                    '--theme-btn-gradient': 'linear-gradient(135deg,rgb(84, 122, 204) 0%,rgb(82, 163, 218) 100%)',
+                    '--theme-btn-gradient-hover': 'linear-gradient(135deg, #7c8ef0 0%,rgb(137, 180, 236) 100%)',
                     
                     // 边框渐变
                     '--theme-border-gradient': 'linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c, #4facfe, #00f2fe)',
@@ -595,8 +596,21 @@ class ThemeSwitcher {
         // 从本地存储加载主题
         this.loadThemeFromStorage();
         
-        // 应用当前主题
-        this.applyTheme(this.currentTheme);
+        // 如果是首次访问，设置随机主题为默认选择
+        if (!localStorage.getItem('randomThemeMode') && !localStorage.getItem('selectedTheme')) {
+            localStorage.setItem('randomThemeMode', 'true');
+            this.startRandomThemeTimer();
+            // 立即应用一个随机主题
+            this.applyRandomTheme();
+        } else {
+            // 应用当前主题
+            this.applyTheme(this.currentTheme);
+            
+            // 检查是否启用随机主题模式
+            if (localStorage.getItem('randomThemeMode') === 'true') {
+                this.startRandomThemeTimer();
+            }
+        }
         
         // 监听存储变化（多标签页同步）
         window.addEventListener('storage', (e) => {
@@ -761,8 +775,8 @@ class ThemeSwitcher {
 
     /**
      * 随机选择主题
-     * 65% 基础主题（默认和深色平均概率）
-     * 30% 特殊主题（春节、樱花、万圣节平均概率）
+     * 50% 基础主题（默认和深色平均概率）
+     * 45% 特殊主题（春节、樱花、万圣节平均概率）
      * 5% 隐藏主题（卓别林主题）
      */
     selectRandomTheme() {
@@ -775,12 +789,12 @@ class ThemeSwitcher {
         const random = Math.random() * 100;
         let selectedTheme;
 
-        if (random < 65) {
-            // 65% 基础主题
+        if (random < 50) {
+            // 50% 基础主题
             const basicThemes = ['default', 'dark'];
             selectedTheme = basicThemes[Math.floor(Math.random() * basicThemes.length)];
         } else if (random < 95) {
-            // 30% 特殊主题
+            // 45% 特殊主题
             const specialThemes = ['springFestival', 'sakura', 'halloween'];
             selectedTheme = specialThemes[Math.floor(Math.random() * specialThemes.length)];
         } else {
@@ -805,6 +819,37 @@ class ThemeSwitcher {
             return randomTheme;
         }
         return null;
+    }
+
+    /**
+     * 启动随机主题定时器
+     */
+    startRandomThemeTimer() {
+        // 清除现有定时器
+        this.stopRandomThemeTimer();
+        
+        // 设置1分钟定时器
+        this.randomThemeTimer = setInterval(() => {
+            if (localStorage.getItem('randomThemeMode') === 'true') {
+                this.applyRandomTheme();
+            } else {
+                // 如果随机模式被关闭，停止定时器
+                this.stopRandomThemeTimer();
+            }
+        }, 60000); // 60秒 = 1分钟
+        
+        console.log('随机主题定时器已启动');
+    }
+
+    /**
+     * 停止随机主题定时器
+     */
+    stopRandomThemeTimer() {
+        if (this.randomThemeTimer) {
+            clearInterval(this.randomThemeTimer);
+            this.randomThemeTimer = null;
+            console.log('随机主题定时器已停止');
+        }
     }
 }
 

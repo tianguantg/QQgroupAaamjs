@@ -1,0 +1,176 @@
+[
+  {
+    "name": "暗影突袭",
+    "description": "战斗中攻击方可用。攻击力上升 3，无法被反击。",
+    "image_path": "images/cards/暗影突袭.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "定向爆破",
+    "description": "选择 6 格内的一个怪物，对目标及附近 2 格内的所有怪物造成 4 点伤害。",
+    "image_path": "images/cards/定向爆破.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "对怪板砖",
+    "description": "指定 3 格内一个怪物，对其造成 5 点伤害。",
+    "image_path": "images/cards/对怪板砖.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "对怪激光",
+    "description": "指定 6 格内一个怪物，对其造成 3 点伤害。",
+    "image_path": "images/cards/对怪激光.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "防御 (大)",
+    "description": "战斗中防御方可用。防御力上升 1~6。",
+    "image_path": "images/cards/防御 (大).png",
+    "map_exclusive": null
+  },
+  {
+    "name": "防御 (特大)",
+    "description": "战斗中防御方可用。防御力上升 1~10。",
+    "image_path": "images/cards/防御 (特大).png",
+    "map_exclusive": null
+  },
+  {
+    "name": "防御 (中)",
+    "description": "战斗中防御方可用。防御力上升 1~3。",
+    "image_path": "images/cards/防御 (中).png",
+    "map_exclusive": null
+  },
+  {
+    "name": "高升炮",
+    "description": "指定 10 格内一个怪物，对其造成 3 点伤害，移除对方增强效果且本轮对方无法反击。",
+    "image_path": "images/cards/高升炮.png",
+    "map_exclusive": "水乡古镇"
+  },
+  {
+    "name": "攻击 (大)",
+    "description": "战斗中攻击方可用。攻击力上升 1~6。",
+    "image_path": "images/cards/攻击 (大).png",
+    "map_exclusive": null
+  },
+  {
+    "name": "攻击 (特大)",
+    "description": "战斗中攻击方可用。攻击力上升 1~10。",
+    "image_path": "images/cards/攻击 (特大).png",
+    "map_exclusive": null
+  },
+  {
+    "name": "攻击 (中)",
+    "description": "战斗中攻击方可用。攻击力上升 1~3。",
+    "image_path": "images/cards/攻击 (中).png",
+    "map_exclusive": null
+  },
+  {
+    "name": "轨道炮",
+    "description": "指定 5 格内一个怪物，对其造成 6 点伤害。",
+    "image_path": "images/cards/轨道炮.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "汉堡",
+    "description": "恢复自己角色 4 点生命值。",
+    "image_path": "images/cards/汉堡.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "奢华大餐",
+    "description": "选择一名友方角色，该角色身边 3 格范围内的所有角色恢复 3Hp。",
+    "image_path": "images/cards/奢华大餐.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "加急加快",
+    "description": "选择一名友方角色，其移动时投掷 2 枚骰子，生效一次。",
+    "image_path": "images/cards/加急加快.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "狂暴",
+    "description": "指定 10 格内的角色使用。攻击力 + 3，受到伤害 + 1，持续 2 回合。",
+    "image_path": "images/cards/狂暴.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "岿然不动",
+    "description": "增加 6 点防御力，持续 2 回合。",
+    "image_path": "images/cards/岿然不动.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "路障",
+    "description": "指定 10 格内的地块放置，经过的角色会停止移动。",
+    "image_path": "images/cards/路障.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "名刀：嘎呜切",
+    "description": "战斗中攻击方可用。攻击力上升 1~20。",
+    "image_path": "images/cards/名刀：嘎呜切.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "你有我有",
+    "description": "选择一名友方角色，你和这名角色各获得一张卡牌。",
+    "image_path": "images/cards/你有我有.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "巧克力蛋糕",
+    "description": "恢复自己角色 2 点生命。",
+    "image_path": "images/cards/巧克力蛋糕.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "全力攻击",
+    "description": "攻击力 + 6，本次战斗的最终攻击力 + 50%。",
+    "image_path": "images/cards/全力攻击.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "是他干的",
+    "description": "选择一名其他角色，对其造成 2 点伤害并施加【问题学生】，随后自己获得 3 星币。回合结束时若本卡在手牌中，则自己受到 2 点伤害。",
+    "image_path": "images/cards/是他干的.png",
+    "map_exclusive": "魔法学院"
+  },
+  {
+    "name": "王之力",
+    "description": "受到 4 点伤害，攻击力 + 5，持续 3 回合。",
+    "image_path": "images/cards/王之力.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "蓄力",
+    "description": "攻击力 + 5，添加一张全力攻击到手牌中。",
+    "image_path": "images/cards/蓄力.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "遥控骰子",
+    "description": "下次的移动点可选择 1-6 内任意数字。",
+    "image_path": "images/cards/遥控骰子.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "以毒攻毒",
+    "description": "自己角色立刻失去 2 点生命。每回合回复 3 点生命，持续 2 回合。",
+    "image_path": "images/cards/以毒攻毒.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "支援",
+    "description": "选择一名角色，传送到他当前的位置。",
+    "image_path": "images/cards/支援.png",
+    "map_exclusive": null
+  },
+  {
+    "name": "方向抉择",
+    "description": "自由选择移动方向。",
+    "image_path": "images/cards/方向抉择.png",
+    "map_exclusive": null
+  }
+]

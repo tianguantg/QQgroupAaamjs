@@ -2,6 +2,9 @@
 
 /* ========== 皮肤系统 - 统一变量配置 ========== */
 :root {
+    /* 强制使用浅色模式，防止浏览器深色模式干扰 */
+    color-scheme: light only;
+    
     /* ========== 主题切换系统 ========== */
     /* 当前主题标识 */
     --current-theme: 'default';
@@ -26,7 +29,7 @@
     --theme-card-bg-hover: rgba(255, 255, 255, 0.85);
     
     /* 按钮渐变 */
-    --theme-btn-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --theme-btn-gradient: linear-gradient(135deg, #8a9cff 0%, #9a7bc8 100%);
     --theme-btn-gradient-hover: linear-gradient(135deg, #7c8ef0 0%, #8a5cb8 100%);
     
     /* 边框渐变 */
@@ -546,6 +549,8 @@ body {
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
+    /* 强制使用浅色模式，防止浏览器深色模式干扰 */
+    color-scheme: light only;
 }
 
 /* 粒子背景效果 */
@@ -1105,8 +1110,12 @@ body::before {
     font-weight: var(--font-weight-bold);
     color: var(--color-text-secondary);
     margin-bottom: var(--spacing-lg);
-    border-left: 4px solid var(--color-info);
     padding-left: var(--spacing-md);
+}
+
+/* 星趴小测验标题特殊样式 - 字体大小为原来的2倍 */
+.quiz-main-title {
+    font-size: calc(var(--font-size-lg) * 2);
 }
 
 .feature-tags-container {
