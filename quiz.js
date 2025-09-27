@@ -128,6 +128,200 @@
     const shuffle = (arr) => arr.map(v=>[quizRandom.random(), v]).sort((a,b)=>a[0]-b[0]).map(p=>p[1]);
     const sampleOne = (arr) => arr[Math.floor(quizRandom.random()*arr.length)];
 
+    // 图片预加载管理器
+    class ImagePreloader {
+      constructor() {
+        this.cache = new Map(); // 图片缓存：src -> Promise<HTMLImageElement>
+        this.loading = new Set(); // 正在加载的图片src集合
+      }
+      
+      // 预加载图片并返回Promise
+      async preloadImage(src) {
+        if (!src) return null;
+        
+        // 如果已经缓存，直接返回
+        if (this.cache.has(src)) {
+          return this.cache.get(src);
+        }
+        
+        // 如果正在加载，等待加载完成
+        if (this.loading.has(src)) {
+          return this.waitForLoad(src);
+        }
+        
+        // 开始新的加载
+        this.loading.add(src);
+        
+        const loadPromise = new Promise((resolve, reject) => {
+          const img = new Image();
+          
+          img.onload = () => {
+            this.loading.delete(src);
+            resolve(img);
+          };
+          
+          img.onerror = () => {
+            this.loading.delete(src);
+            console.warn(`图片加载失败: ${src}`);
+            reject(new Error(`Failed to load image: ${src}`));
+          };
+          
+          img.src = src;
+        });
+        
+        // 缓存Promise
+        this.cache.set(src, loadPromise);
+        
+        try {
+          return await loadPromise;
+        } catch (error) {
+          // 加载失败时从缓存中移除
+          this.cache.delete(src);
+          throw error;
+        }
+      }
+      
+      // 等待正在加载的图片
+      async waitForLoad(src) {
+        return new Promise((resolve) => {
+          const checkInterval = setInterval(() => {
+            if (this.cache.has(src)) {
+              clearInterval(checkInterval);
+              resolve(this.cache.get(src));
+            } else if (!this.loading.has(src)) {
+              // 加载已完成但不在缓存中，可能加载失败
+              clearInterval(checkInterval);
+              resolve(null);
+            }
+          }, 10);
+        });
+      }
+      
+      // 检查图片是否已缓存
+      isImageCached(src) {
+        return this.cache.has(src);
+      }
+      
+      // 清理缓存
+      clearCache() {
+        this.cache.clear();
+        this.loading.clear();
+      }
+      
+      // 获取缓存状态
+      getCacheInfo() {
+        return {
+          cached: this.cache.size,
+          loading: this.loading.size
+        };
+      }
+    }
+
+    // 题目缓冲池管理器
+    class QuestionBuffer {
+      constructor(generator, preloader) {
+        this.generator = generator;
+        this.preloader = preloader;
+        this.buffer = []; // 缓冲的题目队列
+        this.maxSize = 2; // 最多缓冲2题
+        this.isGenerating = false; // 防止并发生成
+        this.currentMode = null;
+        this.currentTotal = 0;
+      }
+      
+      // 初始化缓冲池
+      initialize(generator, mode, total) {
+        this.generator = generator;
+        this.currentMode = mode;
+        this.currentTotal = total;
+        this.buffer = [];
+        this.isGenerating = false;
+      }
+      
+      // 获取下一题（保持随机序列）
+      async getNext() {
+        // 如果缓冲区为空，立即生成一题
+        if (this.buffer.length === 0) {
+          return await this.generateAndPreload();
+        }
+        
+        // 取出第一个题目（FIFO保持顺序）
+        const question = this.buffer.shift();
+        
+        // 异步补充缓冲区（不影响当前题目）
+        this.refillBufferAsync();
+        
+        return question;
+      }
+      
+      // 生成并预加载题目
+      async generateAndPreload() {
+        // 关键：按顺序调用generator.next()保持随机性
+        const question = this.generator.next(this.currentMode, this.currentTotal);
+        
+        if (!question) return null;
+        
+        // 如果有图片，预加载
+        if (question.promptImage) {
+          try {
+            await this.preloader.preloadImage(question.promptImage);
+            question._imagePreloaded = true;
+          } catch (error) {
+            console.warn('图片预加载失败，将使用占位符:', error);
+            question._imagePreloaded = false;
+          }
+        }
+        
+        return question;
+      }
+      
+      // 异步补充缓冲区
+      async refillBufferAsync() {
+        // 避免并发生成
+        if (this.isGenerating || this.buffer.length >= this.maxSize) {
+          return;
+        }
+        
+        this.isGenerating = true;
+        
+        try {
+          // 预生成题目，但不超过总题数限制
+          while (this.buffer.length < this.maxSize) {
+            const question = await this.generateAndPreload();
+            if (question) {
+              this.buffer.push(question);
+            } else {
+              // 没有更多题目了
+              break;
+            }
+          }
+        } catch (error) {
+          console.error('缓冲区补充失败:', error);
+        } finally {
+          this.isGenerating = false;
+        }
+      }
+      
+      // 获取缓冲区状态
+      getBufferInfo() {
+        return {
+          buffered: this.buffer.length,
+          maxSize: this.maxSize,
+          isGenerating: this.isGenerating
+        };
+      }
+      
+      // 清空缓冲区
+      clear() {
+        this.buffer = [];
+        this.isGenerating = false;
+      }
+    }
+
+    // 创建全局实例
+    const imagePreloader = new ImagePreloader();
+    const questionBuffer = new QuestionBuffer();
+
 // 全局小测验配置：
 // - pools: 题目池总体占比（card=卡牌池，character=角色池，event=事件池，profile=档案池）
 // - difficultyRatio: 难度递增模式下各难度级别的题目数量比例（easy:normal:hard）
@@ -2400,9 +2594,38 @@ const TYPE_META = {
           questionText.innerHTML = q.promptText.replace(/\n/g, '<br>');
         } else if (q.promptImage) {
           const alt = q.promptAlt || '卡牌';
-          questionView.innerHTML = `<img src="${q.promptImage}" alt="${alt}" class="quiz-card-image"/>`;
           questionView.style.display = '';
           questionText.innerHTML = q.promptText.replace(/\n/g, '<br>');
+          
+          // 异步图片加载处理
+          if (q._imagePreloaded) {
+            // 图片已预加载，直接显示
+            questionView.innerHTML = `<img src="${q.promptImage}" alt="${alt}" class="quiz-card-image"/>`;
+          } else {
+            // 显示加载占位符
+            questionView.innerHTML = `
+              <div class="image-placeholder">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">图片加载中...</div>
+              </div>
+            `;
+            
+            // 异步加载图片
+            imagePreloader.preloadImage(q.promptImage).then((img) => {
+              if (img && current === q) { // 确保还是当前题目
+                questionView.innerHTML = `<img src="${q.promptImage}" alt="${alt}" class="quiz-card-image"/>`;
+              }
+            }).catch((error) => {
+              if (current === q) { // 确保还是当前题目
+                console.warn('图片加载失败:', error);
+                questionView.innerHTML = `
+                  <div class="image-error">
+                    <div class="error-text">图片加载失败</div>
+                  </div>
+                `;
+              }
+            });
+          }
         } else {
           questionView.innerHTML = '';
           questionView.style.display = 'none';
@@ -2446,16 +2669,27 @@ const TYPE_META = {
         const percentage = total > 0 ? Math.round((score / total) * 100) : 0;
         scoreEl.textContent = percentage.toString();
         
-        // 更新当前难度显示
-        if (current && current.actualDifficulty) {
-          // 优先使用题目的实际难度
-          const difficultyNames = { 'easy': '简单', 'normal': '普通', 'hard': '困难' };
-          currentDifficultyEl.textContent = difficultyNames[current.actualDifficulty] || '未知';
-        } else if (generator && generator.progressiveMode) {
-          // 回退到递增模式的当前难度
-          const difficultyNames = { 'easy': '简单', 'normal': '普通', 'hard': '困难' };
-          const currentDifficulty = generator.difficultyOrder[generator.currentDifficultyIndex];
-          currentDifficultyEl.textContent = difficultyNames[currentDifficulty] || '未知';
+        // 更新当前难度显示（如果元素存在）
+        if (currentDifficultyEl) {
+          if (current && current.actualDifficulty) {
+            // 优先使用题目的实际难度
+            const difficultyNames = { 'easy': '简单', 'normal': '普通', 'hard': '困难' };
+            currentDifficultyEl.textContent = difficultyNames[current.actualDifficulty] || '未知';
+          } else if (generator && generator.progressiveMode) {
+            // 回退到递增模式的当前难度
+            const difficultyNames = { 'easy': '简单', 'normal': '普通', 'hard': '困难' };
+            const currentDifficulty = generator.difficultyOrder[generator.currentDifficultyIndex];
+            currentDifficultyEl.textContent = difficultyNames[currentDifficulty] || '未知';
+          } else {
+            // 如果没有难度信息，根据当前测验配置显示难度
+            const difficultyNames = {
+              'normal': '普通',
+              'hard': '困难', 
+              'nightmare': '噩梦'
+            };
+            const selectedDifficulty = window.QUIZ_CONFIG?.selectedDifficulty || 'normal';
+            currentDifficultyEl.textContent = difficultyNames[selectedDifficulty] || '普通';
+          }
         }
         
         const pct = Math.max(0, Math.min(100, Math.round((index-1) / total * 100)));
@@ -2467,8 +2701,8 @@ const TYPE_META = {
         // 题目得分 = 答题得分（百分制）
         const questionScore = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
         
-        // 时间得分 = max(题目数量*5/答题所用秒数)*100, 0)，四舍五入到整数
-        const timeScore = Math.min(Math.round((totalQuestions * 5 / timeInSeconds) * 100), 100);
+        // 时间得分 = min(max(100+题目数量*6-答题所用秒数,0), 100)，四舍五入到整数
+        const timeScore = Math.min(Math.max(100 + totalQuestions * 6 - timeInSeconds,0), 100);
         
         // 最终得分 = 题目得分*(5/6) + 时间得分*(1/6)，四舍五入到整数
         const finalScore = Math.round(questionScore * (5/6) + timeScore * (1/6));
@@ -2503,6 +2737,10 @@ const TYPE_META = {
         // 获取测验难度显示名称
         const getDifficultyDisplayName = () => {
           if (window.isDailyChallenge) {
+            const date = window.dailyChallengeDate;
+            if (date) {
+              return `每日挑战 (${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')})`;
+            }
             return '每日挑战';
           }
           const difficultyNames = {
@@ -2599,9 +2837,8 @@ const TYPE_META = {
           // 启用难度递增模式
           generator.enableProgressiveMode(total);
           
-          // 重置并启动计时器
+          // 重置计时器（但不启动）
           resetTimer();
-          startTimer();
           
           // 添加等待时间（1.5秒）
           await new Promise(resolve => setTimeout(resolve, 1500));
@@ -2611,8 +2848,15 @@ const TYPE_META = {
           
           setControls(true);
           updateStatus();
-          current = generator.next(mode, total);
+          
+          // 初始化缓冲池
+          questionBuffer.initialize(generator, mode, total);
+          
+          current = await questionBuffer.getNext();
           renderQuestion(current);
+          
+          // 在题目显示后启动计时器
+          startTimer();
         } catch(err){
           // 出错时也要隐藏加载动画
           const loadingOverlay = document.getElementById('loadingOverlay');
@@ -2622,9 +2866,17 @@ const TYPE_META = {
           console.error(err);
         }
       });
-      function nextQuestion(){
+      async function nextQuestion(){
         if (index > total) return;
-        current = generator.next(mode, total);
+        
+        // 使用缓冲池获取下一题
+        if (questionBuffer) {
+          current = await questionBuffer.getNext();
+        } else {
+          // 回退到原始方式（兼容性）
+          current = generator.next(mode, total);
+        }
+        
         if (!current) { endQuiz(); return; }
         renderQuestion(current);
         updateStatus();
@@ -2682,12 +2934,12 @@ const TYPE_META = {
           }, 750);
           
           // 自动进入下一题
-          setTimeout(() => {
+          setTimeout(async () => {
             if (index >= total) {
               endQuiz();
             } else {
               index += 1;
-              nextQuestion();
+              await nextQuestion();
             }
           }, 900);
           nextBtn.style.display = 'none';
@@ -2800,11 +3052,11 @@ const TYPE_META = {
       });
 
       // 控制按钮
-      nextBtn.addEventListener('click', () => {
+      nextBtn.addEventListener('click', async () => {
         if (index >= total) { endQuiz(); return; }
         nextBtn.style.display = 'none'; // 点击后立即隐藏按钮
         index += 1; 
-        nextQuestion();
+        await nextQuestion();
       });
 
       restartBtn.addEventListener('click', async () => {
@@ -2898,6 +3150,14 @@ const TYPE_META = {
         
         // 每日挑战按钮事件
         dailyChallengeBtn.addEventListener('click', () => startDailyChallenge());
+        
+        // 反馈按钮事件
+        const feedbackBtn = document.getElementById('feedbackBtn');
+        if (feedbackBtn) {
+          feedbackBtn.addEventListener('click', () => {
+            window.open('https://wj.qq.com/s2/24040427/7fc2/', '_blank');
+          });
+        }
       }
       
       // 开始每日挑战
@@ -2909,6 +3169,14 @@ const TYPE_META = {
           
           // 设置每日挑战标识
           window.isDailyChallenge = true;
+          
+          // 记录每日挑战开始时的日期，避免跨日问题
+          const challengeDate = new Date();
+          window.dailyChallengeDate = {
+            year: challengeDate.getFullYear(),
+            month: challengeDate.getMonth() + 1,
+            day: challengeDate.getDate()
+          };
           
           // 设置每日挑战配置（固定为噩梦难度）
           updateDifficultyConfig('nightmare');
@@ -2935,9 +3203,8 @@ const TYPE_META = {
           // 启用难度递增模式
           generator.enableProgressiveMode(total);
           
-          // 重置并启动计时器
+          // 重置计时器但不启动
           resetTimer();
-          startTimer();
           
           // 添加等待时间（1.5秒）
           await new Promise(resolve => setTimeout(resolve, 1500));
@@ -2947,8 +3214,15 @@ const TYPE_META = {
           
           setControls(true);
           updateStatus();
-          current = generator.next(mode, total);
+          
+          // 初始化缓冲池
+          questionBuffer.initialize(generator, mode, total);
+          
+          current = await questionBuffer.getNext();
           renderQuestion(current);
+          
+          // 在问题显示后启动计时器
+          startTimer();
         } catch(err){
           // 出错时也要隐藏加载动画
           const loadingOverlay = document.getElementById('loadingOverlay');
@@ -2993,9 +3267,8 @@ const TYPE_META = {
           // 启用难度递增模式
           generator.enableProgressiveMode(total);
           
-          // 重置并启动计时器
+          // 重置计时器（但不启动）
           resetTimer();
-          startTimer();
           
           // 添加等待时间（1.5秒）
           await new Promise(resolve => setTimeout(resolve, 1500));
@@ -3007,6 +3280,9 @@ const TYPE_META = {
           updateStatus();
           current = generator.next(mode, total);
           renderQuestion(current);
+          
+          // 在题目显示后启动计时器
+          startTimer();
         } catch(err){
           // 出错时也要隐藏加载动画
           const loadingOverlay = document.getElementById('loadingOverlay');

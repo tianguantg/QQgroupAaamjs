@@ -651,14 +651,14 @@
     
     .result-label {
       color: var(--color-text-secondary, #666);
-      font-size: 14px;
+      font-size: 21px;
       text-align: left;
       width: 50%;
     }
     
     .result-value {
       color: var(--color-text-primary, #111);
-      font-size: 16px;
+      font-size: 24px;
       font-weight: 600;
       text-align: right;
       width: 50%;
@@ -667,7 +667,7 @@
     
     .result-total .result-label,
     .result-total .result-value {
-      font-size: 18px;
+      font-size: 27px;
       font-weight: 700;
       font-family: 'Blippo', 'Arial Black', Arial, sans-serif;
     }
@@ -715,6 +715,12 @@
             <button id="dailyChallengeBtn" class="nav-btn difficulty-btn" style="margin-top: 16px;">
               <span class="nav-btn-text">每日挑战</span>
             </button>
+            <div style="margin: 16px 0; text-align: center;">
+              <span style="color: var(--color-text-muted, #888); font-size: 12px; font-weight: 500;">————————————————————————————</span>
+            </div>
+            <button id="feedbackBtn" class="nav-btn difficulty-btn" style="margin-top: 8px; background-color: #4CAF50;">
+              <span class="nav-btn-text">反馈/题目收集</span>
+            </button>
           </div>
           
 
@@ -742,7 +748,6 @@
 
       <div id="statusBar" class="status-bar" style="display:none;">
         <div class="stat">题目：<span id="qIndex">0</span>/<span id="qTotal">0</span></div>
-        <div class="stat">难度：<span id="currentDifficulty">简单</span></div>
         <div class="stat">得分：<span id="score" class="score-animation">0</span></div>
         <div class="stat">用时：<span id="timer">00:00</span></div>
       </div>

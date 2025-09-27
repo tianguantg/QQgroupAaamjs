@@ -1719,6 +1719,57 @@ body::before {
                 inset 0 1px 0 var(--color-border-medium);
 }
 
+/* 图片加载占位符和错误状态样式 */
+.image-placeholder, .image-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    background: var(--color-bg-glass);
+    border: 2px dashed var(--color-border-light);
+    border-radius: 12px;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    transition: var(--transition-normal);
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border-light);
+    border-top: 3px solid var(--theme-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 12px;
+}
+
+.loading-text {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.image-error {
+    border-color: var(--color-error-light);
+    background: var(--color-error-bg);
+}
+
+.error-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+    opacity: 0.7;
+}
+
+.error-text {
+    font-weight: 500;
+    color: var(--color-error);
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* 响应式调整 */
 @media (max-width: 768px) {
     .powered-by {
