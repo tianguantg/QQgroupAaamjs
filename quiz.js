@@ -185,42 +185,43 @@
         modal.style.display = 'none';
       }
 
-      // 绑定事件监听器
-      function initFeedbackReply() {
+      // 绑定事件监听器的函数
+      function bindFeedbackEvents() {
         const feedbackReplyBtn = document.getElementById('feedbackReplyBtn');
         const closeFeedbackReply = document.getElementById('closeFeedbackReply');
         const modal = document.getElementById('feedbackReplyModal');
 
-        if (feedbackReplyBtn) {
-          // 移除可能存在的旧事件监听器
-          feedbackReplyBtn.removeEventListener('click', showFeedbackReply);
+        if (feedbackReplyBtn && !feedbackReplyBtn.hasAttribute('data-feedback-bound')) {
           feedbackReplyBtn.addEventListener('click', showFeedbackReply);
+          feedbackReplyBtn.setAttribute('data-feedback-bound', 'true');
         }
 
-        if (closeFeedbackReply) {
-          closeFeedbackReply.removeEventListener('click', hideFeedbackReply);
+        if (closeFeedbackReply && !closeFeedbackReply.hasAttribute('data-feedback-bound')) {
           closeFeedbackReply.addEventListener('click', hideFeedbackReply);
+          closeFeedbackReply.setAttribute('data-feedback-bound', 'true');
         }
 
         // 点击弹窗外部关闭
-        if (modal) {
+        if (modal && !modal.hasAttribute('data-feedback-bound')) {
           modal.addEventListener('click', function(e) {
             if (e.target === modal) {
               hideFeedbackReply();
             }
           });
+          modal.setAttribute('data-feedback-bound', 'true');
         }
-        
-        // 预加载反馈数据
-        loadFeedbackData();
       }
 
-      // 确保DOM加载完成后初始化
+      // 确保在DOM加载完成后和立即执行时都绑定事件
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initFeedbackReply);
+        document.addEventListener('DOMContentLoaded', function() {
+          bindFeedbackEvents();
+          loadFeedbackData();
+        });
       } else {
-        // DOM已经加载完成，直接初始化
-        initFeedbackReply();
+        // DOM已经加载完成，立即执行
+        bindFeedbackEvents();
+        loadFeedbackData();
       }
     })();
 
