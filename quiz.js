@@ -219,7 +219,7 @@
 
     // 题目缓冲池管理器
     class QuestionBuffer {
-      constructor(generator, preloader) {
+      constructor(generator = null, preloader = null) {
         this.generator = generator;
         this.preloader = preloader;
         this.buffer = []; // 缓冲的题目队列
@@ -256,6 +256,12 @@
       
       // 生成并预加载题目
       async generateAndPreload() {
+        // 检查generator是否存在
+        if (!this.generator) {
+          console.error('Generator not initialized');
+          return null;
+        }
+        
         // 关键：按顺序调用generator.next()保持随机性
         const question = this.generator.next(this.currentMode, this.currentTotal);
         
@@ -2870,7 +2876,7 @@ const TYPE_META = {
         if (index > total) return;
         
         // 使用缓冲池获取下一题
-        if (questionBuffer) {
+        if (questionBuffer && questionBuffer.generator) {
           current = await questionBuffer.getNext();
         } else {
           // 回退到原始方式（兼容性）

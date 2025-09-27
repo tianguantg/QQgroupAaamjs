@@ -356,20 +356,32 @@ function initRandomGradients() {
             const deltaX = gradient.targetX - gradient.currentX;
             const deltaY = gradient.targetY - gradient.currentY;
             
-            // 随机移动时间 2-5 秒
-            const moveTime = Math.random() * 3 + 2;
-            const framesPerSecond = 60;
+            // 随机移动时间 3-6 秒，增加移动时间以减少频繁更新
+            const moveTime = Math.random() * 3 + 3;
+            const framesPerSecond = 30; // 匹配动画帧率
             const totalFrames = moveTime * framesPerSecond;
             
             gradient.speedX = deltaX / totalFrames;
             gradient.speedY = deltaY / totalFrames;
         });
         
-        console.log('🎯 生成新的目标位置');
+        // console.log('🎯 生成新的目标位置'); // 注释掉频繁的日志输出
     }
 
-    // 动画更新函数
-    function animateGradients() {
+    // 动画更新函数 - 优化性能版本
+    let animationId;
+    let lastUpdateTime = 0;
+    const targetFPS = 30; // 降低到30FPS以提升性能
+    const frameInterval = 1000 / targetFPS;
+    
+    function animateGradients(currentTime) {
+        // 限制帧率以提升性能
+        if (currentTime - lastUpdateTime < frameInterval) {
+            animationId = requestAnimationFrame(animateGradients);
+            return;
+        }
+        lastUpdateTime = currentTime;
+        
         const root = document.documentElement;
         let allReachedTarget = true;
         
@@ -406,14 +418,14 @@ function initRandomGradients() {
         
         // 如果所有渐变都到达目标位置，生成新的目标
         if (allReachedTarget) {
-            // 等待0.5-2秒后生成新目标
+            // 等待1-3秒后生成新目标，增加间隔以减少计算频率
             setTimeout(() => {
                 generateNewTargets();
-            }, Math.random() * 1500 + 500);
+            }, Math.random() * 2000 + 1000);
         }
         
         // 继续动画
-        requestAnimationFrame(animateGradients);
+        animationId = requestAnimationFrame(animateGradients);
     }
 
     // 初始化
