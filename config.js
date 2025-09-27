@@ -73,11 +73,12 @@ function isLowPerformanceDevice() {
 document.addEventListener('DOMContentLoaded', function() {
     updatePageContent();
     
-    // 只在非移动设备且非低性能设备上启用复杂动画
-    if (!isLowPerformanceDevice()) {
-        initRandomGradients();
-        console.log('🎨 启用完整动画效果（高性能设备）');
-    } else {
+    // 禁用config.js中的动态背景系统，使用dynamic-background.js统一管理
+    // if (!isLowPerformanceDevice()) {
+    //     initRandomGradients();
+    //     console.log('🎨 启用完整动画效果（高性能设备）');
+    // } else {
+    if (true) { // 始终使用静态渐变，避免与dynamic-background.js冲突
         console.log('📱 移动端/低性能设备检测，已禁用复杂动画以提升性能');
         
         // 为移动端添加简化的静态渐变
@@ -163,14 +164,12 @@ function updatePageContent() {
         }
     }
 
-    // 更新二维码
+    // 更新二维码 - 已禁用
     const qrCode = document.getElementById('qrCode');
     if (qrCode) {
-        if (groupConfig.assets.qrcode && checkImageExists(groupConfig.assets.qrcode)) {
-            qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}?v=20250814" alt="群二维码">`;
-        } else {
-            qrCode.innerHTML = '二维码<br>暂未上传';
-        }
+        // 禁用二维码显示
+        qrCode.innerHTML = '二维码';
+        qrCode.classList.add('disabled');
     }
 
     // 添加复制群号功能

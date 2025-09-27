@@ -2841,7 +2841,14 @@ const TYPE_META = {
           score = 0; index = 1;
           
           // 启用难度递增模式
-          generator.enableProgressiveMode(total);
+          // 添加null检查以防止错误
+          if (generator && typeof generator.enableProgressiveMode === 'function') {
+            generator.enableProgressiveMode(total);
+          } else {
+            console.error('Generator未正确初始化或enableProgressiveMode方法不存在');
+            loadingOverlay.classList.remove('show');
+            return;
+          }
           
           // 重置计时器（但不启动）
           resetTimer();
@@ -3079,7 +3086,13 @@ const TYPE_META = {
         score = 0; index = 1; lock = false;
         
         // 启用难度递增模式（与开始按钮保持一致）
-        generator.enableProgressiveMode(total);
+        // 添加null检查以防止错误
+        if (generator && typeof generator.enableProgressiveMode === 'function') {
+          generator.enableProgressiveMode(total);
+        } else {
+          console.error('Generator未正确初始化或enableProgressiveMode方法不存在');
+          return;
+        }
         
         // 重置并启动计时器
         resetTimer();
@@ -3207,7 +3220,13 @@ const TYPE_META = {
           score = 0; index = 1;
           
           // 启用难度递增模式
-          generator.enableProgressiveMode(total);
+          // 添加null检查以防止错误
+          if (generator && typeof generator.enableProgressiveMode === 'function') {
+            generator.enableProgressiveMode(total);
+          } else {
+            console.error('Generator未正确初始化或enableProgressiveMode方法不存在');
+            return;
+          }
           
           // 重置计时器但不启动
           resetTimer();
@@ -3271,7 +3290,13 @@ const TYPE_META = {
           score = 0; index = 1;
           
           // 启用难度递增模式
-          generator.enableProgressiveMode(total);
+          // 添加null检查以防止错误
+          if (generator && typeof generator.enableProgressiveMode === 'function') {
+            generator.enableProgressiveMode(total);
+          } else {
+            console.error('Generator未正确初始化或enableProgressiveMode方法不存在');
+            return;
+          }
           
           // 重置计时器（但不启动）
           resetTimer();

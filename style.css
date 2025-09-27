@@ -927,6 +927,47 @@ body::before {
     transform: translateX(-50%) translateY(-4px);
 }
 
+.join-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #666;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.join-button.disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: #666 !important;
+}
+
+.join-button.disabled::before {
+    display: none;
+}
+
+.join-button.disabled::after {
+    content: '功能已禁用';
+}
+
+.qr-code.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f0f0f0;
+    color: #999;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.qr-code.disabled:hover {
+    transform: none !important;
+    background: #f0f0f0 !important;
+    box-shadow: none !important;
+}
+
+.qr-code.disabled::after {
+    display: none;
+}
+
 .join-button {
     font-size: var(--font-size-2xl);
     font-weight: var(--font-weight-semibold);
