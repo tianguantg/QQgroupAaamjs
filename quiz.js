@@ -2437,28 +2437,56 @@ const TYPE_META = {
       let timerStartTime = 0;
       let timerInterval = null;
       let totalElapsedTime = 0;
+      let timerPaused = false; // 新增：计时器暂停状态
 
       // 计时器函数
       function startTimer() {
-        timerStartTime = Date.now();
-        timerInterval = setInterval(updateTimer, 1000);
+        if (timerPaused) {
+          // 如果是从暂停状态恢复，重新设置开始时间
+          timerStartTime = Date.now();
+          timerPaused = false;
+        } else {
+          timerStartTime = Date.now();
+        }
+        if (!timerInterval) {
+          timerInterval = setInterval(updateTimer, 1000);
+        }
+      }
+
+      function pauseTimer() {
+        if (timerInterval && !timerPaused) {
+          totalElapsedTime += Date.now() - timerStartTime;
+          timerPaused = true;
+        }
+      }
+
+      function resumeTimer() {
+        if (timerPaused) {
+          timerStartTime = Date.now();
+          timerPaused = false;
+        }
       }
 
       function stopTimer() {
         if (timerInterval) {
           clearInterval(timerInterval);
           timerInterval = null;
-          totalElapsedTime += Date.now() - timerStartTime;
+          if (!timerPaused) {
+            totalElapsedTime += Date.now() - timerStartTime;
+          }
+          timerPaused = false;
         }
       }
 
       function resetTimer() {
         stopTimer();
         totalElapsedTime = 0;
+        timerPaused = false;
         timerEl.textContent = '00:00';
       }
 
       function updateTimer() {
+        if (timerPaused) return; // 暂停时不更新显示
         const currentElapsed = totalElapsedTime + (Date.now() - timerStartTime);
         const seconds = Math.floor(currentElapsed / 1000);
         const minutes = Math.floor(seconds / 60);
@@ -2608,7 +2636,7 @@ const TYPE_META = {
             // 图片已预加载，直接显示
             questionView.innerHTML = `<img src="${q.promptImage}" alt="${alt}" class="quiz-card-image"/>`;
           } else {
-            // 显示加载占位符
+            // 显示加载占位符并暂停计时器
             questionView.innerHTML = `
               <div class="image-placeholder">
                 <div class="loading-spinner"></div>
@@ -2616,10 +2644,15 @@ const TYPE_META = {
               </div>
             `;
             
+            // 暂停计时器
+            pauseTimer();
+            
             // 异步加载图片
             imagePreloader.preloadImage(q.promptImage).then((img) => {
               if (img && current === q) { // 确保还是当前题目
                 questionView.innerHTML = `<img src="${q.promptImage}" alt="${alt}" class="quiz-card-image"/>`;
+                // 图片加载完成，恢复计时器
+                resumeTimer();
               }
             }).catch((error) => {
               if (current === q) { // 确保还是当前题目
@@ -2629,6 +2662,8 @@ const TYPE_META = {
                     <div class="error-text">图片加载失败</div>
                   </div>
                 `;
+                // 即使加载失败也要恢复计时器
+                resumeTimer();
               }
             });
           }
