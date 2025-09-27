@@ -2893,8 +2893,8 @@ const TYPE_META = {
         // 题目得分 = 答题得分（百分制）
         const questionScore = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
         
-        // 时间得分 = min(max(100+题目数量*6-答题所用秒数,0), 100)，四舍五入到整数
-        const timeScore = Math.min(Math.max(100 + totalQuestions * 6 - timeInSeconds,0), 100);
+        // 时间得分 = min(max(100+题目数量*7-答题所用秒数*0.5,0), 100)，四舍五入到整数
+        const timeScore = Math.min(Math.max(100 + totalQuestions * 7 - timeInSeconds*0.5,0), 100);
         
         // 最终得分 = 题目得分*(5/6) + 时间得分*(1/6)，四舍五入到整数
         const finalScore = Math.round(questionScore * (5/6) + timeScore * (1/6));
