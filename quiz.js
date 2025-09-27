@@ -74,6 +74,145 @@
       }
     })();
 
+    // 反馈回复功能
+    (function() {
+      let feedbackData = [];
+      let lastModified = '';
+
+      // 从JSON文件加载反馈数据
+      async function loadFeedbackData() {
+        try {
+          const response = await fetch('assets/creater_data/feedbackData.json');
+          if (!response.ok) {
+            throw new Error('Failed to load feedback data');
+          }
+          
+          // 获取文件的最后修改时间
+          const lastModifiedHeader = response.headers.get('Last-Modified');
+          if (lastModifiedHeader) {
+            const date = new Date(lastModifiedHeader);
+            lastModified = date.toLocaleString('zh-CN', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            }).replace(/\//g, '/');
+          } else {
+            // 如果没有Last-Modified头，使用当前时间
+            lastModified = new Date().toLocaleString('zh-CN', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit'
+            }).replace(/\//g, '/');
+          }
+          
+          feedbackData = await response.json();
+        } catch (error) {
+          console.error('Error loading feedback data:', error);
+          // 使用默认数据作为后备
+          feedbackData = [
+            {
+              id: 2,
+              nickname: "qwer一套连",
+              problem: "技巧题中描述问题，[凛]的主动技能必须要求卡牌使用前，怪物标记层数≥3才能触发。这是凛的卡牌活体书页的效果，不是凛的主动技能",
+              reply: "好的，已经修改了"
+            },
+            {
+              id: 1,
+              nickname: "千里终始",
+              problem: "噩梦难度答对一道题之后就结算了",
+              reply: "暂时没遇见，不知道什么原因，还有人遇到过这个问题吗？"
+            }
+          ];
+          lastModified = '2025/9/27 21:33';
+        }
+      }
+
+      // 显示反馈回复弹窗
+      async function showFeedbackReply() {
+        // 确保数据已加载
+        if (feedbackData.length === 0) {
+          await loadFeedbackData();
+        }
+        
+        const modal = document.getElementById('feedbackReplyModal');
+        const feedbackList = document.getElementById('feedbackList');
+        const updateTimeElement = document.querySelector('.feedback-update-time small');
+        
+        // 更新时间显示
+        if (updateTimeElement) {
+          updateTimeElement.textContent = `更新时间：${lastModified}`;
+        }
+        
+        // 清空现有内容
+        feedbackList.innerHTML = '';
+        
+        // 生成反馈列表HTML
+        feedbackData.forEach((feedback, index) => {
+          const feedbackItem = document.createElement('div');
+          feedbackItem.className = 'feedback-item';
+          feedbackItem.innerHTML = `
+            <div class="feedback-header">
+              <strong>反馈 ${feedback.id}</strong>
+              <span class="feedback-nickname">昵称：${feedback.nickname}</span>
+            </div>
+            <div class="feedback-problem">
+              <strong>问题：</strong>${feedback.problem}
+            </div>
+            <div class="feedback-reply">
+              <strong>回复：</strong>${feedback.reply}
+            </div>
+          `;
+          feedbackList.appendChild(feedbackItem);
+          
+          // 添加分隔线（除了最后一个）
+          if (index < feedbackData.length - 1) {
+            const separator = document.createElement('div');
+            separator.className = 'feedback-separator';
+            feedbackList.appendChild(separator);
+          }
+        });
+        
+        modal.style.display = 'block';
+      }
+
+      // 隐藏反馈回复弹窗
+      function hideFeedbackReply() {
+        const modal = document.getElementById('feedbackReplyModal');
+        modal.style.display = 'none';
+      }
+
+      // 绑定事件监听器
+      document.addEventListener('DOMContentLoaded', function() {
+        const feedbackReplyBtn = document.getElementById('feedbackReplyBtn');
+        const closeFeedbackReply = document.getElementById('closeFeedbackReply');
+        const modal = document.getElementById('feedbackReplyModal');
+
+        if (feedbackReplyBtn) {
+          feedbackReplyBtn.addEventListener('click', showFeedbackReply);
+        }
+
+        if (closeFeedbackReply) {
+          closeFeedbackReply.addEventListener('click', hideFeedbackReply);
+        }
+
+        // 点击弹窗外部关闭
+        if (modal) {
+          modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+              hideFeedbackReply();
+            }
+          });
+        }
+        
+        // 预加载反馈数据
+        loadFeedbackData();
+      });
+    })();
+
 // ========== Script Block 2 ==========
 // 可控的随机数生成器类
     class SeededRandom {
