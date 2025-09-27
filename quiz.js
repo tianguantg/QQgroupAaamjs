@@ -186,16 +186,19 @@
       }
 
       // 绑定事件监听器
-      document.addEventListener('DOMContentLoaded', function() {
+      function initFeedbackReply() {
         const feedbackReplyBtn = document.getElementById('feedbackReplyBtn');
         const closeFeedbackReply = document.getElementById('closeFeedbackReply');
         const modal = document.getElementById('feedbackReplyModal');
 
         if (feedbackReplyBtn) {
+          // 移除可能存在的旧事件监听器
+          feedbackReplyBtn.removeEventListener('click', showFeedbackReply);
           feedbackReplyBtn.addEventListener('click', showFeedbackReply);
         }
 
         if (closeFeedbackReply) {
+          closeFeedbackReply.removeEventListener('click', hideFeedbackReply);
           closeFeedbackReply.addEventListener('click', hideFeedbackReply);
         }
 
@@ -210,7 +213,15 @@
         
         // 预加载反馈数据
         loadFeedbackData();
-      });
+      }
+
+      // 确保DOM加载完成后初始化
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFeedbackReply);
+      } else {
+        // DOM已经加载完成，直接初始化
+        initFeedbackReply();
+      }
     })();
 
 // ========== Script Block 2 ==========
