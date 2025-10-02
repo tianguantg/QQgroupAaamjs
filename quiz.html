@@ -24,6 +24,12 @@
       background: var(--theme-bg-gradient);
       background-size: 100% 100%;
       background-attachment: fixed;
+      cursor: url('images/decisions/arrow.png') 0 0, auto;
+    }
+    
+    /* 鼠标按下时的指针样式 */
+    body:active {
+      cursor: url('images/decisions/arrow_pressed.png') 0 0, auto;
     }
     
     /* 移动端背景优化 */
@@ -301,8 +307,9 @@
       }
     }
     
-    /* 正确选项的特殊发光效果 */
-    .quiz-option.correct-explosion {
+    /* 正确选项的特殊发光效果（文本按钮与图片按钮通用） */
+    .quiz-option.correct-explosion,
+    .battle-image-btn.correct-explosion {
       animation: correctGlow 0.75s ease-out forwards;
       position: relative;
       overflow: visible;
@@ -498,12 +505,125 @@
     .stat-icon-container {
       display: flex;
       justify-content: center;
+    }
+    
+    /* 战斗决策图片按钮样式 */
+    .battle-buttons-container {
+      display: flex;
+      justify-content: center;
+      margin-top: 24px;
+    }
+    
+    .battle-image-buttons {
+      display: flex;
+      gap: 40px;
       align-items: center;
+      justify-content: center;
+    }
+    
+    .battle-image-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .battle-image-btn:hover {
+      transform: translateY(-4px);
+      filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
+    }
+    
+    .battle-image-btn:active {
+      transform: translateY(-2px);
+    }
+    
+    .battle-image-btn img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      transition: all 0.3s ease;
+      border-radius: 50%;
+    }
+    
+    .battle-image-btn:hover img {
+      transform: scale(1.1);
+      filter: brightness(1.1);
+    }
+    
+    /* 选中状态样式 */
+    .battle-image-btn.selected {
+      background: rgba(90, 111, 216, 0.2);
+      border: 2px solid var(--theme-border-gradient, #5a6fd8);
+      filter: drop-shadow(0 4px 16px rgba(90, 111, 216, 0.4));
+    }
+    
+    /* 正确答案样式 */
+    .battle-image-btn.correct {
+      background: rgba(76, 175, 80, 0.25);
+      border: 3px solid var(--color-success, #4caf50);
+      filter: drop-shadow(0 8px 26px rgba(76, 175, 80, 0.6));
+      animation: battleCorrectPulse 600ms ease-out;
+    }
+
+    @keyframes battleCorrectPulse {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.12); box-shadow: 0 0 0 12px rgba(76,175,80,0.25); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 18px rgba(76,175,80,0.15); }
+      100% { transform: scale(1); box-shadow: none; }
+    }
+    
+    /* 错误答案样式 */
+    .battle-image-btn.incorrect {
+      background: rgba(244, 67, 54, 0.25);
+      border: 3px solid var(--color-error, #f44336);
+      filter: drop-shadow(0 8px 26px rgba(244, 67, 54, 0.6));
+      animation: battleIncorrectShake 450ms ease-in-out;
+    }
+
+    @keyframes battleIncorrectShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    
+    /* 怪物骰数显示样式 */
+    .enemy-dice-number {
+      position: absolute;
+      left: 43%; /* 宽度的6/10处 */
+      top: 3%; /* 高度的3/10处 */
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 25px; /* 按钮高度120px的1/6 */
+      color: #000000;
+      font-weight: bold;
+      transform: rotate(-20deg); 
+      pointer-events: none; /* 不影响按钮点击 */
+      z-index: 10;
+      text-shadow: 
+        -2px -2px 0 #ffffff,
+        2px -2px 0 #ffffff,
+        -2px 2px 0 #ffffff,
+        2px 2px 0 #ffffff,
+        -4px 0 0 #ffffff,
+        4px 0 0 #ffffff,
+        0 -4px 0 #ffffff,
+        0 4px 0 #ffffff;
     }
     
     .stat-icon {
       position: relative;
       display: inline-block;
+      align-items: center;
     }
     
     .decision-icon {
@@ -879,7 +999,7 @@
             <button id="feedbackBtn" class="nav-btn difficulty-btn" style="margin-top: 8px; background-color: #4CAF50;">
               <span class="nav-btn-text">反馈/题目收集</span>
             </button>
-            <button id="feedbackReplyBtn" class="nav-btn difficulty-btn" style="margin-top: 8px; background-color: #2196F3;">
+            <button id="feedbackReplyBtn" class="nav-btn difficulty-btn" style="margin-top: 8px; background-color: #2196F3; display: none;">
               <span class="nav-btn-text">反馈回复</span>
             </button>
           </div>
@@ -959,6 +1079,28 @@
         </div>
         <div id="feedbackList" class="feedback-list">
           <!-- 反馈内容将通过JavaScript动态生成 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 反馈方式选择弹窗 -->
+  <div id="feedbackChoiceModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>选择渠道</h3>
+        <span class="close" id="closeFeedbackChoice">&times;</span>
+      </div>
+      <div class="modal-body">
+
+        <div style="display:flex; flex-direction: column; align-items: center; gap:12px;">
+          <button id="feedbackBilibiliBtn" class="nav-btn primary">
+            <span class="nav-btn-text">B站（反馈推荐）</span>
+          </button>
+        
+          <button id="feedbackQuestionnaireBtn" class="nav-btn difficulty-btn">
+            <span class="nav-btn-text">填写问卷（题目收集推荐）</span>
+          </button>
         </div>
       </div>
     </div>

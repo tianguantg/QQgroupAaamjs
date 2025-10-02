@@ -595,7 +595,7 @@
     "profile": {
       "name": "超绝最可爱天使酱",
       "birthday": "7月7日",
-      "favorite_food": "未知",
+      "favorite_food": null,
       "favorite_gift": null,
       "biography": "网络天使，糖糖开直播时的变装。装作性格乖巧的样子，动不动就会做出讨好阿宅们的行为。"
     },
@@ -646,7 +646,7 @@
     "profile": {
       "name": "糖糖",
       "birthday": "5月5日",
-      "favorite_food": "未知",
+      "favorite_food": null,
       "favorite_gift": null,
       "biography": "看上去老实文静，实际性格任性，容易得意忘形，迫切的想要得到他人的认可，性格恶劣。"
     },

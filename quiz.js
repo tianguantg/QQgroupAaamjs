@@ -418,11 +418,16 @@
         
         if (!question) return null;
         
-        // 如果有图片，预加载
+        // 如果有图片，预加载（增加preloader空值保护）
         if (question.promptImage) {
           try {
-            await this.preloader.preloadImage(question.promptImage);
-            question._imagePreloaded = true;
+            if (this.preloader) {
+              await this.preloader.preloadImage(question.promptImage);
+              question._imagePreloaded = true;
+            } else {
+              console.warn('预加载器未初始化，将跳过预加载');
+              question._imagePreloaded = false;
+            }
           } catch (error) {
             console.warn('图片预加载失败，将使用占位符:', error);
             question._imagePreloaded = false;
@@ -477,7 +482,7 @@
 
     // 创建全局实例
     const imagePreloader = new ImagePreloader();
-    const questionBuffer = new QuestionBuffer();
+const questionBuffer = new QuestionBuffer(null, imagePreloader);
 
 // 全局小测验配置：
 // - pools: 题目池总体占比（card=卡牌池，character=角色池，event=事件池，profile=档案池）
@@ -1412,7 +1417,8 @@ const TYPE_META = {
           promptText,
           promptHTML,
           options,
-          answer: correctAnswer
+          answer: correctAnswer,
+          enemyX: X  // 添加敌方骰数X值
         };
       }
       
@@ -2760,6 +2766,10 @@ const TYPE_META = {
         const existingExplanations = document.querySelectorAll('.explanation-content');
         existingExplanations.forEach(el => el.remove());
         
+        // 清除之前的题目反馈按钮
+        const existingFeedbackBtns = document.querySelectorAll('.question-feedback-btn');
+        existingFeedbackBtns.forEach(el => el.remove());
+        
         // 首先隐藏所有选项按钮
         optEls.forEach(btn => { 
           btn.classList.remove('correct','incorrect'); 
@@ -2833,17 +2843,63 @@ const TYPE_META = {
         // 检查是否是包含数字修改的题目类型
         const isNumberModificationQuestion = q.type === 'card_effect_desc' || q.type === 'char_skill_desc' || q.type === 'enemy_skill_desc';
         
-        q.options.forEach((text, i) => {
-          if (i < optEls.length) { // 确保不超出按钮数量
-            if (isNumberModificationQuestion) {
-              // 对包含数字修改的题目进行高亮处理，传递所有选项
-              const highlightedText = highlightNumbers(text, q.answer, q.options);
-              optEls[i].querySelector('.opt-text').innerHTML = highlightedText;
-            } else {
-              optEls[i].querySelector('.opt-text').textContent = text;
-            }
+        // 特殊处理battle_decision题型的图片按钮
+        if (q.type === 'battle_decision') {
+          // 隐藏所有选项按钮
+          optEls.forEach(btn => { btn.style.display = 'none'; });
+          
+          // 创建或更新图片按钮容器
+          let battleButtonsContainer = document.querySelector('.battle-buttons-container');
+          if (!battleButtonsContainer) {
+            battleButtonsContainer = document.createElement('div');
+            battleButtonsContainer.className = 'battle-buttons-container';
+            document.querySelector('.options-list').appendChild(battleButtonsContainer);
           }
-        });
+          
+          // 显示容器（防止之前被隐藏）
+          battleButtonsContainer.style.display = 'flex';
+          
+          // 创建图片按钮HTML
+          battleButtonsContainer.innerHTML = `
+            <div class="battle-image-buttons">
+              <button class="battle-image-btn" data-answer="防御">
+                <img src="images/decisions/ready.png" alt="防御" />
+              </button>
+              <button class="battle-image-btn" data-answer="闪避">
+                <img src="images/decisions/dodg.png" alt="闪避" />
+                <span class="enemy-dice-number">${q.enemyX}</span>
+              </button>
+            </div>
+          `;
+          
+          // 为图片按钮添加点击事件
+          const battleBtns = battleButtonsContainer.querySelectorAll('.battle-image-btn');
+          battleBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+              const answer = btn.getAttribute('data-answer');
+              onSelect(answer, btn);
+            });
+          });
+        } else {
+          // 隐藏battle_decision的图片按钮容器（如果存在）
+          const battleButtonsContainer = document.querySelector('.battle-buttons-container');
+          if (battleButtonsContainer) {
+            battleButtonsContainer.style.display = 'none';
+          }
+          
+          // 正常显示文字选项按钮
+          q.options.forEach((text, i) => {
+            if (i < optEls.length) { // 确保不超出按钮数量
+              if (isNumberModificationQuestion) {
+                // 对包含数字修改的题目进行高亮处理，传递所有选项
+                const highlightedText = highlightNumbers(text, q.answer, q.options);
+                optEls[i].querySelector('.opt-text').innerHTML = highlightedText;
+              } else {
+                optEls[i].querySelector('.opt-text').textContent = text;
+              }
+            }
+          });
+        }
         
         // 同时也要高亮正确答案中的数字（当答题后显示正确答案时）
         if (isNumberModificationQuestion && q.answer) {
@@ -2893,8 +2949,8 @@ const TYPE_META = {
         // 题目得分 = 答题得分（百分制）
         const questionScore = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
         
-        // 时间得分 = min(max(100+题目数量*7-答题所用秒数*0.5,0), 100)，四舍五入到整数
-        const timeScore = Math.min(Math.max(100 + totalQuestions * 7 - timeInSeconds*0.5,0), 100);
+        // 时间得分 = min(max(100+(题目数量*7-答题所用秒数)*0.5,0), 100)
+        const timeScore = Math.round(Math.min(Math.max(100 + (totalQuestions * 7 - timeInSeconds)*0.5,0), 100));
         
         // 最终得分 = 题目得分*(5/6) + 时间得分*(1/6)，四舍五入到整数
         const finalScore = Math.round(questionScore * (5/6) + timeScore * (1/6));
@@ -3086,6 +3142,26 @@ const TYPE_META = {
         lock = true;
         const isCorrect = optionText === current.answer;
         if (isCorrect) score += 1;
+        
+        // 图片按钮（battle_decision）专用标注与动画
+        const battleImageBtns = document.querySelectorAll('.battle-image-btn');
+        if (battleImageBtns && battleImageBtns.length > 0) {
+          const correctImageBtn = Array.from(battleImageBtns).find(b => b.getAttribute('data-answer') === current.answer);
+          
+          // 禁用图片按钮点击
+          battleImageBtns.forEach(b => b.disabled = true);
+          
+          if (isCorrect) {
+            // 为点击的图片按钮添加明显的正确样式与爆裂特效
+            btn.classList.add('correct', 'correct-explosion');
+            createExplosionEffect(btn);
+          } else {
+            // 错误时，点击按钮标红，展示正确按钮的绿色高亮
+            btn.classList.add('incorrect');
+            if (correctImageBtn) correctImageBtn.classList.add('correct');
+          }
+        }
+        
         // 标注
         optEls.forEach(b => {
           const text = b.querySelector('.opt-text').textContent;
@@ -3165,6 +3241,25 @@ const TYPE_META = {
             // 将解析添加到"下一题"按钮的后一行
             const nextButtonArea = nextBtn.parentElement;
             nextButtonArea.parentElement.insertBefore(explanationDiv, nextButtonArea.nextSibling);
+            
+            // 插入“题目有问题？”反馈按钮（位于解析后，如果存在，否则位于下一题按钮之后）
+            {
+              const feedbackLink = 'https://wj.qq.com/s2/24040427/7fc2/';
+              const questionFeedbackBtn = document.createElement('button');
+              questionFeedbackBtn.className = 'nav-btn difficulty-btn question-feedback-btn';
+              questionFeedbackBtn.style.cssText = 'display: block; margin: 16px auto 0; background-color: #4CAF50;';
+              questionFeedbackBtn.innerHTML = '<span class="nav-btn-text">题目有问题？</span>';
+              questionFeedbackBtn.addEventListener('click', () => {
+                showFeedbackChoice(feedbackLink);
+              });
+              // 选择插入位置：如果有解析，插在最后一个解析后；否则插在下一题按钮后
+              let insertAfterNode = nextButtonArea;
+              const createdExplanations = nextButtonArea.parentElement.querySelectorAll('.explanation-content');
+              if (createdExplanations && createdExplanations.length > 0) {
+                insertAfterNode = createdExplanations[createdExplanations.length - 1];
+              }
+              nextButtonArea.parentElement.insertBefore(questionFeedbackBtn, insertAfterNode.nextSibling);
+            }
           }
           
           // 为skill_description题目显示选项解析
@@ -3213,6 +3308,43 @@ const TYPE_META = {
             // 将解析添加到"下一题"按钮的后一行
             const nextButtonArea = nextBtn.parentElement;
             nextButtonArea.parentElement.insertBefore(skillExplanationDiv, nextButtonArea.nextSibling);
+            
+            // 插入“题目有问题？”反馈按钮（位于解析后，如果存在，否则位于下一题按钮之后）
+            {
+              const feedbackLink = 'https://wj.qq.com/s2/24040427/7fc2/';
+              const questionFeedbackBtn = document.createElement('button');
+              questionFeedbackBtn.className = 'nav-btn difficulty-btn question-feedback-btn';
+              questionFeedbackBtn.style.cssText = 'display: block; margin: 16px auto 0; background-color: #4CAF50;';
+              questionFeedbackBtn.innerHTML = '<span class="nav-btn-text">题目有问题？</span>';
+              questionFeedbackBtn.addEventListener('click', () => {
+                showFeedbackChoice(feedbackLink);
+              });
+              // 选择插入位置：如果有解析，插在最后一个解析后；否则插在下一题按钮后
+              let insertAfterNode = nextButtonArea;
+              const createdExplanations = nextButtonArea.parentElement.querySelectorAll('.explanation-content');
+              if (createdExplanations && createdExplanations.length > 0) {
+                insertAfterNode = createdExplanations[createdExplanations.length - 1];
+              }
+              nextButtonArea.parentElement.insertBefore(questionFeedbackBtn, insertAfterNode.nextSibling);
+            }
+          }
+          
+          // 如果没有生成任何解析，也在下一题按钮后插入“题目有问题？”按钮（避免重复）
+          {
+            const nextButtonArea = nextBtn.parentElement;
+            const createdExplanations = nextButtonArea.parentElement.querySelectorAll('.explanation-content');
+            const existingInsertedFeedback = nextButtonArea.parentElement.querySelector('.question-feedback-btn');
+            if ((!createdExplanations || createdExplanations.length === 0) && !existingInsertedFeedback) {
+              const feedbackLink = 'https://wj.qq.com/s2/24040427/7fc2/';
+              const questionFeedbackBtn = document.createElement('button');
+              questionFeedbackBtn.className = 'nav-btn difficulty-btn question-feedback-btn';
+              questionFeedbackBtn.style.cssText = 'display: block; margin: 16px auto 0; background-color: #4CAF50;';
+              questionFeedbackBtn.innerHTML = '<span class="nav-btn-text">题目有问题？</span>';
+              questionFeedbackBtn.addEventListener('click', () => {
+                showFeedbackChoice(feedbackLink);
+              });
+              nextButtonArea.parentElement.insertBefore(questionFeedbackBtn, nextButtonArea.nextSibling);
+            }
           }
         }
         
@@ -3339,8 +3471,72 @@ const TYPE_META = {
         
         // 初始化难度按钮
         initializeDifficultyButtons();
+
+        // 绑定反馈方式选择弹窗的通用事件
+        (function bindFeedbackChoiceModalEvents() {
+          const choiceModal = document.getElementById('feedbackChoiceModal');
+          const closeChoice = document.getElementById('closeFeedbackChoice');
+          const bilibiliBtn = document.getElementById('feedbackBilibiliBtn');
+          const questionnaireBtn = document.getElementById('feedbackQuestionnaireBtn');
+
+          // 关闭按钮
+          if (closeChoice && !closeChoice.hasAttribute('data-feedback-choice-bound')) {
+            closeChoice.addEventListener('click', hideFeedbackChoice);
+            closeChoice.setAttribute('data-feedback-choice-bound', 'true');
+          }
+
+          // 点击遮罩关闭
+          if (choiceModal && !choiceModal.hasAttribute('data-feedback-choice-bound')) {
+            choiceModal.addEventListener('click', function(e) {
+              if (e.target === choiceModal) {
+                hideFeedbackChoice();
+              }
+            });
+            choiceModal.setAttribute('data-feedback-choice-bound', 'true');
+          }
+
+          // B站（推荐）
+          if (bilibiliBtn && !bilibiliBtn.hasAttribute('data-feedback-choice-bound')) {
+            bilibiliBtn.addEventListener('click', function() {
+              window.open('https://www.bilibili.com/video/BV1srHPz4EqN/', '_blank');
+              hideFeedbackChoice();
+            });
+            bilibiliBtn.setAttribute('data-feedback-choice-bound', 'true');
+          }
+
+          // 问卷按钮（问卷链接在显示弹窗时动态设置）
+          if (questionnaireBtn && !questionnaireBtn.hasAttribute('data-feedback-choice-bound')) {
+            questionnaireBtn.addEventListener('click', function() {
+              const url = questionnaireBtn.getAttribute('data-questionnaire-url');
+              if (url) {
+                window.open(url, '_blank');
+              }
+              hideFeedbackChoice();
+            });
+            questionnaireBtn.setAttribute('data-feedback-choice-bound', 'true');
+          }
+        })();
       });
       
+      // 显示/隐藏反馈方式选择弹窗
+      function showFeedbackChoice(questionnaireUrl) {
+        const modal = document.getElementById('feedbackChoiceModal');
+        const questionnaireBtn = document.getElementById('feedbackQuestionnaireBtn');
+        if (questionnaireBtn) {
+          questionnaireBtn.setAttribute('data-questionnaire-url', questionnaireUrl || 'https://wj.qq.com/s2/24040427/7fc2/');
+        }
+        if (modal) {
+          modal.style.display = 'block';
+        }
+      }
+
+      function hideFeedbackChoice() {
+        const modal = document.getElementById('feedbackChoiceModal');
+        if (modal) {
+          modal.style.display = 'none';
+        }
+      }
+
       // 难度按钮初始化和事件处理
       function initializeDifficultyButtons() {
         const normalBtn = document.getElementById('normalBtn');
@@ -3356,11 +3552,11 @@ const TYPE_META = {
         // 每日挑战按钮事件
         dailyChallengeBtn.addEventListener('click', () => startDailyChallenge());
         
-        // 反馈按钮事件
+        // 反馈按钮事件 -> 打开反馈方式选择弹窗
         const feedbackBtn = document.getElementById('feedbackBtn');
         if (feedbackBtn) {
           feedbackBtn.addEventListener('click', () => {
-            window.open('https://wj.qq.com/s2/24040427/7fc2/', '_blank');
+            showFeedbackChoice('https://wj.qq.com/s2/24040427/7fc2/');
           });
         }
       }
