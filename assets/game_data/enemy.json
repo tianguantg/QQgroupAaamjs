@@ -1518,7 +1518,7 @@
     "extreme": null
   },
   "game_mechanics": {
-    "can_counter": false,
+    "can_counter": true,
     "description": [
       "会主动攻击。",
       "无法反击。"
