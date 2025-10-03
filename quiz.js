@@ -3448,7 +3448,10 @@ const TYPE_META = {
         resultView.style.display = 'none';
         // 不在这里设置选项显示，让renderQuestion函数处理
         optEls.forEach(btn => { btn.classList.remove('correct','incorrect'); btn.disabled=false; });
-        current = generator.next(mode);
+        
+        // 与开始流程一致：通过缓冲池获取题目
+        questionBuffer.initialize(generator, mode, total);
+        current = await questionBuffer.getNext();
         renderQuestion(current);
         updateStatus();
       });
@@ -3719,7 +3722,9 @@ const TYPE_META = {
           
           setControls(true);
           updateStatus();
-          current = generator.next(mode, total);
+          // 初始化缓冲池并通过缓冲池获取首题，保持与后续一致
+          questionBuffer.initialize(generator, mode, total);
+          current = await questionBuffer.getNext();
           renderQuestion(current);
           
           // 在题目显示后启动计时器
