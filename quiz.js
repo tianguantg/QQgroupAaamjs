@@ -1418,7 +1418,8 @@ const TYPE_META = {
           promptHTML,
           options,
           answer: correctAnswer,
-          enemyX: X  // 添加敌方骰数X值
+          enemyX: X,  // 添加敌方骰数X值
+          defendN: n  // 添加防御所需骰数阈值n
         };
       }
       
@@ -3260,6 +3261,33 @@ const TYPE_META = {
               }
               nextButtonArea.parentElement.insertBefore(questionFeedbackBtn, insertAfterNode.nextSibling);
             }
+          }
+
+          // 为决策题（battle_decision）显示错误解析
+          if (current.type === 'battle_decision') {
+            const decisionExplanationDiv = document.createElement('div');
+            decisionExplanationDiv.className = 'explanation-content';
+            decisionExplanationDiv.style.cssText = `
+              margin-top: 12px;
+              padding: 12px;
+              background: var(--color-bg-info);
+              border: 1px solid var(--color-border-info);
+              border-radius: 8px;
+              font-size: 0.9em;
+              line-height: 1.4;
+              color: var(--text-color);
+            `;
+            const defendLine = (typeof current.defendN === 'number' && current.defendN <= 0)
+              ? '防御必活'
+              : (typeof current.defendN === 'number' && current.defendN >= 6)
+                ? '防御必死'
+                : `防御所需骰数>${current.defendN}`;
+            const dodgeLine = (typeof current.enemyX === 'number' && current.enemyX >= 6)
+              ? '闪避所需骰数＝6'
+              : `闪避所需骰数>${current.enemyX}`;
+            decisionExplanationDiv.innerHTML = `<strong>解析：</strong>${defendLine}<br>${dodgeLine}`;
+            const nextButtonArea = nextBtn.parentElement;
+            nextButtonArea.parentElement.insertBefore(decisionExplanationDiv, nextButtonArea.nextSibling);
           }
           
           // 为skill_description题目显示选项解析
