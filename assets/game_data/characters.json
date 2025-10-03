@@ -157,7 +157,7 @@
     "title": "家政机器人",
     "data": {
       "attack": 1,
-      "defense": 1,
+      "defense": 0,
       "hp": 9
     },
     "skills": {
