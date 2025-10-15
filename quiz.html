@@ -77,6 +77,17 @@
       display: block;
     }
     
+    /* 每日挑战按钮特殊样式 - 仅边框区分 */
+    .daily-challenge-btn {
+      border: 2px solid var(--color-warning, #ff9800) !important;
+      box-shadow: 0 0 0 1px var(--color-warning, #ff9800) !important;
+    }
+    
+    .daily-challenge-btn:hover {
+      border: 2px solid var(--color-accent, #4facfe) !important;
+      box-shadow: 0 0 8px rgba(79, 172, 254, 0.3) !important;
+    }
+    
     /* 主流做题界面布局 */
     .quiz-layout { 
       max-width: 800px; 
@@ -962,8 +973,7 @@
   </div>
 
   <div class="container quiz-container">
-    <!-- 导航栏（复用样式）- 已隐藏 -->
-    <nav class="navbar" style="display: none;">
+    <nav class="navbar">
       <div class="nav-content">
         <div class="logo" id="navLogo" onclick="window.location.href='index.html'" style="cursor:pointer">AAa美甲师后援会</div>
         <div class="nav-buttons">
@@ -990,12 +1000,15 @@
             <button id="nightmareBtn" class="nav-btn difficulty-btn" data-difficulty="nightmare">
               <span class="nav-btn-text">噩梦</span>
             </button>
-            <button id="dailyChallengeBtn" class="nav-btn difficulty-btn" style="margin-top: 16px;">
+            <button id="dailyChallengeBtn" class="nav-btn difficulty-btn daily-challenge-btn" style="margin-top: 30px;">
               <span class="nav-btn-text">每日挑战</span>
             </button>
             <div style="margin-top: 6px; text-align: center;">
               <small style="color: var(--color-text-muted, #888); font-size: 12px;">（每日挑战固定噩梦，所有人同一天的题目相同）</small>
             </div>
+            <button id="profileBtn" class="nav-btn difficulty-btn" data-difficulty="profile" style="margin-top: 10px;">
+              <span class="nav-btn-text">档案模式</span>
+            </button>
             <div style="margin: 16px 0; text-align: center;">
               <span style="color: var(--color-text-muted, #888); font-size: 12px; font-weight: 500;">————————————————————————————</span>
             </div>
@@ -1119,6 +1132,6 @@
   <script src="config.js"></script>
 
   
-  <script src="quiz.js?v=202510031825"></script>
+  <script src="quiz.js?v=202510152336"></script>
 </body>
 </html>

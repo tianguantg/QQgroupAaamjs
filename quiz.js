@@ -499,23 +499,30 @@ window.QUIZ_CONFIG = {
     normal: {
       name: '普通难度',
       description: '适合新手，题目相对简单',
-      questionCount: 10,
-      difficultyRatio: { easy: 2, normal: 1, hard: 1 }, // 主要是简单和普通题
-      pools: { card: 1, character: 1, event: 1, profile: 1, decision: 1, enemy: 1, skill: 1}
+      questionCount: 5,
+      difficultyRatio: { easy: 2, normal: 1, hard: 0}, // 主要是简单和普通题
+      pools: { card: 1, character: 1, event: 1, profile: 0, decision: 1, enemy: 1, skill: 1}
     },
     hard: {
       name: '困难难度', 
       description: '有一定挑战性，需要更多游戏知识',
-      questionCount: 15,
+      questionCount: 10,
       difficultyRatio: { easy: 1, normal: 1, hard: 1 }, // 平衡分布，偏向普通
-      pools: { card: 1, character: 1, event: 1, profile: 1, decision: 1, enemy: 1, skill: 1}
+      pools: { card: 1, character: 1, event: 1, profile: 0, decision: 1, enemy: 1, skill: 1}
     },
     nightmare: {
       name: '噩梦难度',
       description: '极具挑战性，考验深度理解',
-      questionCount: 25,
+      questionCount: 15,
       difficultyRatio: { easy: 1, normal: 2, hard: 4 }, // 主要是普通和困难题
-      pools: { card: 2, character: 1.5, event: 2, profile: 1, decision: 3, enemy: 2, skill: 2}
+      pools: { card: 2, character: 1.5, event: 2, profile: 0, decision: 3, enemy: 2, skill: 2}
+    },
+    profile: {
+      name: '档案模式',
+      description: '专注于角色档案相关题目',
+      questionCount: 5,
+      difficultyRatio: { easy: 1, normal: 2, hard: 2 }, // 平衡分布，偏向普通和困难
+      pools: { card: 0, character: 0, event: 0, profile: 1, decision: 0, enemy: 0, skill: 0}
     }
   },
   
@@ -2995,7 +3002,8 @@ const TYPE_META = {
           const difficultyNames = {
             'normal': '普通难度',
             'hard': '困难难度', 
-            'nightmare': '噩梦难度'
+            'nightmare': '噩梦难度',
+            'profile': '档案模式'
           };
           return difficultyNames[window.QUIZ_CONFIG.selectedDifficulty] || '未知难度';
         };
@@ -3573,12 +3581,14 @@ const TYPE_META = {
         const normalBtn = document.getElementById('normalBtn');
         const hardBtn = document.getElementById('hardBtn');
         const nightmareBtn = document.getElementById('nightmareBtn');
+        const profileBtn = document.getElementById('profileBtn');
         const dailyChallengeBtn = document.getElementById('dailyChallengeBtn');
         
         // 为每个难度按钮添加点击事件，直接开始测验
         normalBtn.addEventListener('click', () => startQuizWithDifficulty('normal'));
         hardBtn.addEventListener('click', () => startQuizWithDifficulty('hard'));
         nightmareBtn.addEventListener('click', () => startQuizWithDifficulty('nightmare'));
+        profileBtn.addEventListener('click', () => startQuizWithDifficulty('profile'));
         
         // 每日挑战按钮事件
         dailyChallengeBtn.addEventListener('click', () => startDailyChallenge());

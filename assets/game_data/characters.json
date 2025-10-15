@@ -1,4 +1,54 @@
-[
+[{
+    "name": "帕露南",
+    "title": "商业之主",
+    "data": {
+      "attack": 1,
+      "defense": 2,
+      "hp": 10
+    },
+    "skills": {
+      "pvp_skills": {
+        "active_skill": {
+          "name": "网络购物",
+          "cooldown": 2,
+          "description": "远程打开商店，购买卡牌。"
+        },
+        "passive_skill": {
+          "name": "传奇商人",
+          "description": "商店可购买的战斗牌数量+1，每次进入商店可获得1星币。"
+        }
+      },
+      "pve_skills": {
+        "active_skill": {
+          "name": "网络购物",
+          "cooldown": 2,
+          "description": "远程打开商店，购买卡牌。"
+        },
+        "passive_skill": {
+          "name": "传奇商人",
+          "description": "商店可购买的战斗牌数量+1，每次进入商店可获得1星币。"
+        }
+      }
+    },
+    "profile": {
+      "name": "帕露南・克里西娅",
+      "birthday": "6月14日",
+      "favorite_food": "看起来贼贵的",
+      "favorite_gift": "商品巧克力、礼盒巧克力、手作巧克力",
+      "biography": "联合城的商业传奇，帝国集团的所有者。克里西亚家族是久负盛名的传统家族财团，帕露南让这个帝国更加繁荣，使联合城的各种产业都遍布了克利西亚家族的身影。\n帕露南很少出现在公共场合，只有很多年前报纸留下的采访照片。"
+    },
+    "cooperation_challenge": {
+      "cooperation_challenge_levels": {
+        "LV 1": "达到1星时立刻获得10星币",
+        "LV 2": "达到1星时生命值上限+2",
+        "LV 3": "初始星币+6",
+        "LV 4": "达到3星时攻击+1、防御+1、移动+1",
+        "LV 5": "可重选2次强化筹码",
+        "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+      },
+      "potential_awakening": null
+    }
+},
   {
     "name": "芬妮",
     "title": "古怪神探",
@@ -50,6 +100,465 @@
       "potential_awakening": "使用主动技能时，从两个随机事件中选择一个发动"
     }
   },
+  {
+    "name": "小町",
+    "title": "暗影忍者",
+    "data": {
+      "attack": 1,
+      "defense": 1,
+      "hp": 9
+    },
+    "skills": {
+      "pvp_skills": {
+        "active_skill": {
+          "name": "忍术连击",
+          "cooldown": 3,
+          "description": "当前行动回合效果牌出牌数量+1。"
+        },
+        "passive_skill": {
+          "name": "复制忍者",
+          "description": "每使用3张效果牌，复制最后使用的那张效果牌并加入手牌。"
+        }
+      },
+      "pve_skills": {
+        "active_skill": {
+          "name": "忍术连击",
+          "cooldown": 3,
+          "description": "当前行动回合效果牌出牌数量+1。"
+        },
+        "passive_skill": {
+          "name": "复制忍者",
+          "description": "每使用3张效果牌，复制最后使用的那张效果牌并加入手牌。"
+        }
+      }
+    },
+    "profile": {
+      "name": "青山小町",
+      "birthday": "1月8日",
+      "favorite_food": "米饭",
+      "favorite_gift": "居家服、漂亮的洋装、水手服",
+      "biography": "本苍院的研究员，致力于星辉古文献的研究。她也是密宗的忍者传人，脖子上会说话的围巾是密宗的魔道具“绞毙”。\n“退魔之夜”事件发生后本苍院被毁，她本人则被政府保护了起来，很少人能见到她。"
+    },
+    "cooperation_challenge": {
+      "cooperation_challenge_levels": {
+        "LV 1": "达到1星时攻击+1",
+        "LV 2": "达到1星时生命值上限+2",
+        "LV 3": "初始星币+6",
+        "LV 4": "达到3星时攻击+1、防御+1、移动+1",
+        "LV 5": "可重选2次强化筹码",
+        "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+      },
+      "potential_awakening": "每使用3张效果牌，当前主动技能的CD-1，并使得自己的效果牌伤害永久+1。"
+    }
+},
+{
+    "name": "派德曼",
+    "title": "社员叔叔",
+    "data": {
+      "attack": 2,
+      "defense": 2,
+      "hp": 8
+    },
+    "skills": {
+      "pvp_skills": {
+        "active_skill": {
+          "name": "真的生气了",
+          "cooldown": 3,
+          "description": "被动技能全取最大值增加，持续1回合。"
+        },
+        "passive_skill": {
+          "name": "毫无主见",
+          "description": "在原有的基础上每个回合浮动增加或减少属性；攻击力-2~2，防御力-2~2，移动骰子点-2~2。"
+        }
+      },
+      "pve_skills": {
+        "active_skill": {
+          "name": "真的生气了",
+          "cooldown": 3,
+          "description": "被动技能全取最大值增加，持续1回合。"
+        },
+        "passive_skill": {
+          "name": "毫无主见",
+          "description": "在原有的基础上每个回合浮动增加或减少属性；攻击力-2~2，防御力-2~2，移动骰子点-2~2。"
+        }
+      }
+    },
+    "profile": {
+      "name": "派德曼",
+      "discoverday": "5月20日",
+      "favorite_food": null,
+      "favorite_gift": "智能手机、新款平板电脑、非常牛的电脑配件",
+      "biography": "超自然生物，虽然不会对周围的人产生直接的肉体伤害，但是会不断蚕食周围人的精神，使他们陷入神经质，癫狂，自残的精神状态。表达感情和发声都是通过面部的平板电脑，但有传闻说那些声音只是在模仿某人说话。\n在“天王落”事件后被收容。"
+    },
+    "cooperation_challenge": {
+      "cooperation_challenge_levels": {
+        "LV 1": "达到1星时攻击+1",
+        "LV 2": "达到1星时生命值上限+2",
+        "LV 3": "达到2星时攻击+2",
+        "LV 4": "达到3星时攻击+1、移动+2",
+        "LV 5": "可重选2次强化筹码",
+        "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+      },
+      "potential_awakening": "攻击骰点为6时，将无视对方的防御力。自己骰点结果小于2时，下次攻击骰点必定为6。"
+    }
+},
+{
+    "name": "帕帕拉",
+    "title": "猩红辣妹",
+    "data": {
+      "attack": 2,
+      "defense": 1,
+      "hp": 10
+    },
+    "skills": {
+      "pvp_skills": {
+        "active_skill": {
+          "name": "嘬你一口",
+          "cooldown": 3,
+          "description": "使用技能时，若当前生命值超过总血量的一半则扣3点血。战斗造成伤害后，回复50%伤害的生命，持续1回合。"
+        },
+        "passive_skill": {
+          "name": "可爱即正义",
+          "description": "当前生命值不超过最大生命值的一半时，攻击+3。"
+        }
+      },
+      "pve_skills": {
+        "active_skill": {
+          "name": "嘬你一口",
+          "cooldown": 3,
+          "description": "使用技能时，若当前生命值超过总血量的一半则扣3点血。战斗造成伤害后，回复50%伤害的生命，持续1回合。"
+        },
+        "passive_skill": {
+          "name": "可爱即正义",
+          "description": "当前生命值不超过最大生命值的一半时，攻击+3。"
+        }
+      }
+    },
+    "profile": {
+      "name": "帕帕拉",
+      "birthday": "10月31日",
+      "favorite_food": "番茄酱为辅料的任何东西",
+      "favorite_gift": "普通的饮料、精酿的啤酒、陈年的红酒",
+      "biography": "“猩红行者”乐队的主唱兼吉他手，也是联合城地下飙车集团“地窖”的主理人。乐队吉他主唱是她童年的兴趣爱好，飙车才是现在的心头好。她喜欢把车子涂成红色并且贴上各种可爱的贴纸。\n现在依然活跃于地下赛车场和各Livehouse。"
+    },
+    "cooperation_challenge": {
+      "cooperation_challenge_levels": {
+        "LV 1": "达到1星时攻击+1",
+        "LV 2": "达到1星时生命值上限+2",
+        "LV 3": "达到2星时攻击+2",
+        "LV 4": "达到3星时攻击+1、移动+2",
+        "LV 5": "可重选2次强化筹码",
+        "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+      },
+      "potential_awakening": null
+    }
+},
+{
+  "name": "恋",
+  "title": "游戏大师",
+  "data": {
+    "attack": 2,
+    "defense": 1,
+    "hp": 8
+  },
+  "skills": {
+    "pvp_skills": {
+      "active_skill": {
+        "name": "熊孩子特权",
+        "cooldown": 3,
+        "description": "偷取8格内指定的一名角色的随机一张牌；如果这张卡是效果牌则刷新鼠鼠护盾。"
+      },
+      "passive_skill": {
+        "name": "鼠鼠救我！",
+        "description": "对友方使用主动技能时，如果目标血量不超过最大生命值的一半，则自己也获得鼠鼠护盾并获得一张卡牌。"
+      }
+    },
+    "pve_skills": {
+      "active_skill": {
+        "name": "熊孩子特权",
+        "cooldown": 3,
+        "description": "指定一名角色获取一张卡牌并且同时获得一个鼠鼠护盾。鼠鼠护盾会使目标下次受到的伤害-3。"
+      },
+      "passive_skill": {
+        "name": "鼠鼠救我！",
+        "description": "对友方使用主动技能时，如果目标血量不超过最大生命值的一半，则自己也获得鼠鼠护盾并获得一张卡牌。"
+      }
+    }
+  },
+  "profile": {
+    "name": "恋",
+    "birthday": "4月23日",
+    "favorite_food": "汉堡",
+    "favorite_gift": "商品巧克力、礼盒巧克力、手作巧克力",
+    "biography": "游戏《星引擎派对》的监制，超级游戏玩家/制作人。游戏杂志《pamagames》把她评选为联合城有史以来最强的游戏玩家。她喜欢收集一些有年代感的电子产品，还有一只灰色的鼠鼠宠物。\n\n自称永远18岁的谜之美少女，虽然游戏内的形象是她小的时候。"
+  },
+  "cooperation_challenge": {
+    "cooperation_challenge_levels": {
+      "LV 1": "达到1星时立刻获得10星币",
+      "LV 2": "达到1星时生命值上限+2",
+      "LV 3": "初始星币+6",
+      "LV 4": "达到3星时攻击+1、防御+1、移动+1",
+      "LV 5": "可重选2次强化筹码",
+      "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+    },
+    "potential_awakening": "为角色施加鼠鼠护盾时，额外使目标获得一次反击能力。"
+  }
+},
+{
+  "name": "米米",
+  "title": "看板娘",
+  "data": {
+    "attack": 1,
+    "defense": 1,
+    "hp": 9
+  },
+  "skills": {
+    "pvp_skills": {
+      "active_skill": {
+        "name": "商品补货",
+        "cooldown": 3,
+        "description": "丢弃全部手牌，然后从卡池中抽取原手牌数量+1张卡牌。"
+      },
+      "passive_skill": {
+        "name": "过期回收",
+        "description": "每丢弃1张战斗牌，获得1星币。"
+      }
+    },
+    "pve_skills": {
+      "active_skill": {
+        "name": "商品补货",
+        "cooldown": 3,
+        "description": "丢弃全部手牌，然后从卡池中抽取原手牌数量+1张卡牌。"
+      },
+      "passive_skill": {
+        "name": "过期回收",
+        "description": "每丢弃1张战斗牌，获得1星币。"
+      }
+    }
+  },
+  "profile": {
+    "name": "米米",
+    "birthday": "8月2日",
+    "favorite_food": "精致的快餐便当",
+    "favorite_gift": "智能手机、新款平板电脑、非常牛的电脑配件",
+    "biography": "游戏《星引擎派对》的全能看板娘，超级打工战士。便利店、酒吧、超市都有米米打工的身影，恋第一次见到米米就是在便利店。至于米米为什么会成为《星引擎派对》游戏的看板娘就不得而知了。\n\n米米神出鬼没，可能会出现在各种打工场合，除了某些直播工作的时候形象没有任何变化。"
+  },
+  "cooperation_challenge": {
+    "cooperation_challenge_levels": {
+      "LV 1": "达到1星时立刻获得10星币",
+      "LV 2": "达到1星时生命值上限+2",
+      "LV 3": "初始星币+6",
+      "LV 4": "达到3星时攻击+1、防御+1、移动+1",
+      "LV 5": "可重选2次强化筹码",
+      "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+    },
+    "potential_awakening": "每累计获得25张卡牌，获得1个筹码。"
+  }
+},
+{
+  "name": "Z3000",
+  "title": "垃圾箱",
+  "data": {
+    "attack": 1,
+    "defense": 2,
+    "hp": 10
+  },
+  "skills": {
+    "pvp_skills": {
+      "active_skill": {
+        "name": "过来吧你",
+        "cooldown": 3,
+        "description": "拉取7格内的一个角色到自己所在格，造成1点伤害，并使其移动速度-2，持续1回合。"
+      },
+      "passive_skill": {
+        "name": "垃圾分类",
+        "description": "使用【过期便当】、【汉堡】、【巧克力蛋糕】、【以毒攻毒】时，自己原地放置【谜之物体】。"
+      }
+    },
+    "pve_skills": {
+      "active_skill": {
+        "name": "过来吧你",
+        "cooldown": 3,
+        "description": "拉取7格内的一个怪物到自己所在格，造成5点伤害。"
+      },
+      "passive_skill": {
+        "name": "垃圾分类",
+        "description": "击倒怪物主动技能冷却-2。"
+      }
+    }
+  },
+  "profile": {
+    "name": "Z3000",
+    "birthday": null,
+    "favorite_food": "任何",
+    "favorite_gift": "智能手机、新款平板电脑、非常牛的电脑配件",
+    "biography": "一切都是未知。有传言是疯狂科学家制造的助手机器人，也有人猜测是废旧工破产遗留下来的有意念的幽灵。可以确定的是它会把乱丢垃圾的人吸入自己的身体里好好的教训一番！\n\n目击到它的人很少，基本相当于都市传说。"
+  },
+  "cooperation_challenge": {
+    "cooperation_challenge_levels": {
+      "LV 1": "达到1星时攻击+1",
+      "LV 2": "达到1星时生命值上限+2",
+      "LV 3": "达到2星时攻击+2",
+      "LV 4": "达到3星时攻击+1、移动+2",
+      "LV 5": "可重选2次强化筹码",
+      "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+    },
+    "potential_awakening": "每击倒2只怪物，永久增加1点攻击力。\n当垃圾箱的攻击力大于6时，可以攻击主动技能拉取的怪物。"
+  }
+},
+{
+  "name": "潘大猛",
+  "title": "肉弹战车",
+  "data": {
+    "attack": 1,
+    "defense": 0,
+    "hp": 14
+  },
+  "skills": {
+    "pvp_skills": {
+      "active_skill": {
+        "name": "搞事情",
+        "cooldown": 4,
+        "description": "获得【自爆】、【以牙还牙】随机一张。"
+      },
+      "passive_skill": {
+        "name": "有好有坏",
+        "description": "所有回血效果+2，但是受到的伤害也会+1。"
+      }
+    },
+    "pve_skills": {
+      "active_skill": {
+        "name": "搞事情",
+        "cooldown": 4,
+        "description": "获得【巧克力蛋糕】、【汉堡】随机一张。"
+      },
+      "passive_skill": {
+        "name": "有好有坏",
+        "description": "使用【汉堡】、【巧克力蛋糕】后，回复以自身为起点5格内的其他角色2点生命值。"
+      }
+    }
+  },
+  "profile": {
+    "name": "潘大猛",
+    "birthday": "10月1日",
+    "favorite_food": "绿叶蔬菜",
+    "favorite_gift": "浴室鸭、小熊玩偶、小怪兽手办",
+    "biography": "土生土长的联合城人。街舞、摇滚、二次元文化都是其最爱。平时会在街区做街舞表演和义工，偶尔也去枫的酒店打工，毕竟他的爱好都挺花钱的。\n\n你可以在周末下午去联合城凰区的三神广场看他的表演。"
+  },
+  "cooperation_challenge": {
+    "cooperation_challenge_levels": {
+      "LV 1": "达到1星时防御+1",
+      "LV 2": "达到1星时生命值上限+2",
+      "LV 3": "达到2星时移动+1，生命值上限+1",
+      "LV 4": "达到3星时攻击+1、防御+1、移动+1",
+      "LV 5": "可重选2次强化筹码",
+      "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+    },
+    "potential_awakening": null
+  }
+},
+{
+  "name": "璐璐",
+  "title": "史莱姆",
+  "data": {
+    "attack": 2,
+    "defense": 2,
+    "hp": 9
+  },
+  "skills": {
+    "pvp_skills": {
+      "active_skill": {
+        "name": "附着粘液",
+        "cooldown": 4,
+        "description": "标记10格内指定的1个其他角色，使之移动点-3，持续2回合（不叠加，重复则覆盖）。"
+      },
+      "passive_skill": {
+        "name": "细胞分裂",
+        "description": "受到伤害后，主动技能CD-1。"
+      }
+    },
+    "pve_skills": {
+      "active_skill": {
+        "name": "附着粘液",
+        "cooldown": 4,
+        "description": "选择1O格内的一名友方角色，该角色获得3层【治愈】。"
+      },
+      "passive_skill": {
+        "name": "细胞分裂",
+        "description": "自身受到伤害后，获得1层【治愈】并使主动技能CD-1。"
+      }
+    }
+  },
+  "profile": {
+    "name": "璐璐",
+    "birthday": "12月12日",
+    "favorite_food": "比自己小的都喜欢",
+    "favorite_gift": "商品巧克力、礼盒巧克力、手作巧克力",
+    "biography": "拉姆齐生物科技的技术顾问。她是实验室的产物，拥有非常高的智慧。一般情况下都会待在实验室里，偶尔溜出去外面进行她的“狩猎”活动，但是根本没人知道她到底“狩猎”了什么。\n\n璐璐的外形非常容易迷惑他人，千万不要上当！"
+  },
+  "cooperation_challenge": {
+    "cooperation_challenge_levels": {
+      "LV 1": "达到1星时防御+1",
+      "LV 2": "达到1星时生命值上限+2",
+      "LV 3": "达到2星时移动+1，生命值上限+1",
+      "LV 4": "达到3星时攻击+1、防御+1、移动+1",
+      "LV 5": "可重选2次强化筹码",
+      "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+    },
+    "potential_awakening": null
+  }
+},
+{
+  "name": "蓝海晴",
+  "title": "命运少女",
+  "data": {
+    "attack": 1,
+    "defense": 1,
+    "hp": 10
+  },
+  "skills": {
+    "pvp_skills": {
+      "active_skill": {
+        "name": "宿命回响",
+        "cooldown": 3,
+        "description": "标记一个角色2回合，被标记的角色受到的伤害+1。\n若该角色在被标记期间被击倒则蓝海晴获得4星币；若期间内未被击倒则该角色回复4点生命。"
+      },
+      "passive_skill": {
+        "name": "幸运点",
+        "description": "自己最终的移动点数为6时，获得6星币。"
+      }
+    },
+    "pve_skills": {
+      "active_skill": {
+        "name": "虚弱印记",
+        "cooldown": 3,
+        "description": "标记一个怪物2回合，被标记的怪物受到的伤害+1。若标记期间击倒该怪物则蓝海晴获得3星币。"
+      },
+      "passive_skill": {
+        "name": "幸运点",
+        "description": "自己最终的移动点数为6时，获得6星币。"
+      }
+    }
+  },
+  "profile": {
+    "name": "蓝海晴",
+    "birthday": "3月22日",
+    "favorite_food": "草莓",
+    "favorite_gift": "居家服、漂亮的洋装、水手服",
+    "biography": "占卜店“日月”的老板。看起来比较成熟，其实才从大学毕业几年。因为性格和外表的缘故很受顾客欢迎。传言在大学时期加入的社团是一个情报组织，为了收集有关“星引擎”的消息。周末会去一个叫“虹之镜”的酒吧消遣，和那里的酒保库拉拉是多年的好友。\n\n和大学时代比样貌有明显变化。"
+  },
+  "cooperation_challenge": {
+    "cooperation_challenge_levels": {
+      "LV 1": "达到1星时立刻获得10星币",
+      "LV 2": "达到1星时生命值上限+2",
+      "LV 3": "初始星币+6",
+      "LV 4": "达到3星时攻击+1、防御+1、移动+1",
+      "LV 5": "可重选2次强化筹码",
+      "LV 6": "获得星星时，额外获得1次重选强化筹码的次数"
+    },
+    "potential_awakening": "持有【虚弱标记】的怪物被击倒时，使击倒它的角色获得1张命运的指引。\n使用主动技能时，使手牌中的遥控骰子变为命运的指引。"
+  }
+},
   {
     "name": "美咲",
     "title": "太刀使",
