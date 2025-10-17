@@ -8,7 +8,7 @@ const CONFIG = {
   
   MAX_NICKNAME_LENGTH: 20,   // 昵称最大长度
   
-  MIN_ANSWER_TIME: 1,        // 每题最小答题时间（秒）
+  MIN_ANSWER_TIME: 0,        // 每题最小答题时间（秒）
   
   MAX_ANSWER_TIME: 300,      // 每题最大答题时间（秒）
   
@@ -24,7 +24,10 @@ const CONFIG = {
   
   // 读取端限流（排行榜查询）
   READ_RATE_LIMIT_WINDOW: 60,        // 读取端限流窗口（秒）
-  READ_RATE_LIMIT_MAX: 30            // 读取端每IP最大请求数
+  READ_RATE_LIMIT_MAX: 30,           // 读取端每IP最大请求数
+
+  // 允许的时间漂移（秒）：sum(questionTimes) 与 timeSpent 的容忍误差
+  ALLOWED_TIME_DRIFT_SEC: 15
   
   };
 
@@ -134,10 +137,11 @@ function validateSubmissionData(data) {
     return { valid: false, error: 'Invalid individual question times' };
   }
   
-  // 检查时间总和的一致性（允许5秒误差）
+  // 检查时间总和的一致性（允许 CONFIG.ALLOWED_TIME_DRIFT_SEC 秒误差）
   const totalQuestionTime = data.questionTimes.reduce((sum, time) => sum + time, 0);
-  if (Math.abs(totalQuestionTime - data.timeSpent) > 5) {
-    console.log('Time inconsistency detected. Total question time:', totalQuestionTime, 'Time spent:', data.timeSpent);
+  const drift = CONFIG.ALLOWED_TIME_DRIFT_SEC ?? 10;
+  if (Math.abs(totalQuestionTime - data.timeSpent) > drift) {
+    console.log('Time inconsistency detected (drift >', drift, 's). Total question time:', totalQuestionTime, 'Time spent:', data.timeSpent);
     return { valid: false, error: 'Time inconsistency detected' };
   }
   

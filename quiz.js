@@ -2783,6 +2783,8 @@ const TYPE_META = {
         // 记录每日挑战题目开始时间
         if (window.isDailyChallenge) {
           window.currentQuestionStartTime = Date.now();
+          // 使用计时器累计时间作为题目起点，避免包含图片加载等暂停时长
+          window.currentQuestionStartElapsed = totalElapsedTime + (timerInterval ? Date.now() - timerStartTime : 0);
         }
         
         // 清理状态
@@ -3198,7 +3200,9 @@ const TYPE_META = {
           }
           
           // 记录答题信息
-          const questionTime = (Date.now() - (window.currentQuestionStartTime || Date.now())) / 1000; // 转换为秒
+          // 使用计时器累计时间差计算单题用时，排除图片加载等暂停时间
+          const elapsedNowMs = totalElapsedTime + (timerInterval ? Date.now() - timerStartTime : 0);
+          const questionTime = Math.max(0, ((elapsedNowMs - (window.currentQuestionStartElapsed || elapsedNowMs)) / 1000));
           window.dailyChallengeAnswers.push({
             questionIndex: index,
             selectedAnswer: optionText,
@@ -3898,20 +3902,20 @@ const TYPE_META = {
         function formatSubmissionError(errorMsg = '', statusCode = 400) {
           const msg = String(errorMsg || '').trim();
           const byExact = {
-            'Already submitted today': '今天已提交过成绩。',
-            'Rate limit exceeded': '提交过于频繁，请稍后再试。',
-            'Missing required fields': '提交数据不完整，请刷新页面后重试。',
-            'Invalid nickname': '昵称不合法：长度最多 20 个字符，请重新输入。',
-            'Invalid date format': '请正常完成当日挑战后再提交0。',
-            'Invalid answers array': '请正常完成当日挑战后再提交1。',
-            'Invalid answer object structure': '答请正常完成当日挑战后再提交2。',
-            'Missing or invalid answer object fields': '请正常完成当日挑战后再提交3。',
-            'Invalid total time': '请正常完成当日挑战后再提交4。',
-            'Invalid question times array': '请正常完成当日挑战后再提交5。',
-            'Invalid individual question times': '请正常完成当日挑战后再提交6。',
-            'Time inconsistency detected': '请正常完成当日挑战后再提交7。',
-            'Invalid seed': '校验失败，请从主页重新进入当日挑战后提交8。',
-            'Internal server error': '服务器异常，请稍后再试。'
+            'Already submitted today': '今天已提交过成绩。', // 同一 IP 当天已在后端记录过一次提交
+            'Rate limit exceeded': '提交过于频繁，请稍后再试。', // 触发后端写端限流（窗口内请求过多）
+            'Missing required fields': '提交数据不完整，请刷新页面后重试。', // 请求体缺少必需字段
+            'Invalid nickname': '昵称不合法：长度最多 20 个字符，请重新输入。', // 昵称缺失/为空/超长
+            'Invalid date format': '日期格式不正确，请刷新页面后重试。', // date 必须是 YYYY-MM-DD
+            'Invalid answers array': '答题数据缺失或数量不正确。', // answers 未提供或长度不等于题目数量
+            'Invalid answer object structure': '答题项结构不合法。', // 单题答案对象结构不符合预期
+            'Missing or invalid answer object fields': '答题项字段缺失或不合法。', // 单题答案的关键字段缺失或类型错误
+            'Invalid total time': '答题总时长不合法。', // 总时长不是数字或超出允许范围
+            'Invalid question times array': '每题用时数组不合法。', // 每题用时数组缺失或长度不匹配
+            'Invalid individual question times': '存在单题用时异常。', // 单题用时超出允许范围（过小/过大）
+            'Time inconsistency detected': '总时长与各题用时之和不一致。', // |sum(questionTimes) - timeSpent| > 5 秒
+            'Invalid seed': '校验失败，请从主页重新进入当日挑战后提交。', // 种子与当日不匹配，需重新进入挑战
+            'Internal server error': '服务器异常，请稍后再试。' // 后端内部错误
           };
 
           if (byExact[msg]) return byExact[msg];
@@ -4034,7 +4038,7 @@ const TYPE_META = {
         }
         container.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <h3 style="margin:0; color: var(--color-text-primary);">每日挑战排行榜</h3>
+            <h3 style="margin:0; color: var(--color-text-primary);">每日挑战排行榜（建设中，暂时无法正常使用）</h3>
           </div>
           <div id="${contentId}">加载中...</div>
         `;
