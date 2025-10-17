@@ -543,6 +543,11 @@ window.QUIZ_CONFIG = {
     enemy: 0,
     skill: 0
   },
+  // 排行榜接口端点（支持按顺序依次尝试，第一项为主路由）
+  leaderboardEndpoints: [
+    'https://quiz-api.aaamjs.asia/api/leaderboard',
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard'
+  ],
   types: {
     name: 1,
     effect: 1,
@@ -3982,7 +3987,7 @@ const TYPE_META = {
         }
       }
 
-      // 渲染主题风格排行榜卡片（主界面与结算界面复用）
+      // 渲染主题风格排行榜卡片（主界面与结算界面复用，含重试/超时/缓存回退）
       async function renderLeaderboardCard(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -4002,9 +4007,11 @@ const TYPE_META = {
           <div id="${contentId}">加载中...</div>
         `;
         const target = document.getElementById(contentId);
-        try {
-          const response = await fetch('https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard');
-          const data = await response.json();
+
+        // 本地缓存键（按日期缓存最近一次成功结果）
+        const CACHE_KEY = 'dailyLeaderboardCache';
+
+        function renderBoard(data) {
           if (data.leaderboard && data.leaderboard.length > 0) {
             let html = `
               <div style="margin-bottom: 8px; color: var(--color-text-secondary); text-align: center;">
@@ -4034,13 +4041,121 @@ const TYPE_META = {
               </div>
             `;
           }
-        } catch (error) {
-          console.error('加载排行榜失败:', error);
-          target.innerHTML = `
+        }
+
+        function saveCache(data) {
+          try {
+            const cache = { data, cachedAt: Date.now() };
+            localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+          } catch (_) {}
+        }
+
+        function loadCache() {
+          try {
+            const raw = localStorage.getItem(CACHE_KEY);
+            if (!raw) return null;
+            const cache = JSON.parse(raw);
+            return cache && cache.data ? cache : null;
+          } catch (_) { return null; }
+        }
+
+        async function fetchWithTimeout(url, timeoutMs = 4000) {
+          const controller = new AbortController();
+          const id = setTimeout(() => controller.abort(), timeoutMs);
+          try {
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(id);
+            return res;
+          } catch (err) {
+            clearTimeout(id);
+            throw err;
+          }
+        }
+
+        const configured = Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
+          ? window.QUIZ_CONFIG.leaderboardEndpoints
+          : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
+              ? window.LEADERBOARD_ENDPOINTS
+              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']);
+
+        // 如果离线，直接展示离线提示并提供缓存回退
+        if (navigator && typeof navigator.onLine === 'boolean' && !navigator.onLine) {
+          const cached = loadCache();
+          let html = `
             <div style="text-align: center; color: var(--color-error); padding: 12px;">
-              加载失败，请稍后重试
+              当前处于离线状态，无法连接排行榜服务。
+            </div>
+            <div style="display:flex; gap:8px; justify-content:center;">
+              <button id="${contentId}Retry" class="nav-btn"><span class="nav-btn-text">重试</span></button>
+              ${cached ? `<button id="${contentId}ShowCache" class="nav-btn primary"><span class="nav-btn-text">显示缓存</span></button>` : ''}
             </div>
           `;
+          target.innerHTML = html;
+          const retryBtn = document.getElementById(`${contentId}Retry`);
+          if (retryBtn) retryBtn.addEventListener('click', () => renderLeaderboardCard(containerId));
+          const showCacheBtn = document.getElementById(`${contentId}ShowCache`);
+          if (showCacheBtn && cached) {
+            showCacheBtn.addEventListener('click', () => {
+              renderBoard(cached.data);
+              const when = new Date(cached.cachedAt);
+              const note = document.createElement('div');
+              note.style.cssText = 'margin-top:8px; text-align:center; color: var(--color-text-secondary)';
+              note.textContent = `显示缓存数据（保存于 ${when.toLocaleString()}）`;
+              target.appendChild(note);
+            });
+          }
+          return;
+        }
+
+        // 依次尝试各端点（支持国内镜像，通过 window.QUIZ_CONFIG.leaderboardEndpoints 配置）
+        try {
+          let data = null;
+          for (const endpoint of configured) {
+            try {
+              const response = await fetchWithTimeout(endpoint, 5000);
+              data = await response.json();
+              if (data && data.leaderboard) {
+                break;
+              }
+            } catch (e) {
+              // 继续下一端点
+            }
+          }
+          if (data && data.leaderboard) {
+            renderBoard(data);
+            saveCache(data);
+            return;
+          }
+          throw new Error('All endpoints failed');
+        } catch (error) {
+          console.error('加载排行榜失败:', error);
+          const cached = loadCache();
+          let html = `
+            <div style="text-align: center; color: var(--color-error); padding: 12px;">
+              无法连接排行榜服务（国内网络可能受限）。
+            </div>
+            <div style="display:flex; gap:8px; justify-content:center;">
+              <button id="${contentId}Retry" class="nav-btn"><span class="nav-btn-text">重试</span></button>
+              ${cached ? `<button id="${contentId}ShowCache" class="nav-btn primary"><span class="nav-btn-text">显示缓存</span></button>` : ''}
+            </div>
+            <div style="margin-top:6px; text-align:center; color: var(--color-text-secondary);">
+              提示：可稍后重试或使用国内镜像域名（如已配置）。
+            </div>
+          `;
+          target.innerHTML = html;
+          const retryBtn = document.getElementById(`${contentId}Retry`);
+          if (retryBtn) retryBtn.addEventListener('click', () => renderLeaderboardCard(containerId));
+          const showCacheBtn = document.getElementById(`${contentId}ShowCache`);
+          if (showCacheBtn && cached) {
+            showCacheBtn.addEventListener('click', () => {
+              renderBoard(cached.data);
+              const when = new Date(cached.cachedAt);
+              const note = document.createElement('div');
+              note.style.cssText = 'margin-top:8px; text-align:center; color: var(--color-text-secondary)';
+              note.textContent = `显示缓存数据（保存于 ${when.toLocaleString()}）`;
+              target.appendChild(note);
+            });
+          }
         }
       }
 
@@ -4051,8 +4166,8 @@ const TYPE_META = {
       }
       
       // 显示每日挑战排行榜
-      async function showDailyChallengeLeaderboard() {
-        try {
+  async function showDailyChallengeLeaderboard() {
+    try {
           const modal = document.createElement('div');
           modal.className = 'leaderboard-modal';
           modal.style.cssText = `
@@ -4102,12 +4217,39 @@ const TYPE_META = {
             }
           });
           
-          // 加载排行榜数据
-          const response = await fetch('https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard');
-          const data = await response.json();
-          
+          // 加载排行榜数据（支持多端点与超时）
+          const configured = Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
+            ? window.QUIZ_CONFIG.leaderboardEndpoints
+            : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
+                ? window.LEADERBOARD_ENDPOINTS
+                : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']);
+
+          const fetchWithTimeoutLocal = async (url, timeoutMs = 5000) => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+              const res = await fetch(url, { signal: controller.signal });
+              return res;
+            } finally {
+              clearTimeout(timer);
+            }
+          };
+
+          let data = null;
+          for (const endpoint of configured) {
+            try {
+              const response = await fetchWithTimeoutLocal(endpoint, 5000);
+              data = await response.json();
+              if (data && data.leaderboard) {
+                break;
+              }
+            } catch (e) {
+              // 尝试下一个端点
+            }
+          }
+
           const leaderboardContent = document.getElementById('leaderboardContent');
-          
+
           if (data.leaderboard && data.leaderboard.length > 0) {
             let html = `
               <div style="margin-bottom: 10px; color: var(--color-text-secondary); text-align: center;">

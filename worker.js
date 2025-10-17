@@ -22,6 +22,10 @@ const CONFIG = {
   
   RATE_LIMIT_MAX: 10,        // 速率限制最大请求数
   
+  // 读取端限流（排行榜查询）
+  READ_RATE_LIMIT_WINDOW: 60,        // 读取端限流窗口（秒）
+  READ_RATE_LIMIT_MAX: 30            // 读取端每IP最大请求数
+  
   };
 
 // 伪随机数生成器（与前端保持一致）
@@ -149,13 +153,13 @@ function validateSubmissionData(data) {
 }
 
 // 速率限制检查
-async function checkRateLimit(env, clientIP) {
+async function checkRateLimit(env, clientIP, windowSec = CONFIG.RATE_LIMIT_WINDOW, maxReq = CONFIG.RATE_LIMIT_MAX, scope = 'write') {
   console.log('checkRateLimit called for IP:', clientIP);
   
   try {
-    const rateLimitKey = `rate_limit_${clientIP}`;
+    const rateLimitKey = `rate_limit_${scope}_${clientIP}`;
     const currentTime = Math.floor(Date.now() / 1000);
-    const windowStart = currentTime - CONFIG.RATE_LIMIT_WINDOW;
+    const windowStart = currentTime - windowSec;
     
     // 获取当前窗口内的请求记录
     const requestsData = await env.QUIZ_KV.get(rateLimitKey);
@@ -165,13 +169,13 @@ async function checkRateLimit(env, clientIP) {
     requests = requests.filter(timestamp => timestamp > windowStart);
     
     // 检查是否超过限制
-    if (requests.length >= CONFIG.RATE_LIMIT_MAX) {
+    if (requests.length >= maxReq) {
       return false;
     }
     
     // 添加当前请求
     requests.push(currentTime);
-    await env.QUIZ_KV.put(rateLimitKey, JSON.stringify(requests), { expirationTtl: CONFIG.RATE_LIMIT_WINDOW * 2 });
+    await env.QUIZ_KV.put(rateLimitKey, JSON.stringify(requests), { expirationTtl: windowSec * 2 });
     
     return true;
   } catch (error) {
@@ -391,11 +395,41 @@ async function handleLeaderboard(request, env) {
       });
     }
     
+    // 边缘缓存优先
+    const cached = await caches.default.match(request);
+    if (cached) {
+      // If-None-Match 支持（命中缓存时快速返回304）
+      const incomingETag = request.headers.get('If-None-Match');
+      const cachedETag = cached.headers.get('ETag');
+      if (incomingETag && cachedETag && incomingETag === cachedETag) {
+        return new Response(null, {
+          status: 304,
+          headers: {
+            'ETag': cachedETag,
+            'Cache-Control': cached.headers.get('Cache-Control') || 'public, max-age=300, stale-while-revalidate=120',
+            'Content-Type': cached.headers.get('Content-Type') || 'application/json'
+          }
+        });
+      }
+      return new Response(cached.body, { status: cached.status, headers: cached.headers });
+    }
+
+    // 读取端限流
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const rateOk = await checkRateLimit(env, clientIP, CONFIG.READ_RATE_LIMIT_WINDOW, CONFIG.READ_RATE_LIMIT_MAX, 'read');
+    if (!rateOk) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // 读取数据
     const leaderboardKey = `leaderboard_${date}`;
     const boardData = await env.QUIZ_KV.get(leaderboardKey);
     const board = boardData ? JSON.parse(boardData) : [];
-    
-    // 只返回公开信息，隐藏敏感数据
+
+    // 公开字段
     const publicBoard = board.map((entry, index) => ({
       rank: index + 1,
       nickname: entry.nickname,
@@ -406,18 +440,44 @@ async function handleLeaderboard(request, env) {
       totalTime: entry.totalTime,
       timestamp: entry.timestamp
     }));
-    
-    return new Response(JSON.stringify({
+
+    const body = JSON.stringify({
       date: date,
       leaderboard: publicBoard,
       totalEntries: publicBoard.length
-    }), {
-      headers: { 
+    });
+
+    // 生成 ETag（基于响应体）
+    const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
+    const hashArr = Array.from(new Uint8Array(hashBuf));
+    const hashHex = hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
+    const etag = `"sha256-${hashHex}"`;
+
+    // 条件请求：If-None-Match
+    const incomingETag = request.headers.get('If-None-Match');
+    if (incomingETag && incomingETag === etag) {
+      return new Response(null, {
+        status: 304,
+        headers: {
+          'ETag': etag,
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=120',
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    const response = new Response(body, {
+      headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=300' // 缓存5分钟
+        'Cache-Control': 'public, max-age=300, stale-while-revalidate=120'
       }
     });
-    
+    response.headers.set('ETag', etag);
+
+    // 写入边缘缓存
+    await caches.default.put(request, response.clone());
+    return response;
+  
   } catch (error) {
     console.error('Leaderboard query error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
