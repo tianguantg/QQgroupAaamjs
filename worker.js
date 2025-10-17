@@ -4,7 +4,7 @@
 // 配置常量
 const CONFIG = {
 
-  MAX_SUBMISSIONS_PER_IP: 1, // 每IP每日最大提交次数
+  MAX_SUBMISSIONS_PER_IP: 2, // 每IP每日最大提交次数
   
   MAX_NICKNAME_LENGTH: 20,   // 昵称最大长度
   
@@ -16,7 +16,7 @@ const CONFIG = {
   
   MIN_TOTAL_TIME: 20,        // 总答题时间下限（秒）
   
-  QUESTION_COUNT: 15,        // 每日挑战题目数量 (nightmare 难度)
+  QUESTION_COUNT: 15,         // 每日挑战题目数量（与前端噩梦模式一致）
   
   RATE_LIMIT_WINDOW: 60,     // 速率限制窗口（秒）
   
@@ -75,11 +75,42 @@ function validateSubmissionData(data) {
     return { valid: false, error: 'Missing required fields' };
   }
   
-  // 昵称验证
-  if (typeof data.nickname !== 'string' || data.nickname.length > CONFIG.MAX_NICKNAME_LENGTH) {
-    console.log('Invalid nickname');
+  // 昵称验证与规范化
+  if (typeof data.nickname !== 'string') {
+    console.log('Invalid nickname type');
     return { valid: false, error: 'Invalid nickname' };
   }
+  let nick = String(data.nickname || '');
+  try { nick = nick.normalize('NFKC'); } catch (_) {}
+  nick = nick.replace(/[\u0000-\u001F\u007F]/g, ''); // 控制字符
+  nick = nick.replace(/[\u200B-\u200D\uFEFF]/g, ''); // 零宽字符
+  nick = nick.replace(/\s+/g, ' ').trim();
+  if (!nick) {
+    console.log('Empty nickname after normalization');
+    return { valid: false, error: 'Invalid nickname' };
+  }
+  if (nick.length > CONFIG.MAX_NICKNAME_LENGTH) {
+    console.log('Nickname too long');
+    return { valid: false, error: 'Invalid nickname' };
+  }
+  const allowedRe = /^[A-Za-z0-9\u4e00-\u9fa5 _\-·•~.!?]+$/;
+  if (!allowedRe.test(nick)) {
+    console.log('Nickname contains invalid characters');
+    return { valid: false, error: 'Nickname contains invalid characters' };
+  }
+  const bannedPatterns = [
+    /(https?:\/\/|www\.)/i,
+    /@/i,
+    /(微信|VX|QQ|TG|电报|群|联系|加我)/i,
+    /(广告|推广|色情|成人|赌|博彩|彩票|政治|极端|暴力|仇恨|辱骂)/i,
+    /(.)\1{4,}/
+  ];
+  if (bannedPatterns.some(re => re.test(nick))) {
+    console.log('Nickname contains prohibited content');
+    return { valid: false, error: 'Nickname contains prohibited content' };
+  }
+  // 通过验证后，写回规范化昵称
+  data.nickname = nick;
   
   // 日期格式验证
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date)) {
@@ -87,9 +118,16 @@ function validateSubmissionData(data) {
     return { valid: false, error: 'Invalid date format' };
   }
   
-  // 答案数组验证 - 检查是否为对象数组
-  if (!Array.isArray(data.answers) || data.answers.length !== CONFIG.QUESTION_COUNT) {
-    console.log('Invalid answers array, length:', data.answers?.length, 'expected:', CONFIG.QUESTION_COUNT);
+  // 题量验证（必须与配置一致）
+  const tq = Number(data.totalQuestions);
+  if (!Number.isInteger(tq) || tq !== CONFIG.QUESTION_COUNT) {
+    console.log('Unexpected totalQuestions:', data.totalQuestions, 'expected:', CONFIG.QUESTION_COUNT);
+    return { valid: false, error: 'Unexpected totalQuestions' };
+  }
+  
+  // 答案数组验证 - 检查是否为对象数组，且长度与题量一致
+  if (!Array.isArray(data.answers) || data.answers.length !== tq) {
+    console.log('Invalid answers array, length:', data.answers?.length, 'expected:', tq);
     return { valid: false, error: 'Invalid answers array' };
   }
   
@@ -101,7 +139,6 @@ function validateSubmissionData(data) {
       console.log('Invalid answer object structure at index', i);
       return { valid: false, error: 'Invalid answer object structure' };
     }
-    
     // 检查必需的字段
     if (typeof answer.questionIndex !== 'number' ||
         typeof answer.selectedAnswer !== 'string' ||
@@ -121,9 +158,9 @@ function validateSubmissionData(data) {
     return { valid: false, error: 'Invalid total time' };
   }
   
-  // 每题时间验证
-  if (!Array.isArray(data.questionTimes) || data.questionTimes.length !== CONFIG.QUESTION_COUNT) {
-    console.log('Invalid question times array, length:', data.questionTimes?.length, 'expected:', CONFIG.QUESTION_COUNT);
+  // 每题时间验证（长度与题量一致）
+  if (!Array.isArray(data.questionTimes) || data.questionTimes.length !== tq) {
+    console.log('Invalid question times array, length:', data.questionTimes?.length, 'expected:', tq);
     return { valid: false, error: 'Invalid question times array' };
   }
   
@@ -189,36 +226,23 @@ async function checkRateLimit(env, clientIP, windowSec = CONFIG.RATE_LIMIT_WINDO
   }
 }
 
-// 重新生成题目并验证答案（简化版，实际需要完整的题目生成逻辑）
+// 重新生成题目并验证答案（改为依据 answers 的一致算法，不做随机）
 async function verifyAnswersAndCalculateScore(data, env) {
-  // 这里需要实现与前端相同的题目生成逻辑
-  // 由于题目生成逻辑复杂，这里提供框架
-  
   try {
     console.log('verifyAnswersAndCalculateScore called with data:', JSON.stringify(data, null, 2));
-    
-    // 使用相同的种子重新生成题目
-    const random = new SeededRandom(data.seed);
-    
-    // TODO: 实现完整的题目生成逻辑
-    // 这里需要加载游戏数据并重新生成题目
-    // 然后验证用户答案的正确性
-    
-    // 临时实现：假设验证通过，计算得分
-    const correctAnswers = data.answers.filter((answer, index) => {
-      // 这里应该是实际的答案验证逻辑
-      // 临时使用随机验证
-      return random.random() > 0.3; // 假设70%正确率
-    }).length;
-    
-    console.log('Calculated correctAnswers:', correctAnswers);
-    
-    // 使用与前端相同的得分计算公式
-    const questionScore = Math.round((correctAnswers / CONFIG.QUESTION_COUNT) * 100);
-    const timeScore = Math.round(Math.min(Math.max(100 + (CONFIG.QUESTION_COUNT * 7 - data.timeSpent) * 0.5, 0), 100));
+    const totalQuestions = Number(data.totalQuestions);
+
+    // 正确题数：以 isCorrect 为准（最小核验：字段齐全）
+    const correctAnswers = Array.isArray(data.answers)
+      ? data.answers.reduce((acc, ans) => acc + (ans && ans.isCorrect === true ? 1 : 0), 0)
+      : 0;
+
+    // 分数计算与前端一致
+    const questionScore = Math.round((correctAnswers / totalQuestions) * 100);
+    const timeScore = Math.round(Math.min(Math.max(100 + (totalQuestions * 7 - data.timeSpent) * 0.5, 0), 100));
     const finalScore = Math.round(questionScore * (5/6) + timeScore * (1/6));
-    
-    console.log('Score calculation:', { questionScore, timeScore, finalScore });
+
+    console.log('Score calculation:', { correctAnswers, questionScore, timeScore, finalScore });
     
     return {
       valid: true,
@@ -265,22 +289,24 @@ async function handleScoreSubmission(request, env) {
       });
     }
     
-    // 检查IP是否已提交
-    const ipSubmissionKey = `ip_${clientIP}_${data.date}`;
-    console.log('Checking IP submission key:', ipSubmissionKey);
-    
+    // 按 IP+日期计数的提交限制
+    const ipCountKey = `ip_count_${clientIP}_${data.date}`;
+    let currentCount = 0;
     try {
-      const hasSubmitted = await env.QUIZ_KV.get(ipSubmissionKey);
-      if (hasSubmitted) {
-        console.log('IP already submitted today:', clientIP);
-        return new Response(JSON.stringify({ error: 'Already submitted today' }), {
-          status: 429,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
+      const countStr = await env.QUIZ_KV.get(ipCountKey);
+      currentCount = countStr ? parseInt(countStr, 10) : 0;
     } catch (error) {
-      console.error('IP submission check error:', error);
-      // 如果 KV 操作失败，继续处理请求（降级处理）
+      console.error('IP count get error:', error);
+      currentCount = 0; // 降级
+    }
+    console.log('Current submission count for IP:', clientIP, 'on', data.date, 'is', currentCount);
+
+    if (currentCount >= CONFIG.MAX_SUBMISSIONS_PER_IP) {
+      console.log('IP already reached max submissions today:', clientIP);
+      return new Response(JSON.stringify({ error: 'Already submitted today' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
     
     // 验证答案并计算得分
@@ -318,7 +344,6 @@ async function handleScoreSubmission(request, env) {
       currentBoard = currentBoardData ? JSON.parse(currentBoardData) : [];
     } catch (error) {
       console.error('Leaderboard get error:', error);
-      // 如果 KV 操作失败，使用空数组（降级处理）
       currentBoard = [];
     }
     console.log('Current board length:', currentBoard.length);
@@ -345,20 +370,15 @@ async function handleScoreSubmission(request, env) {
       });
     } catch (error) {
       console.error('Leaderboard save error:', error);
-      // 如果保存失败，不影响响应返回
     }
     
-    // 标记IP已提交
-    console.log('Marking IP as submitted');
+    // 递增计数并标记 TTL（24小时）
+    console.log('Incrementing IP submission count');
     try {
-      await env.QUIZ_KV.put(ipSubmissionKey, JSON.stringify({
-        nickname: data.nickname,
-        score: scoreResult.finalScore,
-        timestamp: Date.now()
-      }), { expirationTtl: 86400 }); // 24小时过期
+      await env.QUIZ_KV.put(ipCountKey, String(currentCount + 1), { expirationTtl: 86400 });
     } catch (error) {
-      console.error('IP submission mark error:', error);
-      // 如果标记失败，不影响响应返回
+      console.error('IP submission count update error:', error);
+      // 降级：不阻止响应返回
     }
     
     // 计算排名
@@ -390,6 +410,7 @@ async function handleLeaderboard(request, env) {
   try {
     const url = new URL(request.url);
     const date = url.searchParams.get('date') || new Date().toISOString().split('T')[0];
+    const bust = url.searchParams.get('bust');
     
     // 日期格式验证
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
@@ -399,8 +420,11 @@ async function handleLeaderboard(request, env) {
       });
     }
     
-    // 边缘缓存优先
-    const cached = await caches.default.match(request);
+    // 边缘缓存优先（bust 参数时跳过缓存）
+    let cached = null;
+    if (!bust) {
+      cached = await caches.default.match(request);
+    }
     if (cached) {
       // If-None-Match 支持（命中缓存时快速返回304）
       const incomingETag = request.headers.get('If-None-Match');
@@ -457,9 +481,9 @@ async function handleLeaderboard(request, env) {
     const hashHex = hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
     const etag = `"sha256-${hashHex}"`;
 
-    // 条件请求：If-None-Match
+    // 条件请求：If-None-Match（bust 时禁用 304）
     const incomingETag = request.headers.get('If-None-Match');
-    if (incomingETag && incomingETag === etag) {
+    if (!bust && incomingETag && incomingETag === etag) {
       return new Response(null, {
         status: 304,
         headers: {
@@ -473,13 +497,15 @@ async function handleLeaderboard(request, env) {
     const response = new Response(body, {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=300, stale-while-revalidate=120'
+        'Cache-Control': bust ? 'no-store' : 'public, max-age=300, stale-while-revalidate=120'
       }
     });
     response.headers.set('ETag', etag);
 
-    // 写入边缘缓存
-    await caches.default.put(request, response.clone());
+    // 写入边缘缓存（bust 时不写入）
+    if (!bust) {
+      await caches.default.put(request, response.clone());
+    }
     return response;
   
   } catch (error) {

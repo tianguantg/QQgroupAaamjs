@@ -513,7 +513,7 @@ window.QUIZ_CONFIG = {
     nightmare: {
       name: '噩梦难度',
       description: '极具挑战性，考验深度理解',
-      questionCount: 15,
+      questionCount: 1,
       difficultyRatio: { easy: 1, normal: 2, hard: 4 }, // 主要是普通和困难题
       pools: { card: 2, character: 1.5, event: 2, profile: 0, decision: 3, enemy: 2, skill: 2}
     },
@@ -3076,19 +3076,15 @@ const TYPE_META = {
         
         resultView.appendChild(resultCard);
         
-        // 如果是每日挑战：显示提交按钮弹窗交互，并在结算界面展示排行榜卡片
+        // 如果是每日挑战：显示提交按钮，并在结算界面显示主界面的排行榜卡片
         if (window.isDailyChallenge) {
           showDailyChallengeSubmission(scores, timeInSeconds, finalTime);
-          const settlementLeaderboard = document.createElement('div');
-          settlementLeaderboard.className = 'simple-quiz-card';
-          settlementLeaderboard.id = 'leaderboardCardSettlement';
-          settlementLeaderboard.style.marginTop = '16px';
-          const settlementContent = document.createElement('div');
-          settlementContent.id = 'leaderboardCardSettlementContent';
-          settlementLeaderboard.appendChild(settlementContent);
-          resultView.appendChild(settlementLeaderboard);
-          // 渲染结算界面排行榜
-          renderLeaderboardCard('leaderboardCardSettlement');
+          const mainLeaderboardCard = document.getElementById('leaderboardCardMain');
+          if (mainLeaderboardCard) {
+            mainLeaderboardCard.style.display = '';
+            // 结算界面也渲染一次主排行榜
+            renderLeaderboardCard('leaderboardCardMain');
+          }
         }
       }
 
@@ -3833,6 +3829,73 @@ const TYPE_META = {
         openBtn.addEventListener('click', () => {
           openNicknameModal(scores, timeInSeconds, finalTime, statusDiv);
         });
+
+        // 分数>80时在结算界面展示“邀请函！”按钮，点击后出现弹窗
+        if (window.isDailyChallenge && scores && typeof scores.finalScore === 'number' && scores.finalScore > 80) {
+          const inviteBtn = document.createElement('button');
+          inviteBtn.id = 'openInviteModalBtn';
+          inviteBtn.className = 'nav-btn primary daily-challenge-btn';
+          inviteBtn.innerHTML = '<span class="nav-btn-text"> ! 邀请函 ! </span>';
+          // 稍微增强视觉权重以更醒目（保持主题风格）
+          inviteBtn.style.cssText = 'font-weight:700; letter-spacing:0.5px;';
+          actions.appendChild(inviteBtn);
+          inviteBtn.addEventListener('click', () => {
+            showInviteModalIfEligible(scores.finalScore);
+          });
+        }
+      }
+
+      // 邀请函弹窗
+      function showInviteModalIfEligible(finalScore) {
+        try {
+          if (!window.isDailyChallenge) return;
+          if (typeof finalScore !== 'number' || finalScore <= 80) return;
+          const modal = document.createElement('div');
+          modal.className = 'modal';
+          modal.style.display = 'block';
+          const content = document.createElement('div');
+          content.className = 'modal-content';
+          content.innerHTML = `
+            <div class="modal-header">
+              <h3>邀请函</h3>
+              <span class="close" id="closeInviteModal">&times;</span>
+            </div>
+            <div class="modal-body" style="text-align:center;">
+              <p style="margin: 10px 0; font-size: 1.1em;">你的最终得分是：${finalScore}分！你是星趴高手喵！要不要加入我们QQ群喵！</p>
+              <div style="margin: 8px 0; color: var(--color-text-secondary); text-align: right;">BY TGW~</div>
+              <button id="joinGroupInviteBtn" class="nav-btn primary" style="margin:12px auto 0; display:inline-block;"><span class="nav-btn-text">点击加群</span></button>
+            </div>
+          `;
+          modal.appendChild(content);
+          document.body.appendChild(modal);
+          const close = () => { if (document.body.contains(modal)) document.body.removeChild(modal); };
+          const closeBtn = document.getElementById('closeInviteModal');
+          if (closeBtn) closeBtn.addEventListener('click', close);
+          modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+           const joinBtn = document.getElementById('joinGroupInviteBtn');
+           if (joinBtn && typeof groupConfig !== 'undefined' && groupConfig && groupConfig.basic_info) {
+             const url = groupConfig.basic_info.join_link || `https://qm.qq.com/cgi-bin/qm/qr?k=${groupConfig.basic_info.qq_number}`;
+             joinBtn.addEventListener('click', () => {
+               try { window.open(url, '_blank'); } catch (_) {}
+               const imgPath = (groupConfig.assets && groupConfig.assets.qrcode) ? groupConfig.assets.qrcode : 'images/qrcode.jpg';
+               const overlay = document.createElement('div');
+               overlay.style.cssText = [
+                 'position:fixed', 'left:0', 'top:0', 'width:100vw', 'height:100vh',
+                 'background:rgba(0,0,0,0.9)', 'z-index:10000', 'display:flex', 'align-items:center', 'justify-content:center'
+               ].join(';');
+               const img = document.createElement('img');
+               img.src = imgPath;
+               img.alt = 'QQ群二维码';
+               img.style.cssText = [
+                 'max-width:80vw', 'max-height:80vh', 'border-radius:12px',
+                 'box-shadow:0 10px 30px rgba(0,0,0,0.6)', 'border:2px solid rgba(255,255,255,0.8)'
+               ].join(';');
+               overlay.appendChild(img);
+               document.body.appendChild(overlay);
+               overlay.addEventListener('click', () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); });
+             });
+           }
+        } catch (_) {}
       }
 
       // 昵称弹窗并提交
@@ -3872,19 +3935,43 @@ const TYPE_META = {
         const confirmBtn = document.getElementById('confirmSubmitBtn');
         const statusDivModal = document.getElementById('submissionStatusModal');
 
+        function validateNickname(raw) {
+          let name = String(raw || '');
+          try { name = name.normalize('NFKC'); } catch (_) {}
+          name = name.replace(/[\u0000-\u001F\u007F]/g, ''); // 控制字符
+          name = name.replace(/[\u200B-\u200D\uFEFF]/g, ''); // 零宽字符
+          name = name.replace(/\s+/g, ' ').trim();
+          if (!name) {
+            return { ok: false, error: '请输入昵称' };
+          }
+          if (name.length > 20) {
+            return { ok: false, error: '昵称不能超过20个字符' };
+          }
+          const allowedRe = /^[A-Za-z0-9\u4e00-\u9fa5 _\-·•~.!?]+$/;
+          if (!allowedRe.test(name)) {
+            return { ok: false, error: '昵称包含非法字符，请更换' };
+          }
+          const bannedPatterns = [
+            /(https?:\/\/|www\.)/i,           // URL/站点
+            /@/i,                               // 邮箱/联系方式
+            /(微信|VX|QQ|TG|电报|群|联系|加我)/i, // 常见联系方式/招揽
+            /(广告|推广|色情|成人|赌|博彩|彩票|政治|极端|暴力|仇恨|辱骂)/i, // 违规类别词
+            /(.)\1{4,}/                         // 连续重复字符
+          ];
+          if (bannedPatterns.some(re => re.test(name))) {
+            return { ok: false, error: '昵称包含违规内容或信息，请更换' };
+          }
+          return { ok: true, value: name };
+        }
+
         const doSubmit = async () => {
-          const nickname = nicknameInput.value.trim();
-          if (!nickname) {
-            statusDivModal.textContent = '请输入昵称';
+          const { ok, value, error } = validateNickname(nicknameInput.value);
+          if (!ok) {
+            statusDivModal.textContent = error;
             statusDivModal.style.color = 'var(--color-error)';
             return;
           }
-          if (nickname.length > 20) {
-            statusDivModal.textContent = '昵称不能超过20个字符';
-            statusDivModal.style.color = 'var(--color-error)';
-            return;
-          }
-          await submitDailyChallengeScore(nickname, scores, timeInSeconds, finalTime, statusDivModal);
+          await submitDailyChallengeScore(value, scores, timeInSeconds, finalTime, statusDivModal);
           // 同步状态到结算卡片下方的提示（可选）
           if (statusDiv) {
             statusDiv.textContent = statusDivModal.textContent;
@@ -3906,6 +3993,8 @@ const TYPE_META = {
             'Rate limit exceeded': '提交过于频繁，请稍后再试。', // 触发后端写端限流（窗口内请求过多）
             'Missing required fields': '提交数据不完整，请刷新页面后重试。', // 请求体缺少必需字段
             'Invalid nickname': '昵称不合法：长度最多 20 个字符，请重新输入。', // 昵称缺失/为空/超长
+            'Nickname contains invalid characters': '昵称包含非法字符，请重新输入。',
+            'Nickname contains prohibited content': '昵称包含违规内容或联系方式，请重新输入。',
             'Invalid date format': '日期格式不正确，请刷新页面后重试。', // date 必须是 YYYY-MM-DD
             'Invalid answers array': '答题数据缺失或数量不正确。', // answers 未提供或长度不等于题目数量
             'Invalid answer object structure': '答题项结构不合法。', // 单题答案对象结构不符合预期
@@ -4010,6 +4099,11 @@ const TYPE_META = {
               const span = openBtn.querySelector('.nav-btn-text');
               if (span) span.textContent = '已提交';
             }
+            // 刷新主界面排行榜，绕过边缘缓存
+            const mainLeaderboardCard = document.getElementById('leaderboardCardMain');
+            if (mainLeaderboardCard) {
+              renderLeaderboardCard('leaderboardCardMain', { forceBust: true });
+            }
           } else {
             const errMsg = result?.error || '网络错误或服务器不可达';
             const statusCode = response?.status || 0;
@@ -4024,7 +4118,7 @@ const TYPE_META = {
       }
 
       // 渲染主题风格排行榜卡片（主界面与结算界面复用，含重试/超时/缓存回退）
-      async function renderLeaderboardCard(containerId) {
+      async function renderLeaderboardCard(containerId, opts = {}) {
         const container = document.getElementById(containerId);
         if (!container) return;
         container.style.display = '';
@@ -4038,14 +4132,48 @@ const TYPE_META = {
         }
         container.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <h3 style="margin:0; color: var(--color-text-primary);">每日挑战排行榜（建设中，暂时无法正常使用）</h3>
+            <h3 style="margin:0; color: var(--color-text-primary);">每日挑战排行榜</h3>
+            <button id="${contentId}RefreshBtn" class="nav-btn" title="强制刷新（跳过缓存）"><span class="nav-btn-text">刷新</span></button>
           </div>
           <div id="${contentId}">加载中...</div>
         `;
         const target = document.getElementById(contentId);
+        const refreshBtn = document.getElementById(`${contentId}RefreshBtn`);
+        if (refreshBtn) {
+          let refreshing = false;
+          refreshBtn.addEventListener('click', () => {
+            if (refreshing) return;
+            refreshing = true;
+            const prevOpacity = refreshBtn.style.opacity;
+            const prevPointer = refreshBtn.style.pointerEvents;
+            refreshBtn.style.opacity = '0.6';
+            refreshBtn.style.pointerEvents = 'none';
+            try {
+              renderLeaderboardCard(containerId, { forceBust: true });
+              try { sessionStorage.setItem('leaderboardForceBustUntil', String(Date.now() + 7 * 60 * 1000)); } catch (_) {}
+            } finally {
+              setTimeout(() => {
+                refreshing = false;
+                refreshBtn.style.opacity = prevOpacity || '';
+                refreshBtn.style.pointerEvents = prevPointer || '';
+              }, 2000);
+            }
+          });
+        }
 
-        // 本地缓存键（按日期缓存最近一次成功结果）
+        // 本地缓存键（按日期缓存最近一次成功结果)
         const CACHE_KEY = 'dailyLeaderboardCache';
+
+        // 请求参数：日期与强制刷新控制（默认尊重会话中的强制刷新偏好）
+        const preferBust = (() => { try { const until = parseInt((sessionStorage.getItem('leaderboardForceBustUntil') || '0'), 10); return until > Date.now(); } catch (_) { return false; } })();
+        const { forceBust = preferBust } = opts;
+        const d = window.dailyChallengeDate;
+        const dateStr = (d && d.year && d.month && d.day)
+          ? `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
+          : (() => {
+              const now = new Date();
+              return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            })();
 
         function renderBoard(data) {
           if (data.leaderboard && data.leaderboard.length > 0) {
@@ -4148,7 +4276,8 @@ const TYPE_META = {
           let data = null;
           for (const endpoint of configured) {
             try {
-              const response = await fetchWithTimeout(endpoint, 5000);
+              const url = `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
+              const response = await fetchWithTimeout(url, 5000);
               data = await response.json();
               if (data && data.leaderboard) {
                 break;

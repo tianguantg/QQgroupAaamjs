@@ -1126,7 +1126,7 @@
   </div>
 
   <div class="container quiz-container">
-    <nav class="navbar">
+    <nav class="navbar" style="display:none;">
       <div class="nav-content">
         <div class="logo" id="navLogo" onclick="window.location.href='index.html'" style="cursor:pointer">AAa美甲师后援会</div>
         <div class="nav-buttons">
@@ -1156,10 +1156,10 @@
             <button id="dailyChallengeBtn" class="nav-btn difficulty-btn daily-challenge-btn" style="margin-top: 30px;">
               <span class="nav-btn-text">每日挑战</span>
             </button>
-            <div style="margin-top: 6px; text-align: center;">
-              <small style="color: var(--color-text-muted, #888); font-size: 12px;">（每日挑战固定噩梦，所有人同一天的题目相同）</small>
+            <div style="margin-top: 6px; text-align: center; margin-top: 10px;">
+              <small style="color: var(--color-text-muted, #888); font-size: 15px;">—— 以下为特殊模式 ——</small>
             </div>
-            <button id="profileBtn" class="nav-btn difficulty-btn" data-difficulty="profile" style="margin-top: 10px;">
+            <button id="profileBtn" class="nav-btn difficulty-btn" data-difficulty="profile">
               <span class="nav-btn-text">档案模式</span>
             </button>
             <div style="margin: 16px 0; text-align: center;">
@@ -1233,11 +1233,8 @@
 
       <div id="resultView" class="question-text" style="display:none; margin-top:16px;"></div>
     </div>
-
-    <!-- 排行榜卡片：放置在“星趴小测验”卡片下方，仅主界面显示 -->
-    <div id="leaderboardCardMain" class="simple-quiz-card" style="display:none; margin-top:16px;">
-      <div id="leaderboardCardMainContent"></div>
-    </div>
+    <!-- 每日挑战排行榜主卡片容器（主界面显示，测验运行时隐藏） -->
+    <div id="leaderboardCardMain" class="simple-quiz-card" style="margin-top:16px;"></div>
   </div>
 
   <!-- 反馈回复弹窗 -->
@@ -1290,6 +1287,6 @@
   <script src="config.js"></script>
 
   
-  <script src="quiz.js?v=202510171420"></script>
+  <script src="quiz.js?v=202510171729"></script>
 </body>
 </html>

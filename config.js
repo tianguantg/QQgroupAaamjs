@@ -6,7 +6,8 @@ const groupConfig = {
         description: "星引擎游戏组队聊天群！",
         member_count: "70+",
         established_date: "2025/4/29",
-        qq_number: "1043179137"
+        qq_number: "1043179137",
+        join_link: "https://qun.qq.com/universal-share/share?ac=1&authKey=bcCxh6328E47nbYw%2F8glttMKS%2FkUqBDRSEKGgKXjstleMw8IX%2BHeV%2FSuIILi5Xze&busi_data=eyJncm91cENvZGUiOiIxMDQzMTc5MTM3IiwidG9rZW4iOiI4VnMvTytpSHpFS04xY3Z4YVl5TVJ2ZEJ6cktiS2RSU2hSZ1FxSThlMWIxVzF2Y09TQlJEeU82bnZsTHh1UVN5IiwidWluIjoiMjUxOTUyMTk4NyJ9&data=m2j3Kg6mXhOVuSAyV4ztqH22609tszuvtzUl3slUdP7lCaU5QhlNiHU_h-R8oQVI3tvFW-DjyA7xrq6KFFqpVw&svctype=4&tempid=h5_group_info"
     },
 
     // 群特色
@@ -221,8 +222,8 @@ function updatePageContent() {
         
         // 添加加群按钮点击事件
         joinButton.addEventListener('click', function() {
-            // 使用QQ群链接格式
-            window.open(`https://qm.qq.com/cgi-bin/qm/qr?k=${groupConfig.basic_info.qq_number}`, '_blank');
+            const link = groupConfig.basic_info.join_link || `https://qm.qq.com/cgi-bin/qm/qr?k=${groupConfig.basic_info.qq_number}`;
+            window.open(link, '_blank');
         });
     }
 
