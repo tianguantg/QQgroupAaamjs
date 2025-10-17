@@ -4,7 +4,7 @@
 // 配置常量
 const CONFIG = {
 
-  MAX_SUBMISSIONS_PER_IP: 2, // 每IP每日最大提交次数
+  MAX_SUBMISSIONS_PER_IP: 1, // 每IP每日最大提交次数
   
   MAX_NICKNAME_LENGTH: 20,   // 昵称最大长度
   
@@ -29,7 +29,44 @@ const CONFIG = {
   // 允许的时间漂移（秒）：sum(questionTimes) 与 timeSpent 的容忍误差
   ALLOWED_TIME_DRIFT_SEC: 15
   
+};
+
+// 新增：来源白名单与会话配置（保持免费前提下的高性价比防护）
+const SECURITY = {
+  ALLOWED_HOSTS: new Set(['aaamjs.asia', 'aaamjs.dpdns.org', 'localhost:5174', '127.0.0.1:5174', 'localhost:5500', '127.0.0.1:5500']),
+  SESSION_TTL_SEC: 3600, // 会话令牌有效期（秒）
+  MAX_SESSIONS_PER_IP_PER_DAY: 2 // 每IP每日最多创建会话次数
+};
+
+function getHostFromOrigin(origin) {
+  try {
+    const u = new URL(origin);
+    return u.host;
+  } catch (_) {
+    return '';
+  }
+}
+
+function isAllowedRequestOrigin(request) {
+  const origin = request.headers.get('Origin') || '';
+  const referer = request.headers.get('Referer') || '';
+  const originHost = getHostFromOrigin(origin);
+  const refererHost = getHostFromOrigin(referer);
+  return SECURITY.ALLOWED_HOSTS.has(originHost) || SECURITY.ALLOWED_HOSTS.has(refererHost);
+}
+
+function buildCorsHeaders(request, forWrite = false) {
+  const origin = request.headers.get('Origin') || '';
+  const originHost = getHostFromOrigin(origin);
+  const allowed = SECURITY.ALLOWED_HOSTS.has(originHost);
+  const allowOrigin = forWrite ? (allowed ? origin : 'null') : (origin || '*');
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, cf-turnstile-response',
+    'Vary': 'Origin'
   };
+}
 
 // 伪随机数生成器（与前端保持一致）
 class SeededRandom {
@@ -65,6 +102,38 @@ function getDailySeed(dateStr = null) {
   return year * 10000 + month * 100 + day;
 }
 
+// Turnstile 验证（按需执行，使用 Cloudflare 官方验证接口）
+async function verifyTurnstileToken(token, secret) {
+  try {
+    if (!secret || !token) return { success: false, error: 'Captcha required' };
+    const form = new URLSearchParams();
+    form.append('secret', secret);
+    form.append('response', token);
+    const resp = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form
+    });
+    const data = await resp.json();
+    return data && data.success ? { success: true } : { success: false, error: 'Captcha required' };
+  } catch (e) {
+    return { success: false, error: 'Captcha required' };
+  }
+}
+
+// 简单启发式：当 UA 可疑或用时极短时启用人机验证（仅在配置了密钥时）
+function shouldRequireCaptcha(request, data, env) {
+  try {
+    if (!env.TURNSTILE_SECRET) return false; // 未配置密钥则不强制
+    const ua = request.headers.get('User-Agent') || '';
+    const suspiciousUA = /(curl|wget|httpclient|python|bot|spider|crawler)/i.test(ua);
+    const extremeFast = Number(data?.timeSpent) < 25 && Number(data?.totalQuestions) >= 15;
+    return suspiciousUA || extremeFast;
+  } catch (_) {
+    return false;
+  }
+}
+
 // 验证提交数据的完整性和合理性
 function validateSubmissionData(data) {
   console.log('validateSubmissionData called with:', JSON.stringify(data, null, 2));
@@ -73,6 +142,12 @@ function validateSubmissionData(data) {
   if (!data.nickname || !data.date || !data.answers || !data.timeSpent || !data.questionTimes) {
     console.log('Missing required fields');
     return { valid: false, error: 'Missing required fields' };
+  }
+  
+  // 新增：会话令牌字段（后续在 handleScoreSubmission 校验）
+  if (!data.sessionId || typeof data.sessionId !== 'string' || data.sessionId.length < 16) {
+    console.log('Missing or invalid sessionId');
+    return { valid: false, error: 'Session required' };
   }
   
   // 昵称验证与规范化
@@ -174,13 +249,7 @@ function validateSubmissionData(data) {
     return { valid: false, error: 'Invalid individual question times' };
   }
   
-  // 检查时间总和的一致性（允许 CONFIG.ALLOWED_TIME_DRIFT_SEC 秒误差）
-  const totalQuestionTime = data.questionTimes.reduce((sum, time) => sum + time, 0);
-  const drift = CONFIG.ALLOWED_TIME_DRIFT_SEC ?? 10;
-  if (Math.abs(totalQuestionTime - data.timeSpent) > drift) {
-    console.log('Time inconsistency detected (drift >', drift, 's). Total question time:', totalQuestionTime, 'Time spent:', data.timeSpent);
-    return { valid: false, error: 'Time inconsistency detected' };
-  }
+  // 跳过每题时间总和与总时间的一致性检查（按当前需求关闭）
   
   // 种子验证
   const expectedSeed = getDailySeed(data.date);
@@ -226,6 +295,61 @@ async function checkRateLimit(env, clientIP, windowSec = CONFIG.RATE_LIMIT_WINDO
   }
 }
 
+// 会话创建与校验辅助
+async function createSession(env, clientIP, dateStr) {
+  // 每IP每日会话创建次数限制
+  const ipKey = `ip_session_count_${clientIP}_${dateStr}`;
+  let count = 0;
+  try {
+    const val = await env.QUIZ_KV.get(ipKey);
+    count = val ? parseInt(val, 10) : 0;
+  } catch (_) { count = 0; }
+  if (count >= SECURITY.MAX_SESSIONS_PER_IP_PER_DAY) {
+    return { ok: false, error: 'Session limit exceeded' };
+  }
+
+  // 生成令牌
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const token = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  const sessionKey = `session_${token}`;
+  const now = Date.now();
+  const record = { ip: clientIP, date: dateStr, createdAt: now, used: false };
+  try {
+    await env.QUIZ_KV.put(sessionKey, JSON.stringify(record), { expirationTtl: SECURITY.SESSION_TTL_SEC });
+    await env.QUIZ_KV.put(ipKey, String(count + 1), { expirationTtl: 86400 });
+  } catch (error) {
+    console.error('Create session error:', error);
+    return { ok: false, error: 'Session create failed' };
+  }
+  return { ok: true, sessionId: token, record };
+}
+
+async function getSession(env, sessionId) {
+  try {
+    const data = await env.QUIZ_KV.get(`session_${sessionId}`);
+    return data ? JSON.parse(data) : null;
+  } catch (error) {
+    console.error('Get session error:', error);
+    return null;
+  }
+}
+
+async function markSessionUsed(env, sessionId) {
+  try {
+    const record = await getSession(env, sessionId);
+    if (!record) return false;
+    record.used = true;
+    record.usedAt = Date.now();
+    await env.QUIZ_KV.put(`session_${sessionId}`, JSON.stringify(record), { expirationTtl: SECURITY.SESSION_TTL_SEC });
+    return true;
+  } catch (error) {
+    console.error('Mark session used error:', error);
+    return false;
+  }
+}
+
 // 重新生成题目并验证答案（改为依据 answers 的一致算法，不做随机）
 async function verifyAnswersAndCalculateScore(data, env) {
   try {
@@ -257,10 +381,55 @@ async function verifyAnswersAndCalculateScore(data, env) {
   }
 }
 
+// 处理会话创建
+async function handleSessionStart(request, env) {
+  try {
+    // 写端必须来源白名单
+    if (!isAllowedRequestOrigin(request)) {
+      return new Response(JSON.stringify({ error: 'Forbidden origin' }), { status: 403, headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) } });
+    }
+
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+
+    // 速率限制（写端）
+    const rateOk = await checkRateLimit(env, clientIP);
+    if (!rateOk) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), { status: 429, headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) } });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const dateStr = body?.date && /^\d{4}-\d{2}-\d{2}$/.test(body.date)
+      ? body.date
+      : new Date().toISOString().split('T')[0];
+
+    const { ok, error, sessionId } = await createSession(env, clientIP, dateStr);
+    if (!ok) {
+      return new Response(JSON.stringify({ error }), { status: 400, headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) } });
+    }
+
+    return new Response(JSON.stringify({ success: true, sessionId, date: dateStr }), {
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
+    });
+  } catch (error) {
+    console.error('Session start error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) } });
+  }
+}
+
 // 处理成绩提交
 async function handleScoreSubmission(request, env) {
   try {
     console.log('handleScoreSubmission started');
+    
+    // 写端必须来源白名单
+    if (!isAllowedRequestOrigin(request)) {
+      console.log('Forbidden origin for write');
+      return new Response(JSON.stringify({ error: 'Forbidden origin' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
+      });
+    }
+
     const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
     console.log('Client IP:', clientIP);
     
@@ -270,7 +439,7 @@ async function handleScoreSubmission(request, env) {
       console.log('Rate limit exceeded for IP:', clientIP);
       return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
         status: 429,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
       });
     }
     
@@ -278,17 +447,69 @@ async function handleScoreSubmission(request, env) {
     const data = await request.json();
     console.log('Received data:', JSON.stringify(data, null, 2));
     
-    // 数据验证
+    // 数据验证（包含 sessionId 存在性）
     const validation = validateSubmissionData(data);
     console.log('Validation result:', validation);
     if (!validation.valid) {
       console.log('Validation failed:', validation.error);
       return new Response(JSON.stringify({ error: validation.error }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
       });
     }
-    
+
+    // 人机验证（按需触发，仅当启发式判定需要时）
+    try {
+      const requireCaptcha = shouldRequireCaptcha(request, data, env);
+      if (requireCaptcha) {
+        const token = request.headers.get('cf-turnstile-response') || '';
+        if (!token) {
+          console.log('Captcha required but token missing');
+          return new Response(JSON.stringify({ error: 'Captcha required' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
+          });
+        }
+        const secret = env.TURNSTILE_SECRET;
+        const verify = await verifyTurnstileToken(token, secret);
+        if (!verify.success) {
+          console.log('Captcha verification failed');
+          return new Response(JSON.stringify({ error: verify.error || 'Captcha required' }), {
+            status: 403,
+            headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Captcha flow error:', e);
+      return new Response(JSON.stringify({ error: 'Captcha required' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
+      });
+    }
+
+    // 校验会话令牌与绑定
+    const session = await getSession(env, data.sessionId);
+    if (!session) {
+      console.log('Invalid session');
+      return new Response(JSON.stringify({ error: 'Invalid session' }), { status: 400, headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) } });
+    }
+    if (session.used) {
+      console.log('Session already used');
+      return new Response(JSON.stringify({ error: 'Session used' }), { status: 400, headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) } });
+    }
+    const dateStr = data.date;
+    if (session.ip !== clientIP || session.date !== dateStr) {
+      console.log('Session binding mismatch', { session, clientIP, dateStr });
+      return new Response(JSON.stringify({ error: 'Session mismatch' }), { status: 400, headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) } });
+    }
+
+    // 宽容的时间相关校验（仅记录不拒绝）
+    const elapsedSec = Math.max(0, Math.floor((Date.now() - (session.createdAt || Date.now())) / 1000));
+    const driftSec = elapsedSec - data.timeSpent;
+    console.log('Time correlation (serverElapsed - clientTimeSpent):', { elapsedSec, clientTimeSpent: data.timeSpent, driftSec });
+    // 不拒绝，仅用于后续行为分析或调整策略
+
     // 按 IP+日期计数的提交限制
     const ipCountKey = `ip_count_${clientIP}_${data.date}`;
     let currentCount = 0;
@@ -305,7 +526,7 @@ async function handleScoreSubmission(request, env) {
       console.log('IP already reached max submissions today:', clientIP);
       return new Response(JSON.stringify({ error: 'Already submitted today' }), {
         status: 429,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
       });
     }
     
@@ -317,7 +538,7 @@ async function handleScoreSubmission(request, env) {
       console.log('Score verification failed:', scoreResult.error);
       return new Response(JSON.stringify({ error: scoreResult.error }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
       });
     }
     
@@ -380,6 +601,9 @@ async function handleScoreSubmission(request, env) {
       console.error('IP submission count update error:', error);
       // 降级：不阻止响应返回
     }
+
+    // 标记会话已使用
+    await markSessionUsed(env, data.sessionId);
     
     // 计算排名
     const rank = currentBoard.findIndex(entry => 
@@ -393,14 +617,14 @@ async function handleScoreSubmission(request, env) {
       score: scoreResult.finalScore,
       totalEntries: currentBoard.length
     }), {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
     });
     
   } catch (error) {
     console.error('Score submission error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
     });
   }
 }
@@ -416,7 +640,7 @@ async function handleLeaderboard(request, env) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return new Response(JSON.stringify({ error: 'Invalid date format' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
       });
     }
     
@@ -435,11 +659,12 @@ async function handleLeaderboard(request, env) {
           headers: {
             'ETag': cachedETag,
             'Cache-Control': cached.headers.get('Cache-Control') || 'public, max-age=300, stale-while-revalidate=120',
-            'Content-Type': cached.headers.get('Content-Type') || 'application/json'
+            'Content-Type': cached.headers.get('Content-Type') || 'application/json',
+            ...buildCorsHeaders(request, false)
           }
         });
       }
-      return new Response(cached.body, { status: cached.status, headers: cached.headers });
+      return new Response(cached.body, { status: cached.status, headers: { ...Object.fromEntries(cached.headers), ...buildCorsHeaders(request, false) } });
     }
 
     // 读取端限流
@@ -448,7 +673,7 @@ async function handleLeaderboard(request, env) {
     if (!rateOk) {
       return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
         status: 429,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
       });
     }
 
@@ -489,7 +714,8 @@ async function handleLeaderboard(request, env) {
         headers: {
           'ETag': etag,
           'Cache-Control': 'public, max-age=300, stale-while-revalidate=120',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...buildCorsHeaders(request, false)
         }
       });
     }
@@ -497,7 +723,8 @@ async function handleLeaderboard(request, env) {
     const response = new Response(body, {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': bust ? 'no-store' : 'public, max-age=300, stale-while-revalidate=120'
+        'Cache-Control': bust ? 'no-store' : 'public, max-age=300, stale-while-revalidate=120',
+        ...buildCorsHeaders(request, false)
       }
     });
     response.headers.set('ETag', etag);
@@ -512,7 +739,7 @@ async function handleLeaderboard(request, env) {
     console.error('Leaderboard query error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
     });
   }
 }
@@ -520,18 +747,21 @@ async function handleLeaderboard(request, env) {
 // 主处理函数
 export default {
   async fetch(request, env, ctx) {
-    // CORS 处理
-    const corsHeaders = {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    };
-    
+    // 动态 CORS（依请求来源与写/读场景决定）
+    const origin = request.headers.get('Origin') || '';
+    const url = new URL(request.url);
+
+    // 预检请求处理（OPTIONS）
     if (request.method === 'OPTIONS') {
+      const reqMethod = request.headers.get('Access-Control-Request-Method') || 'GET';
+      const forWrite = reqMethod.toUpperCase() === 'POST';
+      const corsHeaders = buildCorsHeaders(request, forWrite);
+      // 对写端的非法来源直接拒绝
+      if (forWrite && !isAllowedRequestOrigin(request)) {
+        return new Response(null, { status: 403, headers: corsHeaders });
+      }
       return new Response(null, { headers: corsHeaders });
     }
-    
-    const url = new URL(request.url);
     
     try {
       let response;
@@ -540,6 +770,8 @@ export default {
         response = await handleScoreSubmission(request, env);
       } else if (url.pathname === '/api/leaderboard' && request.method === 'GET') {
         response = await handleLeaderboard(request, env);
+      } else if (url.pathname === '/api/session/start' && request.method === 'POST') {
+        response = await handleSessionStart(request, env);
       } else {
         response = new Response(JSON.stringify({ error: 'Not Found' }), {
           status: 404,
@@ -547,7 +779,9 @@ export default {
         });
       }
       
-      // 添加 CORS 头
+      // 添加 CORS 头（依据场景动态）
+      const forWrite = request.method === 'POST';
+      const corsHeaders = buildCorsHeaders(request, forWrite);
       Object.entries(corsHeaders).forEach(([key, value]) => {
         response.headers.set(key, value);
       });
@@ -560,11 +794,11 @@ export default {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       });
-      
+      const forWrite = request.method === 'POST';
+      const corsHeaders = buildCorsHeaders(request, forWrite);
       Object.entries(corsHeaders).forEach(([key, value]) => {
         errorResponse.headers.set(key, value);
       });
-      
       return errorResponse;
     }
   }

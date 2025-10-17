@@ -553,6 +553,12 @@ window.QUIZ_CONFIG = {
     'https://quiz-api.aaamjs.asia/api/submit-score',
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score'
   ],
+  // 会话启动接口端点（用于获取一次性 sessionId）
+  sessionStartEndpoints: [
+    'https://quiz-api.aaamjs.asia/api/session/start',
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/session/start'
+  ],
+  turnstileSiteKey: '',
   types: {
     name: 1,
     effect: 1,
@@ -3688,6 +3694,37 @@ const TYPE_META = {
           // 使用每日种子创建随机数生成器
           const dailySeed = getDailySeed();
           quizRandom = new SeededRandom(dailySeed);
+
+          // 启动会话以获取一次性提交令牌（sessionId）
+          window.dailyChallengeSessionId = null;
+          try {
+            const dateStr = `${window.dailyChallengeDate.year}-${window.dailyChallengeDate.month.toString().padStart(2,'0')}-${window.dailyChallengeDate.day.toString().padStart(2,'0')}`;
+            const sessEndpoints = Array.isArray(window.QUIZ_CONFIG?.sessionStartEndpoints) && window.QUIZ_CONFIG.sessionStartEndpoints.length > 0
+              ? window.QUIZ_CONFIG.sessionStartEndpoints
+              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/session/start'];
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 5000);
+            try {
+              for (const ep of sessEndpoints) {
+                try {
+                  const resp = await fetch(ep, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date: dateStr }),
+                    signal: controller.signal
+                  });
+                  if (resp.ok) {
+                    const data = await resp.json();
+                    if (data?.sessionId) { window.dailyChallengeSessionId = data.sessionId; break; }
+                  }
+                } catch (_) { /* 网络错误或超时，尝试下一个端点 */ }
+              }
+            } finally {
+              clearTimeout(timer);
+            }
+          } catch (_) {
+            // 忽略错误，提交时再重试
+          }
           
           // 隐藏难度按钮
           document.getElementById('difficultyButtons').style.display = 'none';
@@ -4004,7 +4041,14 @@ const TYPE_META = {
             'Invalid individual question times': '存在单题用时异常。', // 单题用时超出允许范围（过小/过大）
             'Time inconsistency detected': '总时长与各题用时之和不一致。', // |sum(questionTimes) - timeSpent| > 5 秒
             'Invalid seed': '校验失败，请从主页重新进入当日挑战后提交。', // 种子与当日不匹配，需重新进入挑战
-            'Internal server error': '服务器异常，请稍后再试。' // 后端内部错误
+            'Internal server error': '服务器异常，请稍后再试。', // 后端内部错误
+            'Session required': '提交令牌缺失或无效，请刷新页面后重试。',
+            'Invalid session': '提交令牌无效或已过期，请刷新页面后重试。',
+            'Session used': '该提交令牌已使用，请刷新页面重新开始挑战。',
+            'Session mismatch': '提交绑定信息不匹配，请从主页重新进入每日挑战。',
+            'Forbidden origin': '来源不被允许，请从正式站点访问后提交。',
+            'Unexpected totalQuestions': '提交题量不匹配，请刷新页面后重试。',
+            'Captcha required': '需要人机验证，请稍后重试。'
           };
 
           if (byExact[msg]) return byExact[msg];
@@ -4017,9 +4061,72 @@ const TYPE_META = {
           return `提交失败：${msg || '未知错误'}`;
         }
 
+        async function getTurnstileTokenOnDemand(statusEl) {
+          try {
+            const sitekey = window.QUIZ_CONFIG?.turnstileSiteKey;
+            if (!sitekey) return null;
+            if (statusEl) {
+              statusEl.textContent = '正在进行人机验证...';
+              statusEl.style.color = 'var(--color-text-secondary)';
+            }
+            await new Promise((resolve, reject) => {
+              if (window.turnstile && typeof window.turnstile.render === 'function') return resolve();
+              let tries = 0;
+              const timer = setInterval(() => {
+                if (window.turnstile && typeof window.turnstile.render === 'function') { clearInterval(timer); resolve(); }
+                else if (++tries > 100) { clearInterval(timer); reject(new Error('Turnstile not loaded')); }
+              }, 100);
+            });
+            if (!window._turnstileWidgetId) {
+              try {
+                window._turnstileWidgetId = window.turnstile.render('#turnstile-container', { sitekey, size: 'invisible' });
+              } catch (_) { return null; }
+            }
+            try {
+              const token = await window.turnstile.execute(window._turnstileWidgetId);
+              return token || null;
+            } catch (_) { return null; }
+          } catch (_) { return null; }
+        }
+
         try {
           statusDiv.textContent = '正在提交...';
           statusDiv.style.color = 'var(--color-text-secondary)';
+
+          // 确保存在提交令牌（sessionId），若缺失则即时尝试创建
+          if (!window.dailyChallengeSessionId) {
+            statusDiv.textContent = '正在初始化提交令牌...';
+            statusDiv.style.color = 'var(--color-text-secondary)';
+            const dateStr = `${window.dailyChallengeDate.year}-${window.dailyChallengeDate.month.toString().padStart(2,'0')}-${window.dailyChallengeDate.day.toString().padStart(2,'0')}`;
+            const sessEndpoints = Array.isArray(window.QUIZ_CONFIG?.sessionStartEndpoints) && window.QUIZ_CONFIG.sessionStartEndpoints.length > 0
+              ? window.QUIZ_CONFIG.sessionStartEndpoints
+              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/session/start'];
+            const controllerSess = new AbortController();
+            const timerSess = setTimeout(() => controllerSess.abort(), 5000);
+            try {
+              for (const ep of sessEndpoints) {
+                try {
+                  const resp = await fetch(ep, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ date: dateStr }),
+                    signal: controllerSess.signal
+                  });
+                  if (resp.ok) {
+                    const data = await resp.json();
+                    if (data?.sessionId) { window.dailyChallengeSessionId = data.sessionId; break; }
+                  }
+                } catch (_) { continue; }
+              }
+            } finally {
+              clearTimeout(timerSess);
+            }
+            if (!window.dailyChallengeSessionId) {
+              statusDiv.textContent = '❌ 无法获取提交令牌，请刷新页面后重试';
+              statusDiv.style.color = 'var(--color-error)';
+              return;
+            }
+          }
           
           // 收集答题数据用于验证
         const submissionData = {
@@ -4033,6 +4140,7 @@ const TYPE_META = {
           totalQuestions: total,
           timeSpent: timeInSeconds,
           totalTime: Math.floor(finalTime / 1000),
+          sessionId: window.dailyChallengeSessionId,
           // 添加一些防作弊数据
           answers: window.dailyChallengeAnswers || [],
           questionTimes: window.dailyChallengeQuestionTimes || [],
@@ -4052,13 +4160,15 @@ const TYPE_META = {
             ? window.QUIZ_CONFIG.submitScoreEndpoints
             : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score'];
 
-          const postWithTimeout = async (url, timeoutMs = 7000) => {
+          const postWithTimeout = async (url, timeoutMs = 7000, turnstileToken = null) => {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeoutMs);
             try {
+              const headers = { 'Content-Type': 'application/json' };
+              if (turnstileToken) headers['cf-turnstile-response'] = turnstileToken;
               const res = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers,
                 body: JSON.stringify(submissionData),
                 signal: controller.signal
               });
@@ -4070,14 +4180,23 @@ const TYPE_META = {
 
           let response = null;
           let result = null;
+          let lastError = null;
           for (const ep of endpoints) {
             try {
               response = await postWithTimeout(ep, 7000);
-              result = await response.json();
-              // 成功或明确失败都结束循环；网络异常才继续下一个
-              if (response.ok || result?.error) break;
+              result = await response.json().catch(() => ({}));
+              if (response.ok) break;
+              if (result?.error === 'Captcha required' || response.status === 403) {
+                const token = await getTurnstileTokenOnDemand(statusDiv);
+                if (!token) { lastError = result?.error || 'Captcha required'; break; }
+                response = await postWithTimeout(ep, 7000, token);
+                result = await response.json().catch(() => ({}));
+                if (response.ok || result?.error) break;
+              } else if (result?.error) {
+                lastError = result.error;
+                break;
+              }
             } catch (e) {
-              // 超时/网络错误，尝试下一个端点
               continue;
             }
           }
@@ -4105,7 +4224,7 @@ const TYPE_META = {
               renderLeaderboardCard('leaderboardCardMain', { forceBust: true });
             }
           } else {
-            const errMsg = result?.error || '网络错误或服务器不可达';
+            const errMsg = (lastError || result?.error) || '网络错误或服务器不可达';
             const statusCode = response?.status || 0;
             statusDiv.textContent = `❌ ${formatSubmissionError(errMsg, statusCode)}`;
             statusDiv.style.color = 'var(--color-error)';
