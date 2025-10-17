@@ -3302,7 +3302,7 @@ const TYPE_META = {
             explanationDiv.style.cssText = `
               margin-top: 12px;
               padding: 12px;
-              background: var(--color-bg-info);
+              background: transparent;
               border: 1px solid var(--color-border-info);
               border-radius: 8px;
               font-size: 0.9em;
@@ -3342,7 +3342,7 @@ const TYPE_META = {
             decisionExplanationDiv.style.cssText = `
               margin-top: 12px;
               padding: 12px;
-              background: var(--color-bg-info);
+              background: transparent;
               border: 1px solid var(--color-border-info);
               border-radius: 8px;
               font-size: 0.9em;
@@ -3369,7 +3369,7 @@ const TYPE_META = {
             skillExplanationDiv.style.cssText = `
               margin-top: 12px;
               padding: 12px;
-              background: var(--color-bg-info);
+              background: transparent;
               border: 1px solid var(--color-border-info);
               border-radius: 8px;
               font-size: 0.9em;
@@ -3390,12 +3390,13 @@ const TYPE_META = {
                   lineHTML += `来源：${detail.source}`;
                 }
                 
-                // 如果是incorrect_description，则在来源后贴出correct_description
+                // 如果是incorrect_description，则在来源后贴出correct_description（荧光高亮）
                 if (detail.isIncorrectDescription && detail.correctDescription) {
+                  const highlight = `<span class="fluorescent-highlight">正确描述：${detail.correctDescription}</span>`;
                   if (detail.source) {
-                    lineHTML += `<br>&nbsp;&nbsp;&nbsp;&nbsp;正确描述：${detail.correctDescription}`;
+                    lineHTML += `<br>&nbsp;&nbsp;&nbsp;&nbsp;${highlight}`;
                   } else {
-                    lineHTML += `正确描述：${detail.correctDescription}`;
+                    lineHTML += highlight;
                   }
                 }
                 
