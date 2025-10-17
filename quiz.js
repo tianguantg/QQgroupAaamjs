@@ -548,6 +548,11 @@ window.QUIZ_CONFIG = {
     'https://quiz-api.aaamjs.asia/api/leaderboard',
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard'
   ],
+  // 提交成绩接口端点（主路由 + 回退）
+  submitScoreEndpoints: [
+    'https://quiz-api.aaamjs.asia/api/submit-score',
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score'
+  ],
   types: {
     name: 1,
     effect: 1,
@@ -3949,17 +3954,42 @@ const TYPE_META = {
           answers: submissionData.answers
         });
           
-          const response = await fetch('https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(submissionData)
-          });
-          
-          const result = await response.json();
-          
-          if (response.ok) {
+          // 端点顺序尝试，带超时控制
+          const endpoints = Array.isArray(window.QUIZ_CONFIG?.submitScoreEndpoints) && window.QUIZ_CONFIG.submitScoreEndpoints.length > 0
+            ? window.QUIZ_CONFIG.submitScoreEndpoints
+            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score'];
+
+          const postWithTimeout = async (url, timeoutMs = 7000) => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            try {
+              const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(submissionData),
+                signal: controller.signal
+              });
+              return res;
+            } finally {
+              clearTimeout(timer);
+            }
+          };
+
+          let response = null;
+          let result = null;
+          for (const ep of endpoints) {
+            try {
+              response = await postWithTimeout(ep, 7000);
+              result = await response.json();
+              // 成功或明确失败都结束循环；网络异常才继续下一个
+              if (response.ok || result?.error) break;
+            } catch (e) {
+              // 超时/网络错误，尝试下一个端点
+              continue;
+            }
+          }
+
+          if (response && response.ok) {
             statusDiv.textContent = `✅ 提交成功！排名：第 ${result.rank} 名`;
             statusDiv.style.color = 'var(--color-success)';
             
@@ -3977,7 +4007,9 @@ const TYPE_META = {
               if (span) span.textContent = '已提交';
             }
           } else {
-            statusDiv.textContent = `❌ ${formatSubmissionError(result.error, response.status)}`;
+            const errMsg = result?.error || '网络错误或服务器不可达';
+            const statusCode = response?.status || 0;
+            statusDiv.textContent = `❌ ${formatSubmissionError(errMsg, statusCode)}`;
             statusDiv.style.color = 'var(--color-error)';
           }
         } catch (error) {
