@@ -513,7 +513,7 @@ window.QUIZ_CONFIG = {
     nightmare: {
       name: '噩梦难度',
       description: '极具挑战性，考验深度理解',
-      questionCount: 15,
+      questionCount: 20,
       difficultyRatio: { easy: 1, normal: 2, hard: 4 }, // 主要是普通和困难题
       pools: { card: 2, character: 1.5, event: 2, profile: 0, decision: 3, enemy: 2, skill: 2}
     },
@@ -2687,6 +2687,12 @@ const TYPE_META = {
         if (quizLayout) {
           quizLayout.style.display = running ? 'block' : 'none';
         }
+
+        // 仅在主界面显示排行榜主卡片
+        const mainLeaderboardCard = document.getElementById('leaderboardCardMain');
+        if (mainLeaderboardCard) {
+          mainLeaderboardCard.style.display = running ? 'none' : '';
+        }
         
         // 移除了对不存在的completionText元素的访问
       }
@@ -2764,6 +2770,11 @@ const TYPE_META = {
       }
 
       function renderQuestion(q){
+        // 记录每日挑战题目开始时间
+        if (window.isDailyChallenge) {
+          window.currentQuestionStartTime = Date.now();
+        }
+        
         // 清理状态
         lock = false;
         resultView.style.display = 'none';
@@ -3052,6 +3063,21 @@ const TYPE_META = {
         `;
         
         resultView.appendChild(resultCard);
+        
+        // 如果是每日挑战：显示提交按钮弹窗交互，并在结算界面展示排行榜卡片
+        if (window.isDailyChallenge) {
+          showDailyChallengeSubmission(scores, timeInSeconds, finalTime);
+          const settlementLeaderboard = document.createElement('div');
+          settlementLeaderboard.className = 'simple-quiz-card';
+          settlementLeaderboard.id = 'leaderboardCardSettlement';
+          settlementLeaderboard.style.marginTop = '16px';
+          const settlementContent = document.createElement('div');
+          settlementContent.id = 'leaderboardCardSettlementContent';
+          settlementLeaderboard.appendChild(settlementContent);
+          resultView.appendChild(settlementLeaderboard);
+          // 渲染结算界面排行榜
+          renderLeaderboardCard('leaderboardCardSettlement');
+        }
       }
 
       async function loadData(){
@@ -3151,6 +3177,28 @@ const TYPE_META = {
         lock = true;
         const isCorrect = optionText === current.answer;
         if (isCorrect) score += 1;
+        
+        // 记录每日挑战的答题数据（用于防作弊验证）
+        if (window.isDailyChallenge) {
+          if (!window.dailyChallengeAnswers) {
+            window.dailyChallengeAnswers = [];
+          }
+          if (!window.dailyChallengeQuestionTimes) {
+            window.dailyChallengeQuestionTimes = [];
+          }
+          
+          // 记录答题信息
+          const questionTime = (Date.now() - (window.currentQuestionStartTime || Date.now())) / 1000; // 转换为秒
+          window.dailyChallengeAnswers.push({
+            questionIndex: index,
+            selectedAnswer: optionText,
+            correctAnswer: current.answer,
+            isCorrect: isCorrect,
+            questionId: current.id || `q_${index}`,
+            timestamp: Date.now()
+          });
+          window.dailyChallengeQuestionTimes.push(questionTime);
+        }
         
         // 图片按钮（battle_decision）专用标注与动画
         const battleImageBtns = document.querySelectorAll('.battle-image-btn');
@@ -3612,6 +3660,10 @@ const TYPE_META = {
           // 设置每日挑战标识
           window.isDailyChallenge = true;
           
+          // 初始化每日挑战数据收集
+          window.dailyChallengeAnswers = [];
+          window.dailyChallengeQuestionTimes = [];
+          
           // 记录每日挑战开始时的日期，避免跨日问题
           const challengeDate = new Date();
           window.dailyChallengeDate = {
@@ -3746,6 +3798,357 @@ const TYPE_META = {
           
           questionView.innerHTML = '<div class="muted">数据加载失败</div>';
           console.error(err);
+        }
+      }
+      
+      // 每日挑战分数提交相关函数（改为按钮+昵称弹窗）
+      function showDailyChallengeSubmission(scores, timeInSeconds, finalTime) {
+        const actions = document.createElement('div');
+        actions.style.cssText = 'margin-top: 16px; display:flex; flex-direction: column; align-items:center; gap: 10px;';
+        actions.innerHTML = `
+          <button id="openSubmitModalBtn" class="nav-btn primary">
+            <span class="nav-btn-text">提交成绩</span>
+          </button>
+          <div id="submissionStatus" style="text-align: center; color: var(--color-text-secondary);"></div>
+        `;
+        resultView.appendChild(actions);
+
+        const statusDiv = actions.querySelector('#submissionStatus');
+        const openBtn = actions.querySelector('#openSubmitModalBtn');
+        
+        openBtn.addEventListener('click', () => {
+          openNicknameModal(scores, timeInSeconds, finalTime, statusDiv);
+        });
+      }
+
+      // 昵称弹窗并提交
+      function openNicknameModal(scores, timeInSeconds, finalTime, statusDiv) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'block';
+        const content = document.createElement('div');
+        content.className = 'modal-content';
+        content.innerHTML = `
+          <div class="modal-header">
+            <h3>提交成绩</h3>
+            <span class="close" id="closeSubmitModal">&times;</span>
+          </div>
+          <div class="modal-body">
+            <div style="margin-bottom: 12px;">
+              <label for="nicknameInputModal" style="display:block; margin-bottom:6px; color: var(--color-text-secondary);">昵称：</label>
+              <input type="text" id="nicknameInputModal" maxlength="20" placeholder="请输入您的昵称（最多20个字符）" 
+                     style="width: 100%; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-bg-primary); color: var(--color-text-primary);">
+            </div>
+            <div style="display:flex; gap:8px; justify-content:center;">
+              <button id="confirmSubmitBtn" class="nav-btn primary"><span class="nav-btn-text">确认提交</span></button>
+              <button id="cancelSubmitBtn" class="nav-btn"><span class="nav-btn-text">取消</span></button>
+            </div>
+            <div id="submissionStatusModal" style="margin-top: 10px; text-align: center; color: var(--color-text-secondary);"></div>
+          </div>
+        `;
+        modal.appendChild(content);
+        document.body.appendChild(modal);
+
+        const closeModal = () => { if (document.body.contains(modal)) document.body.removeChild(modal); };
+        document.getElementById('closeSubmitModal').addEventListener('click', closeModal);
+        document.getElementById('cancelSubmitBtn').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        const nicknameInput = document.getElementById('nicknameInputModal');
+        const confirmBtn = document.getElementById('confirmSubmitBtn');
+        const statusDivModal = document.getElementById('submissionStatusModal');
+
+        const doSubmit = async () => {
+          const nickname = nicknameInput.value.trim();
+          if (!nickname) {
+            statusDivModal.textContent = '请输入昵称';
+            statusDivModal.style.color = 'var(--color-error)';
+            return;
+          }
+          if (nickname.length > 20) {
+            statusDivModal.textContent = '昵称不能超过20个字符';
+            statusDivModal.style.color = 'var(--color-error)';
+            return;
+          }
+          await submitDailyChallengeScore(nickname, scores, timeInSeconds, finalTime, statusDivModal);
+          // 同步状态到结算卡片下方的提示（可选）
+          if (statusDiv) {
+            statusDiv.textContent = statusDivModal.textContent;
+            statusDiv.style.color = statusDivModal.style.color;
+          }
+        };
+
+        confirmBtn.addEventListener('click', doSubmit);
+        nicknameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') doSubmit(); });
+      }
+      
+      // 提交每日挑战分数
+      async function submitDailyChallengeScore(nickname, scores, timeInSeconds, finalTime, statusDiv) {
+        // 将后端错误映射为更友好的中文提示
+        function formatSubmissionError(errorMsg = '', statusCode = 400) {
+          const msg = String(errorMsg || '').trim();
+          const byExact = {
+            'Already submitted today': '今天已提交过成绩。',
+            'Rate limit exceeded': '提交过于频繁，请稍后再试。',
+            'Missing required fields': '提交数据不完整，请刷新页面后重试。',
+            'Invalid nickname': '昵称不合法：长度最多 20 个字符，请重新输入。',
+            'Invalid date format': '日期格式不正确，请刷新页面后重试。',
+            'Invalid answers array': '请正常完成当日挑战后再提交。',
+            'Invalid answer object structure': '答请正常完成当日挑战后再提交。',
+            'Missing or invalid answer object fields': '请正常完成当日挑战后再提交。',
+            'Invalid total time': '请正常完成当日挑战后再提交。',
+            'Invalid question times array': '请正常完成当日挑战后再提交。',
+            'Invalid individual question times': '请正常完成当日挑战后再提交。',
+            'Time inconsistency detected': '请正常完成当日挑战后再提交。',
+            'Invalid seed': '校验失败，请从主页重新进入当日挑战后提交。',
+            'Internal server error': '服务器异常，请稍后再试。'
+          };
+
+          if (byExact[msg]) return byExact[msg];
+          if (msg.startsWith('Score calculation failed')) return '服务器校验失败，请稍后重试。';
+
+          // 状态码通用兜底
+          if (statusCode === 429) return `提交过于频繁或已提交（${msg || '限制' }），请稍后再试。`;
+          if (statusCode === 500) return `服务器异常（${msg || '错误' }），请稍后再试。`;
+          if (statusCode === 400) return `提交失败：数据校验未通过（${msg || '校验错误'}）。`;
+          return `提交失败：${msg || '未知错误'}`;
+        }
+
+        try {
+          statusDiv.textContent = '正在提交...';
+          statusDiv.style.color = 'var(--color-text-secondary)';
+          
+          // 收集答题数据用于验证
+        const submissionData = {
+          nickname: nickname,
+          date: `${window.dailyChallengeDate.year}-${window.dailyChallengeDate.month.toString().padStart(2, '0')}-${window.dailyChallengeDate.day.toString().padStart(2, '0')}`,
+          seed: getDailySeed(),
+          finalScore: scores.finalScore,
+          questionScore: scores.questionScore,
+          timeScore: scores.timeScore,
+          correctAnswers: score,
+          totalQuestions: total,
+          timeSpent: timeInSeconds,
+          totalTime: Math.floor(finalTime / 1000),
+          // 添加一些防作弊数据
+          answers: window.dailyChallengeAnswers || [],
+          questionTimes: window.dailyChallengeQuestionTimes || [],
+          timestamp: Date.now()
+        };
+        
+        // 调试信息
+        console.log('提交数据:', {
+          answersLength: submissionData.answers.length,
+          questionTimesLength: submissionData.questionTimes.length,
+          totalQuestions: submissionData.totalQuestions,
+          answers: submissionData.answers
+        });
+          
+          const response = await fetch('https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(submissionData)
+          });
+          
+          const result = await response.json();
+          
+          if (response.ok) {
+            statusDiv.textContent = `✅ 提交成功！排名：第 ${result.rank} 名`;
+            statusDiv.style.color = 'var(--color-success)';
+            
+            // 禁用弹窗内“确认提交”按钮与结算卡片的“提交成绩”按钮（如果存在）
+            const confirmBtn = document.getElementById('confirmSubmitBtn');
+            if (confirmBtn) {
+              confirmBtn.disabled = true;
+              const span = confirmBtn.querySelector('.nav-btn-text');
+              if (span) span.textContent = '已提交';
+            }
+            const openBtn = document.getElementById('openSubmitModalBtn');
+            if (openBtn) {
+              openBtn.disabled = true;
+              const span = openBtn.querySelector('.nav-btn-text');
+              if (span) span.textContent = '已提交';
+            }
+          } else {
+            statusDiv.textContent = `❌ ${formatSubmissionError(result.error, response.status)}`;
+            statusDiv.style.color = 'var(--color-error)';
+          }
+        } catch (error) {
+          console.error('提交分数失败:', error);
+          statusDiv.textContent = '❌ 网络错误：请检查网络连接或稍后再试';
+          statusDiv.style.color = 'var(--color-error)';
+        }
+      }
+
+      // 渲染主题风格排行榜卡片（主界面与结算界面复用）
+      async function renderLeaderboardCard(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.style.display = '';
+        const contentId = `${containerId}Content`;
+        // 确保内容容器存在
+        let content = document.getElementById(contentId);
+        if (!content) {
+          content = document.createElement('div');
+          content.id = contentId;
+          container.appendChild(content);
+        }
+        container.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <h3 style="margin:0; color: var(--color-text-primary);">每日挑战排行榜</h3>
+          </div>
+          <div id="${contentId}">加载中...</div>
+        `;
+        const target = document.getElementById(contentId);
+        try {
+          const response = await fetch('https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard');
+          const data = await response.json();
+          if (data.leaderboard && data.leaderboard.length > 0) {
+            let html = `
+              <div style="margin-bottom: 8px; color: var(--color-text-secondary); text-align: center;">
+                ${data.date} | 共 ${data.totalEntries} 人参与
+              </div>
+              <div class="leaderboard-header" style="display: grid; grid-template-columns: 60px 1fr 80px; gap: 10px;">
+                <div>排名</div>
+                <div>昵称</div>
+                <div style="text-align:right;">分数</div>
+              </div>
+            `;
+            data.leaderboard.forEach((entry, index) => {
+              const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+              html += `
+                <div class="leaderboard-row" style="display: grid; grid-template-columns: 60px 1fr 80px; gap: 10px;">
+                  <div>${rankIcon} ${index + 1}</div>
+                  <div class="leaderboard-nickname">${entry.nickname}</div>
+                  <div class="leaderboard-score">${entry.finalScore}</div>
+                </div>
+              `;
+            });
+            target.innerHTML = html;
+          } else {
+            target.innerHTML = `
+              <div style="text-align: center; color: var(--color-text-secondary); padding: 12px;">
+                暂无排行榜数据
+              </div>
+            `;
+          }
+        } catch (error) {
+          console.error('加载排行榜失败:', error);
+          target.innerHTML = `
+            <div style="text-align: center; color: var(--color-error); padding: 12px;">
+              加载失败，请稍后重试
+            </div>
+          `;
+        }
+      }
+
+      // 页面加载后在主界面卡片下方渲染排行榜
+      const mainLeaderboardEl = document.getElementById('leaderboardCardMain');
+      if (mainLeaderboardEl) {
+        renderLeaderboardCard('leaderboardCardMain');
+      }
+      
+      // 显示每日挑战排行榜
+      async function showDailyChallengeLeaderboard() {
+        try {
+          const modal = document.createElement('div');
+          modal.className = 'leaderboard-modal';
+          modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+          `;
+          
+          const content = document.createElement('div');
+          content.style.cssText = `
+            background: var(--color-bg-primary);
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            border: 1px solid var(--color-border);
+          `;
+          
+          content.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+              <h3 style="margin: 0; color: var(--color-text-primary);">每日挑战排行榜</h3>
+              <button id="closeLeaderboard" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-secondary);">×</button>
+            </div>
+            <div id="leaderboardContent">加载中...</div>
+          `;
+          
+          modal.appendChild(content);
+          document.body.appendChild(modal);
+          
+          // 关闭按钮
+          document.getElementById('closeLeaderboard').addEventListener('click', () => {
+            document.body.removeChild(modal);
+          });
+          
+          // 点击遮罩关闭
+          modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+              document.body.removeChild(modal);
+            }
+          });
+          
+          // 加载排行榜数据
+          const response = await fetch('https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard');
+          const data = await response.json();
+          
+          const leaderboardContent = document.getElementById('leaderboardContent');
+          
+          if (data.leaderboard && data.leaderboard.length > 0) {
+            let html = `
+              <div style="margin-bottom: 10px; color: var(--color-text-secondary); text-align: center;">
+                ${data.date} | 共 ${data.totalEntries} 人参与
+              </div>
+              <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; font-weight: bold; padding: 10px 0; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary);">
+                <div>排名</div>
+                <div>昵称</div>
+                <div>分数</div>
+              </div>
+            `;
+            
+            data.leaderboard.forEach((entry, index) => {
+              const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+              html += `
+                <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--color-border-light); color: var(--color-text-primary);">
+                  <div>${rankIcon} ${index + 1}</div>
+                  <div style="overflow: hidden; text-overflow: ellipsis;">${entry.nickname}</div>
+                  <div style="font-weight: bold;">${entry.finalScore}</div>
+                </div>
+              `;
+            });
+            
+            leaderboardContent.innerHTML = html;
+          } else {
+            leaderboardContent.innerHTML = `
+              <div style="text-align: center; color: var(--color-text-secondary); padding: 20px;">
+                暂无排行榜数据
+              </div>
+            `;
+          }
+        } catch (error) {
+          console.error('加载排行榜失败:', error);
+          const leaderboardContent = document.getElementById('leaderboardContent');
+          if (leaderboardContent) {
+            leaderboardContent.innerHTML = `
+              <div style="text-align: center; color: var(--color-error); padding: 20px;">
+                加载失败，请稍后重试
+              </div>
+            `;
+          }
         }
       }
       
