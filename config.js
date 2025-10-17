@@ -168,63 +168,21 @@ function updatePageContent() {
     // 更新二维码 - 已禁用
     const qrCode = document.getElementById('qrCode');
     if (qrCode) {
-        // 启用二维码显示
-        if (groupConfig.assets.qrcode && checkImageExists(groupConfig.assets.qrcode)) {
-            qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}" alt="加群二维码">`;
-            qrCode.classList.remove('disabled');
-            qrCode.title = '扫码加入群聊';
-            
-            // 添加二维码点击放大功能
-            qrCode.addEventListener('click', function() {
-                const fullScreenOverlay = document.createElement('div');
-                fullScreenOverlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.9);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 10000;
-                    cursor: pointer;
-                `;
-                
-                const fullScreenImage = document.createElement('img');
-                fullScreenImage.src = groupConfig.assets.qrcode;
-                fullScreenImage.style.cssText = `
-                    max-width: 90%;
-                    max-height: 90%;
-                    border-radius: 12px;
-                    box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
-                `;
-                
-                fullScreenOverlay.appendChild(fullScreenImage);
-                document.body.appendChild(fullScreenOverlay);
-                
-                fullScreenOverlay.addEventListener('click', function() {
-                    document.body.removeChild(fullScreenOverlay);
-                });
-            });
-        } else {
-            qrCode.innerHTML = '二维码';
-            qrCode.classList.add('disabled');
-        }
+        // 强制保持禁用：不展示图片，不响应点击
+        qrCode.classList.add('disabled');
+        qrCode.title = '二维码功能已禁用';
+        qrCode.innerHTML = '二维码已禁用';
+        qrCode.style.pointerEvents = 'none';
     }
 
-    // 启用加群按钮
+    // 禁用加群按钮
     const joinButton = document.getElementById('joinButton');
     if (joinButton) {
-        joinButton.classList.remove('disabled');
-        joinButton.textContent = '点击直接加群';
-        joinButton.title = '点击加入QQ群';
-        
-        // 添加加群按钮点击事件
-        joinButton.addEventListener('click', function() {
-            const link = groupConfig.basic_info.join_link || `https://qm.qq.com/cgi-bin/qm/qr?k=${groupConfig.basic_info.qq_number}`;
-            window.open(link, '_blank');
-        });
+        joinButton.classList.add('disabled');
+        joinButton.textContent = '加群功能已禁用';
+        joinButton.title = '功能已禁用';
+        joinButton.setAttribute('aria-disabled', 'true');
+        joinButton.style.pointerEvents = 'none';
     }
 
     // 添加复制群号功能
