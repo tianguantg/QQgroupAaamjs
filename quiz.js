@@ -4025,40 +4025,56 @@ const TYPE_META = {
         // 将后端错误映射为更友好的中文提示
         function formatSubmissionError(errorMsg = '', statusCode = 400) {
           const msg = String(errorMsg || '').trim();
-          const byExact = {
-            'Already submitted today': '今天已提交过成绩。', // 同一 IP 当天已在后端记录过一次提交
-            'Rate limit exceeded': '提交过于频繁，请稍后再试。', // 触发后端写端限流（窗口内请求过多）
-            'Missing required fields': '提交数据不完整，请刷新页面后重试。', // 请求体缺少必需字段
-            'Invalid nickname': '昵称不合法：长度最多 20 个字符，请重新输入。', // 昵称缺失/为空/超长
+          // 需要隐去细节但提供错误代码的敏感/安全相关错误
+          const sensitiveCodes = {
+            'Forbidden origin': 'E_ORIGIN',
+            'Captcha required': 'E_CAPTCHA',
+            'Invalid seed': 'E_SEED',
+            'Unexpected totalQuestions': 'E_QCOUNT',
+            'Invalid individual question times': 'E_TIMES',
+            'Invalid answers array': 'E_ANSWERS',
+            'Invalid answer object structure': 'E_ANSWER_OBJ',
+            'Missing or invalid answer object fields': 'E_ANSWER_FIELDS',
+            'Session mismatch': 'E_SESSION_BIND',
+            'Invalid session': 'E_SESSION',
+            'Session used': 'E_SESSION_USED',
+            'Session required': 'E_SESSION_REQ'
+          };
+          // 普通友好提示（不包含安全细节）
+          const friendlyExact = {
+            'Already submitted today': '今天已提交过成绩。',
+            'Rate limit exceeded': '提交过于频繁，请稍后再试。',
+            'Missing required fields': '提交数据不完整，请刷新页面后重试。',
+            'Invalid nickname': '昵称不合法：长度最多 20 个字符，请重新输入。',
             'Nickname contains invalid characters': '昵称包含非法字符，请重新输入。',
             'Nickname contains prohibited content': '昵称包含违规内容或联系方式，请重新输入。',
-            'Invalid date format': '日期格式不正确，请刷新页面后重试。', // date 必须是 YYYY-MM-DD
-            'Invalid answers array': '答题数据缺失或数量不正确。', // answers 未提供或长度不等于题目数量
-            'Invalid answer object structure': '答题项结构不合法。', // 单题答案对象结构不符合预期
-            'Missing or invalid answer object fields': '答题项字段缺失或不合法。', // 单题答案的关键字段缺失或类型错误
-            'Invalid total time': '答题总时长不合法。', // 总时长不是数字或超出允许范围
-            'Invalid question times array': '每题用时数组不合法。', // 每题用时数组缺失或长度不匹配
-            'Invalid individual question times': '存在单题用时异常。', // 单题用时超出允许范围（过小/过大）
-            'Time inconsistency detected': '总时长与各题用时之和不一致。', // |sum(questionTimes) - timeSpent| > 5 秒
-            'Invalid seed': '校验失败，请从主页重新进入当日挑战后提交。', // 种子与当日不匹配，需重新进入挑战
-            'Internal server error': '服务器异常，请稍后再试。', // 后端内部错误
-            'Session required': '提交令牌缺失或无效，请刷新页面后重试。',
-            'Invalid session': '提交令牌无效或已过期，请刷新页面后重试。',
-            'Session used': '该提交令牌已使用，请刷新页面重新开始挑战。',
-            'Session mismatch': '提交绑定信息不匹配，请从主页重新进入每日挑战。',
-            'Forbidden origin': '来源不被允许，请从正式站点访问后提交。',
-            'Unexpected totalQuestions': '提交题量不匹配，请刷新页面后重试。',
-            'Captcha required': '需要人机验证，请稍后重试。'
+            'Invalid date format': '日期格式不正确，请刷新页面后重试。',
+            'Invalid question times array': '每题用时数组不合法。',
+            'Invalid total time': '答题总时长不合法。',
+            'Internal server error': '服务器异常，请稍后再试。'
           };
 
-          if (byExact[msg]) return byExact[msg];
-          if (msg.startsWith('Score calculation failed')) return '服务器校验失败，请稍后重试。';
+          // 命中敏感错误：返回通用描述 + 错误代码
+          if (sensitiveCodes[msg]) {
+            const codeStr = statusCode ? `${statusCode}-${sensitiveCodes[msg]}` : sensitiveCodes[msg];
+            return `提交失败：服务器拒绝本次提交。错误代码：${codeStr}`;
+          }
 
-          // 状态码通用兜底
-          if (statusCode === 429) return `提交过于频繁或已提交（${msg || '限制' }），请稍后再试。`;
-          if (statusCode === 500) return `服务器异常（${msg || '错误' }），请稍后再试。`;
-          if (statusCode === 400) return `提交失败：数据校验未通过（${msg || '校验错误'}）。`;
-          return `提交失败：${msg || '未知错误'}`;
+          // 评分计算失败归类为通用服务器异常并附带代码
+          if (msg.startsWith('Score calculation failed')) {
+            const codeStr = statusCode ? `${statusCode}-E_SCORE` : 'E_SCORE';
+            return `服务器异常，请稍后再试。错误代码：${codeStr}`;
+          }
+
+          // 常规友好提示
+          if (friendlyExact[msg]) return friendlyExact[msg];
+
+          // 状态码兜底（不泄露具体细节）
+          if (statusCode === 429) return '提交过于频繁，请稍后再试。';
+          if (statusCode === 403) return '提交失败：服务器拒绝本次提交。错误代码：403';
+          if (statusCode === 500) return '服务器异常，请稍后再试。';
+          if (statusCode === 400) return '提交失败：数据校验未通过。';
+          return '提交失败：请稍后重试。';
         }
 
         async function getTurnstileTokenOnDemand(statusEl) {
