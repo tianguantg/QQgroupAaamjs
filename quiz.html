@@ -110,6 +110,12 @@
       background: var(--color-bg-white, rgba(255,255,255,0.9));
       border-radius: 16px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      transition: opacity .22s ease, transform .22s ease;
+    }
+    /* 题目切换淡出样式 */
+    .question-area.fade-out {
+      opacity: 0;
+      transform: translateY(6px);
     }
     .quiz-card-image { 
       width: 280px; 
@@ -1173,8 +1179,14 @@
               <span style="color: var(--color-text-muted, #888); font-size: 12px; font-weight: 500;">————————————————————————————</span>
             </div>
             <button id="feedbackBtn" class="nav-btn difficulty-btn" style="margin-top: 8px; background-color: #4CAF50;">
-              <span class="nav-btn-text">反馈/题目收集</span>
+              <span class="nav-btn-text">反馈收集</span>
             </button>
+            <button id="knowledgeBtn" class="nav-btn difficulty-btn" style="margin-top: 8px; background-color: var(--color-warning, #ff9800);">
+              <span class="nav-btn-text">星趴冷知识收集！</span>
+            </button>
+            <div class="knowledge-note" style="margin-top: 6px; text-align: center;">
+              <small style="color: var(--color-text-muted, #888);">收集各种星趴冷知识，合适的会加进题目！</small>
+            </div>
             <button id="feedbackReplyBtn" class="nav-btn difficulty-btn" style="margin-top: 8px; background-color: #2196F3; display: none;">
               <span class="nav-btn-text">反馈回复</span>
             </button>
@@ -1297,5 +1309,6 @@
   <div id="turnstile-container" style="display:none;"></div>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <script src="quiz.js?v=202510171739"></script>
+
 </body>
 </html>

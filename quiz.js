@@ -3173,6 +3173,13 @@ const TYPE_META = {
       async function nextQuestion(){
         if (index > total) return;
         
+        // 题目切换过渡：先淡出
+        const qa = document.querySelector('.question-area') || questionArea;
+        if (qa) {
+          qa.classList.add('fade-out');
+          await new Promise(resolve => setTimeout(resolve, 220));
+        }
+        
         // 使用缓冲池获取下一题
         if (questionBuffer && questionBuffer.generator) {
           current = await questionBuffer.getNext();
@@ -3181,8 +3188,18 @@ const TYPE_META = {
           current = generator.next(mode, total);
         }
         
-        if (!current) { endQuiz(); return; }
+        if (!current) { 
+          if (qa) qa.classList.remove('fade-out');
+          endQuiz(); 
+          return; 
+        }
+        
+        // 渲染新题目后淡入
         renderQuestion(current);
+        if (qa) {
+          // 触发淡入
+          qa.classList.remove('fade-out');
+        }
         updateStatus();
       }
 
@@ -3665,6 +3682,19 @@ const TYPE_META = {
             showFeedbackChoice('https://wj.qq.com/s2/24040427/7fc2/');
           });
         }
+
+        // 冷知识收集按钮事件 -> 新窗口跳转到指定链接
+        const knowledgeBtn = document.getElementById('knowledgeBtn');
+        if (knowledgeBtn) {
+          knowledgeBtn.addEventListener('click', () => {
+            try {
+              window.open('https://www.xiaoheihe.cn/app/bbs/link/166698329', '_blank');
+            } catch (e) {
+              // 回退方式
+              window.location.href = 'https://www.xiaoheihe.cn/app/bbs/link/166698329';
+            }
+          });
+        }
       }
       
       // 开始每日挑战
@@ -3868,8 +3898,8 @@ const TYPE_META = {
           openNicknameModal(scores, timeInSeconds, finalTime, statusDiv);
         });
 
-        // 分数>80时在结算界面展示“邀请函！”按钮，点击后出现弹窗
-        if (window.isDailyChallenge && scores && typeof scores.finalScore === 'number' && scores.finalScore > 80) {
+        // 分数>85时在结算界面展示“邀请函！”按钮，点击后出现弹窗
+        if (window.isDailyChallenge && scores && typeof scores.finalScore === 'number' && scores.finalScore > 85) {
           const inviteBtn = document.createElement('button');
           inviteBtn.id = 'openInviteModalBtn';
           inviteBtn.className = 'nav-btn primary daily-challenge-btn';
@@ -3992,7 +4022,7 @@ const TYPE_META = {
           const bannedPatterns = [
             /(https?:\/\/|www\.)/i,           // URL/站点
             /@/i,                               // 邮箱/联系方式
-            /(微信|VX|QQ|TG|电报|群|联系|加我)/i, // 常见联系方式/招揽
+            /(微信|VX|QQ|电报|群|联系|加我)/i, // 常见联系方式/招揽
             /(广告|推广|色情|成人|赌|博彩|彩票|政治|极端|暴力|仇恨|辱骂)/i, // 违规类别词
             /(.)\1{4,}/                         // 连续重复字符
           ];
