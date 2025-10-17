@@ -513,7 +513,7 @@ window.QUIZ_CONFIG = {
     nightmare: {
       name: '噩梦难度',
       description: '极具挑战性，考验深度理解',
-      questionCount: 20,
+      questionCount: 15,
       difficultyRatio: { easy: 1, normal: 2, hard: 4 }, // 主要是普通和困难题
       pools: { card: 2, character: 1.5, event: 2, profile: 0, decision: 3, enemy: 2, skill: 2}
     },
