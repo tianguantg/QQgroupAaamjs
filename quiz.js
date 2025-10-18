@@ -548,6 +548,16 @@ window.QUIZ_CONFIG = {
     'https://quiz-api.aaamjs.asia/api/leaderboard',
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard'
   ],
+  // Top1查询端点（用于显示历史冠军）
+  top1Endpoints: [
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/top1',
+    'https://quiz-api.aaamjs.asia/api/top1'
+  ],
+  // Top3历史查询端点（用于显示最近7天前三）
+  topHistoryEndpoints: [
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history',
+    'https://quiz-api.aaamjs.asia/api/top3/history'
+  ],
   // 提交成绩接口端点（优先使用 Worker 域，减少跨域问题）
   submitScoreEndpoints: [
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score',
@@ -4399,7 +4409,7 @@ const TYPE_META = {
         }
         container.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <h3 style="margin:0; color: var(--color-text-primary);">每日挑战排行榜</h3>
+            <h3 style="margin:0; color: var(--color-text-primary);">每日挑战排行榜（建设中）</h3>
             <button id="${contentId}RefreshBtn" class="nav-btn" title="强制刷新（跳过缓存）"><span class="nav-btn-text">刷新</span></button>
           </div>
           <div id="${contentId}">加载中...</div>
@@ -4564,14 +4574,11 @@ const TYPE_META = {
           const cached = loadCache();
           let html = `
             <div style="text-align: center; color: var(--color-error); padding: 12px;">
-              无法连接排行榜服务（国内网络可能受限）。
+              无法连接排行榜服务。
             </div>
             <div style="display:flex; gap:8px; justify-content:center;">
               <button id="${contentId}Retry" class="nav-btn"><span class="nav-btn-text">重试</span></button>
               ${cached ? `<button id="${contentId}ShowCache" class="nav-btn primary"><span class="nav-btn-text">显示缓存</span></button>` : ''}
-            </div>
-            <div style="margin-top:6px; text-align:center; color: var(--color-text-secondary);">
-              提示：可稍后重试或使用国内镜像域名（如已配置）。
             </div>
           `;
           target.innerHTML = html;
@@ -4686,6 +4693,73 @@ const TYPE_META = {
         });
         
         leaderboardContent.innerHTML = html;
+
+        // 显示昨日前三 + 最近7天每日前三（通过 /api/top3/history 聚合查询）
+        try {
+          const baseDate = new Date(dateStr);
+          const y = new Date(baseDate.getTime() - 24 * 3600 * 1000);
+          const yStr = `${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
+
+          const topHistoryEndpointsCfg = Array.isArray(window.QUIZ_CONFIG?.topHistoryEndpoints) && window.QUIZ_CONFIG.topHistoryEndpoints.length > 0
+            ? window.QUIZ_CONFIG.topHistoryEndpoints
+            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
+
+          let history = null;
+          for (const endpoint of topHistoryEndpointsCfg) {
+            try {
+              const url = `${endpoint}?days=7&limit=3${forceBust ? `&bust=${Date.now()}` : ''}`;
+              const resp = await fetchWithTimeoutLocal(url, 3000);
+              const hdata = await resp.json();
+              if (hdata && Array.isArray(hdata.items)) { history = hdata; break; }
+            } catch (_) {}
+          }
+
+          if (history && Array.isArray(history.items)) {
+            // 昨日前三
+            const yItem = history.items.find(it => it.date === yStr);
+            if (yItem && Array.isArray(yItem.tops) && yItem.tops.length > 0) {
+              const block = document.createElement('div');
+              block.style.cssText = 'margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);';
+              let yHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">昨日前三</div>';
+              yHtml += '<div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; font-weight: bold; padding: 8px 0; color: var(--color-text-secondary);"><div>排名</div><div>昵称</div><div>分数</div></div>';
+              yItem.tops.forEach((entry, idx) => {
+                const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+                yHtml += `
+                  <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--color-border-light); color: var(--color-text-primary);">
+                    <div>${rankIcon} ${idx + 1}</div>
+                    <div style="overflow: hidden; text-overflow: ellipsis;">${entry.nickname}</div>
+                    <div style="font-weight: bold;">${entry.finalScore}</div>
+                  </div>
+                `;
+              });
+              block.innerHTML = yHtml;
+              leaderboardContent.appendChild(block);
+            }
+
+            // 最近7天每日前三
+            if (history.items.length > 0) {
+              const histBlock = document.createElement('div');
+              histBlock.style.cssText = 'margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);';
+              let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
+              history.items.forEach((it) => {
+                hHtml += `<div style="margin-top:6px; color: var(--color-text-secondary);">${it.date}</div>`;
+                (Array.isArray(it.tops) ? it.tops : []).forEach((entry, idx) => {
+                  const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+                  hHtml += `
+                    <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--color-border-light); color: var(--color-text-primary);">
+                      <div>${rankIcon} ${idx + 1}</div>
+                      <div style="overflow: hidden; text-overflow: ellipsis;">${entry.nickname}</div>
+                      <div style="font-weight: bold;">${entry.finalScore}</div>
+                    </div>
+                  `;
+                });
+              });
+              histBlock.innerHTML = hHtml;
+              leaderboardContent.appendChild(histBlock);
+            }
+          }
+        } catch (_) {}
+
       } else {
         leaderboardContent.innerHTML = `
           <div style="text-align: center; color: var(--color-text-secondary); padding: 20px;">

@@ -593,6 +593,21 @@ async function handleScoreSubmission(request, env) {
     } catch (error) {
       console.error('Leaderboard save error:', error);
     }
+
+    // 保存当日Top1快照（长期保留）
+    try {
+      if (currentBoard.length > 0) {
+        const top1 = currentBoard[0];
+        await env.QUIZ_KV.put(`top1_${data.date}`, JSON.stringify(top1));
+        // 累积历史（以日期为key的轻量字典）
+        const historyRaw = await env.QUIZ_KV.get('top1_history');
+        const history = historyRaw ? JSON.parse(historyRaw) : {};
+        history[data.date] = { date: data.date, ...top1 };
+        await env.QUIZ_KV.put('top1_history', JSON.stringify(history));
+      }
+    } catch (error) {
+      console.error('Top1 persist error:', error);
+    }
     
     // 按新规则：不再在提交端递增 IP 提交计数
 
@@ -661,7 +676,29 @@ async function handleAttemptStatus(request, env) {
   }
 }
 
-// 处理排行榜查询
+// 计算到上海时区下一次午夜的剩余秒数
+function getSecondsUntilMidnightShanghai() {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Shanghai',
+      hour12: false,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }).formatToParts(new Date());
+    const get = (t) => Number(parts.find(p => p.type === t)?.value || 0);
+    const h = get('hour');
+    const m = get('minute');
+    const s = get('second');
+    const elapsed = h * 3600 + m * 60 + s;
+    const remaining = Math.max(1, 86400 - elapsed);
+    return remaining;
+  } catch (_) {
+    // 环境不支持Intl或异常时回退到5分钟
+    return 300;
+  }
+}
+
+// 处理排行榜查询（缓存TTL对齐至上海午夜）
 async function handleLeaderboard(request, env) {
   try {
     const url = new URL(request.url);
@@ -686,11 +723,12 @@ async function handleLeaderboard(request, env) {
       const incomingETag = request.headers.get('If-None-Match');
       const cachedETag = cached.headers.get('ETag');
       if (incomingETag && cachedETag && incomingETag === cachedETag) {
+        const ttlSec = getSecondsUntilMidnightShanghai();
         return new Response(null, {
           status: 304,
           headers: {
             'ETag': cachedETag,
-            'Cache-Control': cached.headers.get('Cache-Control') || 'public, max-age=300, stale-while-revalidate=120',
+            'Cache-Control': `public, max-age=${ttlSec}, stale-while-revalidate=120`,
             'Content-Type': cached.headers.get('Content-Type') || 'application/json',
             ...buildCorsHeaders(request, false)
           }
@@ -741,21 +779,23 @@ async function handleLeaderboard(request, env) {
     // 条件请求：If-None-Match（bust 时禁用 304）
     const incomingETag = request.headers.get('If-None-Match');
     if (!bust && incomingETag && incomingETag === etag) {
+      const ttlSec = getSecondsUntilMidnightShanghai();
       return new Response(null, {
         status: 304,
         headers: {
           'ETag': etag,
-          'Cache-Control': 'public, max-age=300, stale-while-revalidate=120',
+          'Cache-Control': `public, max-age=${ttlSec}, stale-while-revalidate=120`,
           'Content-Type': 'application/json',
           ...buildCorsHeaders(request, false)
         }
       });
     }
 
+    const ttlSec = getSecondsUntilMidnightShanghai();
     const response = new Response(body, {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': bust ? 'no-store' : 'public, max-age=300, stale-while-revalidate=120',
+        'Cache-Control': bust ? 'no-store' : `public, max-age=${ttlSec}, stale-while-revalidate=120`,
         ...buildCorsHeaders(request, false)
       }
     });
@@ -769,6 +809,128 @@ async function handleLeaderboard(request, env) {
   
   } catch (error) {
     console.error('Leaderboard query error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
+    });
+  }
+}
+
+// 查询指定日期的Top1（存在则返回，不存在则从当日榜单回退）
+async function handleTop1(request, env) {
+  try {
+    const url = new URL(request.url);
+    const date = url.searchParams.get('date') || new Date().toISOString().split('T')[0];
+    
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return new Response(JSON.stringify({ error: 'Invalid date format' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
+      });
+    }
+
+    let source = 'kv';
+    const entryData = await env.QUIZ_KV.get(`top1_${date}`);
+    let entry = entryData ? JSON.parse(entryData) : null;
+
+    if (!entry) {
+      const boardData = await env.QUIZ_KV.get(`leaderboard_${date}`);
+      const board = boardData ? JSON.parse(boardData) : [];
+      entry = board[0] || null;
+      source = entry ? 'leaderboard-fallback' : 'none';
+    }
+
+    const ttlSec = getSecondsUntilMidnightShanghai();
+    const body = JSON.stringify({
+      date,
+      top1: entry ? {
+        rank: 1,
+        nickname: entry.nickname,
+        finalScore: entry.finalScore,
+        questionScore: entry.questionScore,
+        timeScore: entry.timeScore,
+        correctAnswers: entry.correctAnswers,
+        totalTime: entry.totalTime,
+        timestamp: entry.timestamp
+      } : null,
+      source
+    });
+
+    return new Response(body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': `public, max-age=${ttlSec}, stale-while-revalidate=120`,
+        ...buildCorsHeaders(request, false)
+      }
+    });
+  } catch (error) {
+    console.error('Top1 query error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
+    });
+  }
+}
+
+function formatShanghaiYMD(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(date);
+  const get = (t) => parts.find(p => p.type === t)?.value || '';
+  return `${get('year')}-${get('month')}-${get('day')}`;
+}
+
+// 最近N天（不含今天）每日TopK
+async function handleTopHistory(request, env) {
+  try {
+    const url = new URL(request.url);
+    const daysParam = parseInt(url.searchParams.get('days') || '7', 10);
+    const limitParam = parseInt(url.searchParams.get('limit') || '3', 10);
+    const days = Math.min(Math.max(daysParam, 1), 30);
+    const limit = Math.min(Math.max(limitParam, 1), 10);
+
+    // 读取端限流
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const rateOk = await checkRateLimit(env, clientIP, CONFIG.READ_RATE_LIMIT_WINDOW, CONFIG.READ_RATE_LIMIT_MAX, 'read');
+    if (!rateOk) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
+      });
+    }
+
+    const now = new Date();
+    const items = [];
+    for (let i = 1; i <= days; i++) {
+      const d = new Date(now.getTime() - i * 24 * 3600 * 1000);
+      const dateStr = formatShanghaiYMD(d);
+      const raw = await env.QUIZ_KV.get(`leaderboard_${dateStr}`);
+      const board = raw ? JSON.parse(raw) : [];
+      const tops = board.slice(0, limit).map((entry, idx) => ({
+        rank: idx + 1,
+        nickname: entry.nickname,
+        finalScore: entry.finalScore,
+        questionScore: entry.questionScore,
+        timeScore: entry.timeScore,
+        correctAnswers: entry.correctAnswers,
+        totalTime: entry.totalTime,
+        timestamp: entry.timestamp
+      }));
+      items.push({ date: dateStr, tops });
+    }
+
+    const ttlSec = getSecondsUntilMidnightShanghai();
+    const body = JSON.stringify({ tz: 'Asia/Shanghai', days, limit, items });
+    return new Response(body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': `public, max-age=${ttlSec}, stale-while-revalidate=120`,
+        ...buildCorsHeaders(request, false)
+      }
+    });
+  } catch (error) {
+    console.error('Top history query error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
@@ -802,6 +964,10 @@ export default {
         response = await handleScoreSubmission(request, env);
       } else if (url.pathname === '/api/leaderboard' && request.method === 'GET') {
         response = await handleLeaderboard(request, env);
+      } else if (url.pathname === '/api/top1' && request.method === 'GET') {
+        response = await handleTop1(request, env);
+      } else if (url.pathname === '/api/top3/history' && request.method === 'GET') {
+        response = await handleTopHistory(request, env);
       } else if (url.pathname === '/api/session/start' && request.method === 'POST') {
         response = await handleSessionStart(request, env);
       } else if (url.pathname === '/api/attempt/status' && request.method === 'GET') {
