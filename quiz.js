@@ -4016,7 +4016,7 @@ const TYPE_META = {
         });
 
         // 分数>90时在结算界面展示“邀请函！”按钮，点击后出现弹窗
-        if (window.isDailyChallenge && scores && typeof scores.finalScore === 'number' && scores.finalScore > 90) {
+        if (window.isDailyChallenge && scores && typeof scores.finalScore === 'number' && scores.finalScore > 95) {
           const inviteBtn = document.createElement('button');
           inviteBtn.id = 'openInviteModalBtn';
           inviteBtn.className = 'nav-btn primary daily-challenge-btn';
