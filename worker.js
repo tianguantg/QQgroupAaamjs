@@ -33,7 +33,13 @@ const CONFIG = {
 
 // 新增：来源白名单与会话配置（保持免费前提下的高性价比防护）
 const SECURITY = {
-  ALLOWED_HOSTS: new Set(['aaamjs.asia', 'aaamjs.dpdns.org', 'localhost:5174', '127.0.0.1:5174', 'localhost:5500', '127.0.0.1:5500']),
+  ALLOWED_HOSTS: new Set([
+    'aaamjs.asia',
+    'aaamjs.dpdns.org',
+    'localhost:5174', '127.0.0.1:5174',
+    'localhost:5500', '127.0.0.1:5500',
+    'localhost:8081', '127.0.0.1:8081'
+  ]),
   SESSION_TTL_SEC: 3600, // 会话令牌有效期（秒）
   MAX_SESSIONS_PER_IP_PER_DAY: 2 // 每IP每日最多创建会话次数
 };
@@ -297,15 +303,26 @@ async function checkRateLimit(env, clientIP, windowSec = CONFIG.RATE_LIMIT_WINDO
 
 // 会话创建与校验辅助
 async function createSession(env, clientIP, dateStr) {
-  // 每IP每日会话创建次数限制
-  const ipKey = `ip_session_count_${clientIP}_${dateStr}`;
-  let count = 0;
+  // 每IP每日会话创建次数限制（防止频繁进入）
+  const ipSessionKey = `ip_session_count_${clientIP}_${dateStr}`;
+  let sessionCreateCount = 0;
   try {
-    const val = await env.QUIZ_KV.get(ipKey);
-    count = val ? parseInt(val, 10) : 0;
-  } catch (_) { count = 0; }
-  if (count >= SECURITY.MAX_SESSIONS_PER_IP_PER_DAY) {
+    const val = await env.QUIZ_KV.get(ipSessionKey);
+    sessionCreateCount = val ? parseInt(val, 10) : 0;
+  } catch (_) { sessionCreateCount = 0; }
+  if (sessionCreateCount >= SECURITY.MAX_SESSIONS_PER_IP_PER_DAY) {
     return { ok: false, error: 'Session limit exceeded' };
+  }
+
+  // 进入即消耗机会：按 IP+日期 计数
+  const ipAttemptKey = `ip_attempt_${clientIP}_${dateStr}`;
+  let attemptCount = 0;
+  try {
+    const val2 = await env.QUIZ_KV.get(ipAttemptKey);
+    attemptCount = val2 ? parseInt(val2, 10) : 0;
+  } catch (_) { attemptCount = 0; }
+  if (attemptCount >= CONFIG.MAX_SUBMISSIONS_PER_IP) {
+    return { ok: false, error: 'Already consumed today' };
   }
 
   // 生成令牌
@@ -315,10 +332,11 @@ async function createSession(env, clientIP, dateStr) {
 
   const sessionKey = `session_${token}`;
   const now = Date.now();
-  const record = { ip: clientIP, date: dateStr, createdAt: now, used: false };
+  const record = { ip: clientIP, date: dateStr, createdAt: now, used: false, attemptConsumed: true };
   try {
     await env.QUIZ_KV.put(sessionKey, JSON.stringify(record), { expirationTtl: SECURITY.SESSION_TTL_SEC });
-    await env.QUIZ_KV.put(ipKey, String(count + 1), { expirationTtl: 86400 });
+    await env.QUIZ_KV.put(ipSessionKey, String(sessionCreateCount + 1), { expirationTtl: 86400 });
+    await env.QUIZ_KV.put(ipAttemptKey, String(attemptCount + 1), { expirationTtl: 86400 });
   } catch (error) {
     console.error('Create session error:', error);
     return { ok: false, error: 'Session create failed' };
@@ -510,25 +528,8 @@ async function handleScoreSubmission(request, env) {
     console.log('Time correlation (serverElapsed - clientTimeSpent):', { elapsedSec, clientTimeSpent: data.timeSpent, driftSec });
     // 不拒绝，仅用于后续行为分析或调整策略
 
-    // 按 IP+日期计数的提交限制
-    const ipCountKey = `ip_count_${clientIP}_${data.date}`;
-    let currentCount = 0;
-    try {
-      const countStr = await env.QUIZ_KV.get(ipCountKey);
-      currentCount = countStr ? parseInt(countStr, 10) : 0;
-    } catch (error) {
-      console.error('IP count get error:', error);
-      currentCount = 0; // 降级
-    }
-    console.log('Current submission count for IP:', clientIP, 'on', data.date, 'is', currentCount);
-
-    if (currentCount >= CONFIG.MAX_SUBMISSIONS_PER_IP) {
-      console.log('IP already reached max submissions today:', clientIP);
-      return new Response(JSON.stringify({ error: 'Already submitted today' }), {
-        status: 429,
-        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
-      });
-    }
+    // 进入即消耗已在会话创建阶段完成；提交端不再按IP限制
+    // 保留既有会话绑定与一次性提交校验（session.used）
     
     // 验证答案并计算得分
     console.log('Starting score verification...');
@@ -593,14 +594,7 @@ async function handleScoreSubmission(request, env) {
       console.error('Leaderboard save error:', error);
     }
     
-    // 递增计数并标记 TTL（24小时）
-    console.log('Incrementing IP submission count');
-    try {
-      await env.QUIZ_KV.put(ipCountKey, String(currentCount + 1), { expirationTtl: 86400 });
-    } catch (error) {
-      console.error('IP submission count update error:', error);
-      // 降级：不阻止响应返回
-    }
+    // 按新规则：不再在提交端递增 IP 提交计数
 
     // 标记会话已使用
     await markSessionUsed(env, data.sessionId);
@@ -625,6 +619,44 @@ async function handleScoreSubmission(request, env) {
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, true) }
+    });
+  }
+}
+
+// 读取当日剩余机会（READ端，允许公共读取）
+async function handleAttemptStatus(request, env) {
+  try {
+    const url = new URL(request.url);
+    const dateStr = url.searchParams.get('date') || new Date().toISOString().split('T')[0];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return new Response(JSON.stringify({ error: 'Invalid date format' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
+      });
+    }
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const rateOk = await checkRateLimit(env, clientIP, CONFIG.READ_RATE_LIMIT_WINDOW, CONFIG.READ_RATE_LIMIT_MAX, 'read');
+    if (!rateOk) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
+      });
+    }
+    const ipAttemptKey = `ip_attempt_${clientIP}_${dateStr}`;
+    let attemptCount = 0;
+    try {
+      const val = await env.QUIZ_KV.get(ipAttemptKey);
+      attemptCount = val ? parseInt(val, 10) : 0;
+    } catch (_) { attemptCount = 0; }
+    const remaining = Math.max(0, CONFIG.MAX_SUBMISSIONS_PER_IP - attemptCount);
+    return new Response(JSON.stringify({ success: true, date: dateStr, remaining, max: CONFIG.MAX_SUBMISSIONS_PER_IP }), {
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
+    });
+  } catch (error) {
+    console.error('Attempt status error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
     });
   }
 }
@@ -772,6 +804,8 @@ export default {
         response = await handleLeaderboard(request, env);
       } else if (url.pathname === '/api/session/start' && request.method === 'POST') {
         response = await handleSessionStart(request, env);
+      } else if (url.pathname === '/api/attempt/status' && request.method === 'GET') {
+        response = await handleAttemptStatus(request, env);
       } else {
         response = new Response(JSON.stringify({ error: 'Not Found' }), {
           status: 404,

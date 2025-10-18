@@ -543,20 +543,25 @@ window.QUIZ_CONFIG = {
     enemy: 0,
     skill: 0
   },
-  // 排行榜接口端点（支持按顺序依次尝试，第一项为主路由）
+  // 排行榜接口端点（优先使用国内域优先，减少网络阻塞）
   leaderboardEndpoints: [
     'https://quiz-api.aaamjs.asia/api/leaderboard',
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard'
   ],
-  // 提交成绩接口端点（主路由 + 回退）
+  // 提交成绩接口端点（优先使用 Worker 域，减少跨域问题）
   submitScoreEndpoints: [
-    'https://quiz-api.aaamjs.asia/api/submit-score',
-    'https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score'
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score',
+    'https://quiz-api.aaamjs.asia/api/submit-score'
   ],
-  // 会话启动接口端点（用于获取一次性 sessionId）
+  // 会话启动接口端点（用于获取一次性 sessionId，优先使用国内域，减少网络阻塞）
   sessionStartEndpoints: [
     'https://quiz-api.aaamjs.asia/api/session/start',
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/session/start'
+  ],
+  // 每日尝试状态查询端点（优先 Worker 域）
+  attemptStatusEndpoints: [
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/attempt/status',
+    'https://quiz-api.aaamjs.asia/api/attempt/status'
   ],
   turnstileSiteKey: '',
   types: {
@@ -3658,6 +3663,97 @@ const TYPE_META = {
         }
       }
 
+      // 侧边提示（自动消失）
+      function showSideToast(message, durationMs = 3000) {
+        try {
+          const toast = document.createElement('div');
+          toast.style.cssText = `
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 2000;
+            background: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            border: 1px solid var(--color-border);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            border-radius: 8px;
+            padding: 10px 14px;
+            max-width: 320px;
+          `;
+          toast.textContent = message;
+          document.body.appendChild(toast);
+          setTimeout(() => {
+            try { document.body.removeChild(toast); } catch (_) {}
+          }, Math.max(1000, durationMs || 3000));
+        } catch (_) {}
+      }
+
+      // 标准弹窗提示（统一为通用 .modal/.modal-content 结构）
+      function showStandardModal(title, message) {
+        try {
+          const modal = document.createElement('div');
+          modal.className = 'modal';
+          modal.style.display = 'block';
+          const content = document.createElement('div');
+          content.className = 'modal-content';
+          content.innerHTML = `
+            <div class="modal-header">
+              <h3>${title || '提示'}</h3>
+              <span class="close" id="stdModalClose">&times;</span>
+            </div>
+            <div class="modal-body">
+              <p style="color: var(--color-text-secondary);">${message || ''}</p>
+              <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
+                <button id="stdModalOk" class="nav-btn primary"><span class="nav-btn-text">确定</span></button>
+              </div>
+            </div>
+          `;
+          modal.appendChild(content);
+          document.body.appendChild(modal);
+          const cleanup = () => { try { document.body.removeChild(modal); } catch (_) {} };
+          document.getElementById('stdModalClose')?.addEventListener('click', cleanup);
+          document.getElementById('stdModalOk')?.addEventListener('click', cleanup);
+          modal.addEventListener('click', (e) => { if (e.target === modal) cleanup(); });
+        } catch (_) {}
+      }
+
+      // 进入前确认弹窗（返回Promise）
+      function showConfirmModal(title, message) {
+        return new Promise((resolve) => {
+          try {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            const content = document.createElement('div');
+            content.className = 'modal-content';
+            content.innerHTML = `
+              <div class="modal-header">
+                <h3>${title || '提示'}</h3>
+                <span class="close" id="confirmClose">&times;</span>
+              </div>
+              <div class="modal-body">
+                <p style="color: var(--color-text-primary);">${message || ''}</p>
+                <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;">
+                  <button id="confirmCancel" class="nav-btn"><span class="nav-btn-text">取消</span></button>
+                  <button id="confirmOk" class="nav-btn primary"><span class="nav-btn-text">确定</span></button>
+                </div>
+              </div>
+            `;
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            const cleanup = () => { try { document.body.removeChild(modal); } catch (_) {} };
+            const resolveFalse = () => { cleanup(); resolve(false); };
+            const resolveTrue = () => { cleanup(); resolve(true); };
+            document.getElementById('confirmClose')?.addEventListener('click', resolveFalse);
+            document.getElementById('confirmCancel')?.addEventListener('click', resolveFalse);
+            document.getElementById('confirmOk')?.addEventListener('click', resolveTrue);
+            modal.addEventListener('click', (e) => { if (e.target === modal) resolveFalse(); });
+            const onKey = (e) => { if (e.key === 'Escape') { document.removeEventListener('keydown', onKey); resolveFalse(); } };
+            document.addEventListener('keydown', onKey);
+          } catch (_) { resolve(false); }
+        });
+      }
+
       // 难度按钮初始化和事件处理
       function initializeDifficultyButtons() {
         const normalBtn = document.getElementById('normalBtn');
@@ -3672,8 +3768,12 @@ const TYPE_META = {
         nightmareBtn.addEventListener('click', () => startQuizWithDifficulty('nightmare'));
         profileBtn.addEventListener('click', () => startQuizWithDifficulty('profile'));
         
-        // 每日挑战按钮事件
-        dailyChallengeBtn.addEventListener('click', () => startDailyChallenge());
+        // 每日挑战按钮事件（进入前确认）
+        dailyChallengeBtn.addEventListener('click', async () => {
+          const ok = await showConfirmModal('提示', '若中途退出，今日内将无法再次作答');
+          if (!ok) return;
+          startDailyChallenge();
+        });
         
         // 反馈按钮事件 -> 打开反馈方式选择弹窗
         const feedbackBtn = document.getElementById('feedbackBtn');
@@ -3695,6 +3795,8 @@ const TYPE_META = {
             }
           });
         }
+
+        // 性能优化：不在页面加载时请求尝试状态，改为点击每日挑战时由会话创建结果决定入口可用性。
       }
       
       // 开始每日挑战
@@ -3728,6 +3830,7 @@ const TYPE_META = {
 
           // 启动会话以获取一次性提交令牌（sessionId）
           window.dailyChallengeSessionId = null;
+          let lastErrMsg = null;
           try {
             const dateStr = `${window.dailyChallengeDate.year}-${window.dailyChallengeDate.month.toString().padStart(2,'0')}-${window.dailyChallengeDate.day.toString().padStart(2,'0')}`;
             const sessEndpoints = Array.isArray(window.QUIZ_CONFIG?.sessionStartEndpoints) && window.QUIZ_CONFIG.sessionStartEndpoints.length > 0
@@ -3744,17 +3847,28 @@ const TYPE_META = {
                     body: JSON.stringify({ date: dateStr }),
                     signal: controller.signal
                   });
-                  if (resp.ok) {
-                    const data = await resp.json();
-                    if (data?.sessionId) { window.dailyChallengeSessionId = data.sessionId; break; }
-                  }
+                  const data = await resp.json().catch(() => null);
+                  if (resp.ok && data?.sessionId) { window.dailyChallengeSessionId = data.sessionId; break; }
+                  else { lastErrMsg = data?.error || (!resp.ok ? `HTTP ${resp.status}` : null); }
                 } catch (_) { /* 网络错误或超时，尝试下一个端点 */ }
               }
             } finally {
               clearTimeout(timer);
             }
-          } catch (_) {
-            // 忽略错误，提交时再重试
+          } catch (e) {
+            lastErrMsg = e?.message || null;
+          }
+          // 进入即消耗：若无法创建会话则拒绝进入每日挑战
+          if (!window.dailyChallengeSessionId) {
+            // 隐藏加载动画并恢复界面
+            loadingOverlay.classList.remove('show');
+            window.isDailyChallenge = false;
+            const msg = lastErrMsg === 'Already consumed today'
+              ? '今日每日挑战次数已用完，请明日再来。'
+              : '无法进入每日挑战：网络错误或服务器不可达。';
+            showStandardModal('每日挑战不可用', msg);
+            questionView.innerHTML = `<div class="muted">${msg}</div>`;
+            return;
           }
           
           // 隐藏难度按钮
@@ -3789,6 +3903,9 @@ const TYPE_META = {
           
           // 隐藏加载动画
           loadingOverlay.classList.remove('show');
+          
+          // 显示侧边提示：中途退出提醒（自动消失）
+          showSideToast('注意：中途退出将无法再次进入', 3500);
           
           setControls(true);
           updateStatus();
@@ -3898,8 +4015,8 @@ const TYPE_META = {
           openNicknameModal(scores, timeInSeconds, finalTime, statusDiv);
         });
 
-        // 分数>85时在结算界面展示“邀请函！”按钮，点击后出现弹窗
-        if (window.isDailyChallenge && scores && typeof scores.finalScore === 'number' && scores.finalScore > 85) {
+        // 分数>90时在结算界面展示“邀请函！”按钮，点击后出现弹窗
+        if (window.isDailyChallenge && scores && typeof scores.finalScore === 'number' && scores.finalScore > 90) {
           const inviteBtn = document.createElement('button');
           inviteBtn.id = 'openInviteModalBtn';
           inviteBtn.className = 'nav-btn primary daily-challenge-btn';
@@ -4082,7 +4199,8 @@ const TYPE_META = {
             'Invalid date format': '日期格式不正确，请刷新页面后重试。',
             'Invalid question times array': '每题用时数组不合法。',
             'Invalid total time': '答题总时长不合法。',
-            'Internal server error': '服务器异常，请稍后再试。'
+            'Internal server error': '服务器异常，请稍后再试。',
+            'Already consumed today': '今日次数已用完，请明日再来。'
           };
 
           // 命中敏感错误：返回通用描述 + 错误代码
@@ -4116,6 +4234,17 @@ const TYPE_META = {
               statusEl.textContent = '正在进行人机验证...';
               statusEl.style.color = 'var(--color-text-secondary)';
             }
+            // 动态加载 Turnstile 脚本（仅在需要且未加载时）
+            try {
+              if (!window.turnstile && !document.querySelector('script[data-turnstile]')) {
+                const s = document.createElement('script');
+                s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+                s.async = true;
+                s.defer = true;
+                s.setAttribute('data-turnstile', 'true');
+                document.head.appendChild(s);
+              }
+            } catch (_) {}
             await new Promise((resolve, reject) => {
               if (window.turnstile && typeof window.turnstile.render === 'function') return resolve();
               let tries = 0;
@@ -4140,39 +4269,11 @@ const TYPE_META = {
           statusDiv.textContent = '正在提交...';
           statusDiv.style.color = 'var(--color-text-secondary)';
 
-          // 确保存在提交令牌（sessionId），若缺失则即时尝试创建
+          // 确保存在提交令牌（sessionId），不再在提交时创建
           if (!window.dailyChallengeSessionId) {
-            statusDiv.textContent = '正在初始化提交令牌...';
-            statusDiv.style.color = 'var(--color-text-secondary)';
-            const dateStr = `${window.dailyChallengeDate.year}-${window.dailyChallengeDate.month.toString().padStart(2,'0')}-${window.dailyChallengeDate.day.toString().padStart(2,'0')}`;
-            const sessEndpoints = Array.isArray(window.QUIZ_CONFIG?.sessionStartEndpoints) && window.QUIZ_CONFIG.sessionStartEndpoints.length > 0
-              ? window.QUIZ_CONFIG.sessionStartEndpoints
-              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/session/start'];
-            const controllerSess = new AbortController();
-            const timerSess = setTimeout(() => controllerSess.abort(), 5000);
-            try {
-              for (const ep of sessEndpoints) {
-                try {
-                  const resp = await fetch(ep, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ date: dateStr }),
-                    signal: controllerSess.signal
-                  });
-                  if (resp.ok) {
-                    const data = await resp.json();
-                    if (data?.sessionId) { window.dailyChallengeSessionId = data.sessionId; break; }
-                  }
-                } catch (_) { continue; }
-              }
-            } finally {
-              clearTimeout(timerSess);
-            }
-            if (!window.dailyChallengeSessionId) {
-              statusDiv.textContent = '❌ 无法获取提交令牌，请刷新页面后重试';
-              statusDiv.style.color = 'var(--color-error)';
-              return;
-            }
+            statusDiv.textContent = '❌ 未检测到每日挑战会话，请先进入每日挑战。';
+            statusDiv.style.color = 'var(--color-error)';
+            return;
           }
           
           // 收集答题数据用于验证
@@ -4443,7 +4544,7 @@ const TYPE_META = {
           for (const endpoint of configured) {
             try {
               const url = `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
-              const response = await fetchWithTimeout(url, 5000);
+              const response = await fetchWithTimeout(url, 3500);
               data = await response.json();
               if (data && data.leaderboard) {
                 break;
@@ -4499,131 +4600,111 @@ const TYPE_META = {
       // 显示每日挑战排行榜
   async function showDailyChallengeLeaderboard() {
     try {
-          const modal = document.createElement('div');
-          modal.className = 'leaderboard-modal';
-          modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-          `;
-          
-          const content = document.createElement('div');
-          content.style.cssText = `
-            background: var(--color-bg-primary);
-            border-radius: 8px;
-            padding: 20px;
-            max-width: 500px;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 1px solid var(--color-border);
-          `;
-          
-          content.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-              <h3 style="margin: 0; color: var(--color-text-primary);">每日挑战排行榜</h3>
-              <button id="closeLeaderboard" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--color-text-secondary);">×</button>
-            </div>
-            <div id="leaderboardContent">加载中...</div>
-          `;
-          
-          modal.appendChild(content);
-          document.body.appendChild(modal);
-          
-          // 关闭按钮
-          document.getElementById('closeLeaderboard').addEventListener('click', () => {
-            document.body.removeChild(modal);
-          });
-          
-          // 点击遮罩关闭
-          modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-              document.body.removeChild(modal);
-            }
-          });
-          
-          // 加载排行榜数据（支持多端点与超时）
-          const configured = Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
-            ? window.QUIZ_CONFIG.leaderboardEndpoints
-            : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
-                ? window.LEADERBOARD_ENDPOINTS
-                : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']);
+      const modal = document.createElement('div');
+      modal.className = 'modal';
+      modal.style.display = 'block';
+      const content = document.createElement('div');
+      content.className = 'modal-content';
+      content.innerHTML = `
+        <div class="modal-header">
+          <h3>每日挑战排行榜</h3>
+          <span class="close" id="closeLeaderboard">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div id="leaderboardContent">加载中...</div>
+        </div>
+      `;
+      modal.appendChild(content);
+      document.body.appendChild(modal);
+      const cleanup = () => { try { document.body.removeChild(modal); } catch (_) {} };
+      document.getElementById('closeLeaderboard')?.addEventListener('click', cleanup);
+      modal.addEventListener('click', (e) => { if (e.target === modal) cleanup(); });
+      
+      // 加载排行榜数据（支持多端点与超时）
+      const preferBust = (() => { try { const until = parseInt((sessionStorage.getItem('leaderboardForceBustUntil') || '0'), 10); return until > Date.now(); } catch (_) { return false; } })();
+      const forceBust = preferBust;
+      const d = window.dailyChallengeDate;
+      const dateStr = (d && d.year && d.month && d.day)
+        ? `${d.year}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`
+        : (() => {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+          })();
 
-          const fetchWithTimeoutLocal = async (url, timeoutMs = 5000) => {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeoutMs);
-            try {
-              const res = await fetch(url, { signal: controller.signal });
-              return res;
-            } finally {
-              clearTimeout(timer);
-            }
-          };
+      const configured = Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
+        ? window.QUIZ_CONFIG.leaderboardEndpoints
+        : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
+            ? window.LEADERBOARD_ENDPOINTS
+            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']);
 
-          let data = null;
-          for (const endpoint of configured) {
-            try {
-              const response = await fetchWithTimeoutLocal(endpoint, 5000);
-              data = await response.json();
-              if (data && data.leaderboard) {
-                break;
-              }
-            } catch (e) {
-              // 尝试下一个端点
-            }
-          }
-
-          const leaderboardContent = document.getElementById('leaderboardContent');
-
-          if (data.leaderboard && data.leaderboard.length > 0) {
-            let html = `
-              <div style="margin-bottom: 10px; color: var(--color-text-secondary); text-align: center;">
-                ${data.date} | 共 ${data.totalEntries} 人参与
-              </div>
-              <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; font-weight: bold; padding: 10px 0; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary);">
-                <div>排名</div>
-                <div>昵称</div>
-                <div>分数</div>
-              </div>
-            `;
-            
-            data.leaderboard.forEach((entry, index) => {
-              const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
-              html += `
-                <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--color-border-light); color: var(--color-text-primary);">
-                  <div>${rankIcon} ${index + 1}</div>
-                  <div style="overflow: hidden; text-overflow: ellipsis;">${entry.nickname}</div>
-                  <div style="font-weight: bold;">${entry.finalScore}</div>
-                </div>
-              `;
-            });
-            
-            leaderboardContent.innerHTML = html;
-          } else {
-            leaderboardContent.innerHTML = `
-              <div style="text-align: center; color: var(--color-text-secondary); padding: 20px;">
-                暂无排行榜数据
-              </div>
-            `;
-          }
-        } catch (error) {
-          console.error('加载排行榜失败:', error);
-          const leaderboardContent = document.getElementById('leaderboardContent');
-          if (leaderboardContent) {
-            leaderboardContent.innerHTML = `
-              <div style="text-align: center; color: var(--color-error); padding: 20px;">
-                加载失败，请稍后重试
-              </div>
-            `;
-          }
+      const fetchWithTimeoutLocal = async (url, timeoutMs = 3500) => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const res = await fetch(url, { signal: controller.signal });
+          return res;
+        } finally {
+          clearTimeout(timer);
         }
+      };
+
+      let data = null;
+      for (const endpoint of configured) {
+        try {
+          const url = `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
+          const response = await fetchWithTimeoutLocal(url, 3500);
+          data = await response.json();
+          if (data && data.leaderboard) {
+            break;
+          }
+        } catch (e) {}
       }
+
+      const leaderboardContent = document.getElementById('leaderboardContent');
+
+      if (data && data.leaderboard && data.leaderboard.length > 0) {
+        let html = `
+          <div style="margin-bottom: 10px; color: var(--color-text-secondary); text-align: center;">
+            ${data.date} | 共 ${data.totalEntries} 人参与
+          </div>
+          <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; font-weight: bold; padding: 10px 0; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary);">
+            <div>排名</div>
+            <div>昵称</div>
+            <div>分数</div>
+          </div>
+        `;
+        
+        data.leaderboard.forEach((entry, index) => {
+          const rankIcon = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+          html += `
+            <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--color-border-light); color: var(--color-text-primary);">
+              <div>${rankIcon} ${index + 1}</div>
+              <div style="overflow: hidden; text-overflow: ellipsis;">${entry.nickname}</div>
+              <div style="font-weight: bold;">${entry.finalScore}</div>
+            </div>
+          `;
+        });
+        
+        leaderboardContent.innerHTML = html;
+      } else {
+        leaderboardContent.innerHTML = `
+          <div style="text-align: center; color: var(--color-text-secondary); padding: 20px;">
+            暂无排行榜数据
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error('加载排行榜失败:', error);
+      const leaderboardContent = document.getElementById('leaderboardContent');
+      if (leaderboardContent) {
+        leaderboardContent.innerHTML = `
+          <div style="text-align: center; color: var(--color-error); padding: 20px;">
+            加载失败，请稍后重试
+          </div>
+        `;
+      }
+    }
+  }
       
       // 更新难度配置
       function updateDifficultyConfig(difficulty) {
