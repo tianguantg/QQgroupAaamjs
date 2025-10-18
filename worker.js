@@ -16,7 +16,7 @@ const CONFIG = {
   
   MIN_TOTAL_TIME: 20,        // 总答题时间下限（秒）
   
-  QUESTION_COUNT: 15,         // 每日挑战题目数量（与前端噩梦模式一致）
+  QUESTION_COUNT: 20,         // 每日挑战题目数量（与前端噩梦模式一致）
   
   RATE_LIMIT_WINDOW: 60,     // 速率限制窗口（秒）
   
