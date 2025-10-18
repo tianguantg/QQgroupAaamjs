@@ -1404,7 +1404,7 @@ const TYPE_META = {
               <div class="stats-row">
                 <div class="stat-icon-container">
                   <div class="stat-icon" style="position: relative;">
-                    <img src="images/decisions/A.png" alt="攻击力" class="decision-icon" />
+                    <img src="images/decisions/A.png" alt="攻击力" class="decision-icon" onerror="this.style.display='none';" />
                     <span class="stat-value stat-value-a">
                       <div style="line-height: 1;">${A}</div>
                       <div style="line-height: 0.5; margin: -2px 0;">-</div>
@@ -1414,7 +1414,7 @@ const TYPE_META = {
                 </div>
                 <div class="stat-icon-container">
                   <div class="stat-icon" style="position: relative;">
-                    <img src="images/decisions/X.png" alt="骰点" class="decision-icon" />
+                    <img src="images/decisions/X.png" alt="骰点" class="decision-icon" onerror="this.style.display='none';" />
                     <span class="stat-value stat-value-x">${X}</span>
                   </div>
                 </div>
@@ -1427,7 +1427,7 @@ const TYPE_META = {
               <div class="stats-row">
                 <div class="stat-icon-container">
                   <div class="stat-icon" style="position: relative;">
-                    <img src="images/decisions/D.png" alt="防御力" class="decision-icon" />
+                    <img src="images/decisions/D.png" alt="防御力" class="decision-icon" onerror="this.style.display='none';" />
                     <span class="stat-value stat-value-d">
                       <div style="line-height: 1;">${D}</div>
                       <div style="line-height: 0.5; margin: -2px 0;">-</div>
@@ -1437,7 +1437,7 @@ const TYPE_META = {
                 </div>
                 <div class="stat-icon-container">
                   <div class="stat-icon" style="position: relative;">
-                    <img src="images/decisions/HP.png" alt="生命值" class="decision-icon-hp" />
+                    <img src="images/decisions/HP.png" alt="生命值" class="decision-icon-hp" onerror="this.style.display='none';" />
                     <span class="stat-value stat-value-hp">${HP}</span>
                   </div>
                 </div>
@@ -2911,15 +2911,17 @@ const TYPE_META = {
           // 显示容器（防止之前被隐藏）
           battleButtonsContainer.style.display = 'flex';
           
-          // 创建图片按钮HTML
+          // 创建图片按钮HTML（带文本回退与onerror处理）
           battleButtonsContainer.innerHTML = `
             <div class="battle-image-buttons">
               <button class="battle-image-btn" data-answer="防御">
-                <img src="images/decisions/ready.png" alt="防御" />
+                <img src="images/decisions/ready.png" alt="防御" onerror="this.style.display='none'; this.closest('button').classList.add('img-missing');" />
+                <span class="battle-label" style="display:none;">防御</span>
               </button>
               <button class="battle-image-btn" data-answer="闪避">
-                <img src="images/decisions/dodg.png" alt="闪避" />
+                <img src="images/decisions/dodg.png" alt="闪避" onerror="this.style.display='none'; this.closest('button').classList.add('img-missing');" />
                 <span class="enemy-dice-number">${q.enemyX}</span>
+                <span class="battle-label" style="display:none;">闪避</span>
               </button>
             </div>
           `;

@@ -9,6 +9,14 @@
   <meta http-equiv="Expires" content="0" />
   <title>星趴小测验 - AAa美甲师后援会</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- 预加载关键资源：字体与决策题图片 -->
+  <link rel="preload" href="assets/fonts/Blippo.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="images/decisions/ready.png" as="image">
+  <link rel="preload" href="images/decisions/dodg.png" as="image">
+  <link rel="preload" href="images/decisions/A.png" as="image">
+  <link rel="preload" href="images/decisions/X.png" as="image">
+  <link rel="preload" href="images/decisions/D.png" as="image">
+  <link rel="preload" href="images/decisions/HP.png" as="image">
   <style>
     /* 字体定义 */
     @font-face {
@@ -581,6 +589,19 @@
     .battle-image-btn:hover img {
       transform: scale(1.1);
       filter: brightness(1.1);
+    }
+    
+    /* 图片加载失败时的文本回退样式 */
+    .battle-image-btn.img-missing {
+      background: rgba(90, 111, 216, 0.12);
+      border: 2px dashed var(--theme-border-gradient, #5a6fd8);
+    }
+    .battle-image-btn.img-missing .battle-label {
+      display: inline-block !important;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--color-text-primary, #333);
+      pointer-events: none;
     }
     
     /* 选中状态样式 */
@@ -1308,6 +1329,17 @@
   
   <div id="turnstile-container" style="display:none;"></div>
   <script src="quiz.js?v=202510182234"></script>
+
+  <!-- 注册 Service Worker：缓存关键图片与字体，提升加载可靠性 -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => {
+          console.log('ServiceWorker 注册失败:', err);
+        });
+      });
+    }
+  </script>
 
 </body>
 </html>
