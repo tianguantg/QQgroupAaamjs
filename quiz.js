@@ -4411,6 +4411,10 @@ const TYPE_META = {
             <button id="${contentId}RefreshBtn" class="nav-btn" title="强制刷新（跳过缓存）"><span class="nav-btn-text">刷新</span></button>
           </div>
           <div id="${contentId}">加载中...</div>
+          <div id="${contentId}HistoryWrap" style="margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);">
+            <div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>
+            <div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>
+          </div>
         `;
         const target = document.getElementById(contentId);
         const refreshBtn = document.getElementById(`${contentId}RefreshBtn`);
@@ -4480,6 +4484,12 @@ const TYPE_META = {
                 ? window.QUIZ_CONFIG.topHistoryEndpoints
                 : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
 
+              // 加载占位已在初始模板插入，这里只获取引用并更新提示
+              const historyWrap = document.getElementById(`${contentId}HistoryWrap`);
+              if (historyWrap) {
+                historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>';
+              }
+
               let history = null;
               // 本地缓存优先（与排行榜一致的 15 分钟 TTL）
               const histCacheKey = 'topHistoryCache:7:3:0';
@@ -4503,15 +4513,14 @@ const TYPE_META = {
                 }
               }
 
-              if (history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0) {
-                const wrap = document.createElement('div');
-                wrap.style.cssText = 'margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);';
+              const hasItems = history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0;
+              if (hasItems) {
                 let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
                 hHtml += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin-top:8px;">';
 
                 history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).forEach((it) => {
                   hHtml += `
-                    <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--color-bg-secondary);">
+                    <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--theme-card-bg); color: var(--color-text-primary);">
                       <div style="text-align:center; font-weight:600; color: var(--color-text-secondary);">${it.date}</div>
                       <div style="display:grid; grid-template-columns: 36px 1fr 60px; gap:8px; margin-top:6px;">
                   `;
@@ -4532,8 +4541,9 @@ const TYPE_META = {
                 });
 
                 hHtml += '</div>';
-                wrap.innerHTML = hHtml;
-                target.appendChild(wrap);
+                historyWrap.innerHTML = hHtml;
+              } else {
+                historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">暂无数据</div>';
               }
             } catch (_) {}
           } else {
@@ -4725,6 +4735,10 @@ const TYPE_META = {
         </div>
         <div class="modal-body">
           <div id="leaderboardContent">加载中...</div>
+          <div id="leaderboardHistoryWrap" style="margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);">
+            <div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>
+            <div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>
+          </div>
         </div>
       `;
       modal.appendChild(content);
@@ -4806,6 +4820,12 @@ const TYPE_META = {
             ? window.QUIZ_CONFIG.topHistoryEndpoints
             : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
 
+          // 使用已有占位：更新弹窗历史前三加载提示
+          const historyWrap = document.getElementById('leaderboardHistoryWrap');
+          if (historyWrap) {
+            historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>';
+          }
+
           let history = null;
           // 本地缓存优先（与排行榜一致的 15 分钟 TTL）
           const histCacheKey = 'topHistoryCache:7:3:0';
@@ -4829,15 +4849,14 @@ const TYPE_META = {
             }
           }
 
-          if (history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0) {
-            const wrap = document.createElement('div');
-            wrap.style.cssText = 'margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);';
+          const hasItems = history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0;
+          if (hasItems) {
             let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
             hHtml += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin-top:8px;">';
 
             history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).forEach((it) => {
               hHtml += `
-                <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--color-bg-secondary);">
+                <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--theme-card-bg); color: var(--color-text-primary);">
                   <div style="text-align:center; font-weight:600; color: var(--color-text-secondary);">${it.date}</div>
                   <div style="display:grid; grid-template-columns: 36px 1fr 60px; gap:8px; margin-top:6px;">
               `;
@@ -4858,8 +4877,9 @@ const TYPE_META = {
             });
 
             hHtml += '</div>';
-            wrap.innerHTML = hHtml;
-            leaderboardContent.appendChild(wrap);
+            historyWrap.innerHTML = hHtml;
+          } else {
+            historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">暂无数据</div>';
           }
         } catch (_) {}
 
