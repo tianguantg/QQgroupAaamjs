@@ -3836,11 +3836,34 @@ const TYPE_META = {
           const dailySeed = getDailySeed();
           quizRandom = new SeededRandom(dailySeed);
 
+          // 在进入会话前先检查今日剩余机会（避免直接触发400）
+          const dateStr = `${window.dailyChallengeDate.year}-${window.dailyChallengeDate.month.toString().padStart(2,'0')}-${window.dailyChallengeDate.day.toString().padStart(2,'0')}`;
+          try {
+            const attemptEndpoints = Array.isArray(window.QUIZ_CONFIG?.attemptStatusEndpoints) && window.QUIZ_CONFIG.attemptStatusEndpoints.length > 0
+              ? window.QUIZ_CONFIG.attemptStatusEndpoints
+              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/attempt/status'];
+            let attemptInfo = null;
+            for (const ep of attemptEndpoints) {
+              try {
+                const resp = await fetch(`${ep}?date=${encodeURIComponent(dateStr)}`);
+                const data = await resp.json().catch(() => null);
+                if (resp.ok && data && typeof data.remaining === 'number') { attemptInfo = data; break; }
+              } catch (_) { /* 忽略错误，尝试下一个端点 */ }
+            }
+            if (attemptInfo && attemptInfo.remaining <= 0) {
+              loadingOverlay.classList.remove('show');
+              window.isDailyChallenge = false;
+              const msg = '今日每日挑战次数已用完，请明日再来。';
+              showStandardModal('每日挑战不可用', msg);
+              questionView.innerHTML = `<div class="muted">${msg}</div>`;
+              return;
+            }
+          } catch (_) { /* 读取失败时继续尝试创建会话 */ }
+
           // 启动会话以获取一次性提交令牌（sessionId）
           window.dailyChallengeSessionId = null;
           let lastErrMsg = null;
           try {
-            const dateStr = `${window.dailyChallengeDate.year}-${window.dailyChallengeDate.month.toString().padStart(2,'0')}-${window.dailyChallengeDate.day.toString().padStart(2,'0')}`;
             const sessEndpoints = Array.isArray(window.QUIZ_CONFIG?.sessionStartEndpoints) && window.QUIZ_CONFIG.sessionStartEndpoints.length > 0
               ? window.QUIZ_CONFIG.sessionStartEndpoints
               : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/session/start'];
@@ -3868,12 +3891,15 @@ const TYPE_META = {
           }
           // 进入即消耗：若无法创建会话则拒绝进入每日挑战
           if (!window.dailyChallengeSessionId) {
-            // 隐藏加载动画并恢复界面
             loadingOverlay.classList.remove('show');
             window.isDailyChallenge = false;
-            const msg = lastErrMsg === 'Already consumed today'
+            const used = lastErrMsg === 'Already consumed today' || lastErrMsg === 'Session limit exceeded';
+            const originBlocked = lastErrMsg === 'Forbidden origin' || lastErrMsg === 'HTTP 403';
+            const msg = used
               ? '今日每日挑战次数已用完，请明日再来。'
-              : '无法进入每日挑战：网络错误或服务器不可达。';
+              : originBlocked
+                ? '请求被拒绝：请在 aaamjs.asia 域或白名单本地端口(5174/5500/8081)打开页面后重试。'
+                : '无法进入每日挑战：网络错误或服务器不可达。';
             showStandardModal('每日挑战不可用', msg);
             questionView.innerHTML = `<div class="muted">${msg}</div>`;
             return;
@@ -4478,74 +4504,7 @@ const TYPE_META = {
             });
             target.innerHTML = html;
 
-            // 最近7天每日前三（主页小卡片，跟随排行榜显示）
-            try {
-              const topHistoryEndpointsCfg = Array.isArray(window.QUIZ_CONFIG?.topHistoryEndpoints) && window.QUIZ_CONFIG.topHistoryEndpoints.length > 0
-                ? window.QUIZ_CONFIG.topHistoryEndpoints
-                : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
-
-              // 加载占位已在初始模板插入，这里只获取引用并更新提示
-              const historyWrap = document.getElementById(`${contentId}HistoryWrap`);
-              if (historyWrap) {
-                historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>';
-              }
-
-              let history = null;
-              // 本地缓存优先（与排行榜一致的 15 分钟 TTL）
-              const histCacheKey = 'topHistoryCache:7:3:0';
-              if (!forceBust) {
-                const hCache = loadHistoryCache(histCacheKey);
-                if (hCache && hCache.data && Array.isArray(hCache.data.items) && hCache.data.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
-                  history = hCache.data;
-                }
-              }
-              if (!history) {
-                for (const endpoint of topHistoryEndpointsCfg) {
-                  try {
-                    const url = `${endpoint}?days=7&limit=3&includeToday=0${forceBust ? `&bust=${Date.now()}` : ''}`;
-                    const resp = await fetchWithTimeout(url, 3000);
-                    const hdata = await resp.json();
-                    if (hdata && Array.isArray(hdata.items)) { history = hdata; break; }
-                  } catch (_) {}
-                }
-                if (history && Array.isArray(history.items) && history.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
-                  try { saveHistoryCache(histCacheKey, history); } catch (_) {}
-                }
-              }
-
-              const hasItems = history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0;
-              if (hasItems) {
-                let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
-                hHtml += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin-top:8px;">';
-
-                history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).forEach((it) => {
-                  hHtml += `
-                    <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--theme-card-bg); color: var(--color-text-primary);">
-                      <div style="text-align:center; font-weight:600; color: var(--color-text-secondary);">${it.date}</div>
-                      <div style="display:grid; grid-template-columns: 36px 1fr 60px; gap:8px; margin-top:6px;">
-                  `;
-                  (Array.isArray(it.tops) ? it.tops : []).forEach((entry, idx) => {
-                    const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-                    hHtml += `
-                      <div style="display:contents;">
-                        <div>${rankIcon} ${idx + 1}</div>
-                        <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${entry.nickname}</div>
-                        <div style="text-align:right; font-weight:bold;">${entry.finalScore}</div>
-                      </div>
-                    `;
-                  });
-                  hHtml += `
-                      </div>
-                    </div>
-                  `;
-                });
-
-                hHtml += '</div>';
-                historyWrap.innerHTML = hHtml;
-              } else {
-                historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">暂无数据</div>';
-              }
-            } catch (_) {}
+            // 最近7天每日前三渲染已解耦，由外部统一触发
           } else {
             target.innerHTML = `
               <div style="text-align: center; color: var(--color-text-secondary); padding: 12px;">
@@ -4605,6 +4564,82 @@ const TYPE_META = {
           }
         }
 
+        // 独立渲染“最近7天每日前三”，避免依赖排行榜成功结果
+        async function renderTopHistoryMain(forceBustLocal) {
+          try {
+            const historyWrap = document.getElementById(`${contentId}HistoryWrap`);
+            if (historyWrap) {
+              historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>';
+            }
+
+            const topHistoryEndpointsCfg = Array.isArray(window.QUIZ_CONFIG?.topHistoryEndpoints) && window.QUIZ_CONFIG.topHistoryEndpoints.length > 0
+              ? window.QUIZ_CONFIG.topHistoryEndpoints
+              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
+
+            let history = null;
+            const histCacheKey = 'topHistoryCache:7:3:0';
+            if (!forceBustLocal) {
+              const hCache = loadHistoryCache(histCacheKey);
+              if (hCache && hCache.data && Array.isArray(hCache.data.items) && hCache.data.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
+                history = hCache.data;
+              }
+            }
+            if (!history) {
+              for (const endpoint of topHistoryEndpointsCfg) {
+                try {
+                  const url = `${endpoint}?days=7&limit=3&includeToday=0${forceBustLocal ? `&bust=${Date.now()}` : ''}`;
+                  const resp = await fetchWithTimeout(url, 3000);
+                  const hdata = await resp.json();
+                  if (hdata && Array.isArray(hdata.items)) { history = hdata; break; }
+                } catch (_) {}
+              }
+              if (history && Array.isArray(history.items) && history.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
+                try { saveHistoryCache(histCacheKey, history); } catch (_) {}
+              }
+            }
+
+            const hasItems = history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0;
+            if (historyWrap) {
+              if (hasItems) {
+                let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
+                hHtml += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin-top:8px;">';
+
+                history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).forEach((it) => {
+                  hHtml += `
+                    <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--theme-card-bg); color: var(--color-text-primary);">
+                      <div style="text-align:center; font-weight:600; color: var(--color-text-secondary);">${it.date}</div>
+                      <div style="display:grid; grid-template-columns: 36px 1fr 60px; gap:8px; margin-top:6px;">
+                  `;
+                  (Array.isArray(it.tops) ? it.tops : []).forEach((entry, idx) => {
+                    const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+                    hHtml += `
+                      <div style="display:contents;">
+                        <div>${rankIcon} ${idx + 1}</div>
+                        <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${entry.nickname}</div>
+                        <div style="text-align:right; font-weight:bold;">${entry.finalScore}</div>
+                      </div>
+                    `;
+                  });
+                  hHtml += `
+                      </div>
+                    </div>
+                  `;
+                });
+
+                hHtml += '</div>';
+                historyWrap.innerHTML = hHtml;
+              } else {
+                historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">暂无数据</div>';
+              }
+            }
+          } catch (_) {
+            const historyWrap = document.getElementById(`${contentId}HistoryWrap`);
+            if (historyWrap) {
+              historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">暂无数据</div>';
+            }
+          }
+        }
+
         const configured = Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
           ? window.QUIZ_CONFIG.leaderboardEndpoints
           : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
@@ -4637,6 +4672,7 @@ const TYPE_META = {
               target.appendChild(note);
             });
           }
+          await renderTopHistoryMain(forceBust);
           return;
         }
 
@@ -4660,6 +4696,7 @@ const TYPE_META = {
               await renderBoard(data);
               // 仅当存在有效数据时缓存
               saveCache(data);
+              await renderTopHistoryMain(forceBust);
               return;
             }
             // 首次响应为空榜，自动进行一次 bust 重试以绕过CDN空缓存
@@ -4673,6 +4710,7 @@ const TYPE_META = {
                       if (data2.leaderboard.length > 0) {
                         await renderBoard(data2);
                         saveCache(data2);
+                        await renderTopHistoryMain(true);
                         return;
                       }
                       break; // 二次仍为空，不再继续
@@ -4682,6 +4720,7 @@ const TYPE_META = {
             } catch (_) {}
             // 保持现有空态展示，但不写入空缓存
             await renderBoard(data);
+            await renderTopHistoryMain(forceBust);
             return;
           }
           throw new Error('All endpoints failed');
@@ -4711,6 +4750,7 @@ const TYPE_META = {
               target.appendChild(note);
             });
           }
+          await renderTopHistoryMain(forceBust);
         }
       }
 
@@ -4775,6 +4815,82 @@ const TYPE_META = {
         }
       };
 
+      // 独立渲染弹窗内“最近7天每日前三”，避免依赖榜单成功
+      async function renderTopHistoryModal(forceBustLocal) {
+        try {
+          const historyWrap = document.getElementById('leaderboardHistoryWrap');
+          if (historyWrap) {
+            historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>';
+          }
+
+          const topHistoryEndpointsCfg = Array.isArray(window.QUIZ_CONFIG?.topHistoryEndpoints) && window.QUIZ_CONFIG.topHistoryEndpoints.length > 0
+            ? window.QUIZ_CONFIG.topHistoryEndpoints
+            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
+
+          let history = null;
+          const histCacheKey = 'topHistoryCache:7:3:0';
+          if (!forceBustLocal) {
+            const hCache = loadHistoryCache(histCacheKey);
+            if (hCache && hCache.data && Array.isArray(hCache.data.items) && hCache.data.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
+              history = hCache.data;
+            }
+          }
+          if (!history) {
+            for (const endpoint of topHistoryEndpointsCfg) {
+              try {
+                const url = `${endpoint}?days=7&limit=3&includeToday=0${forceBustLocal ? `&bust=${Date.now()}` : ''}`;
+                const resp = await fetchWithTimeoutLocal(url, 3000);
+                const hdata = await resp.json();
+                if (hdata && Array.isArray(hdata.items)) { history = hdata; break; }
+              } catch (_) {}
+            }
+            if (history && Array.isArray(history.items) && history.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
+              try { saveHistoryCache(histCacheKey, history); } catch (_) {}
+            }
+          }
+
+          const hasItems = history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0;
+          if (historyWrap) {
+            if (hasItems) {
+              let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
+              hHtml += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin-top:8px;">';
+
+              history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).forEach((it) => {
+                hHtml += `
+                  <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--theme-card-bg); color: var(--color-text-primary);">
+                    <div style="text-align:center; font-weight:600; color: var(--color-text-secondary);">${it.date}</div>
+                    <div style="display:grid; grid-template-columns: 36px 1fr 60px; gap:8px; margin-top:6px;">
+                `;
+                (Array.isArray(it.tops) ? it.tops : []).forEach((entry, idx) => {
+                  const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+                  hHtml += `
+                    <div style="display:contents;">
+                      <div>${rankIcon} ${idx + 1}</div>
+                      <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${entry.nickname}</div>
+                      <div style="text-align:right; font-weight:bold;">${entry.finalScore}</div>
+                    </div>
+                  `;
+                });
+                hHtml += `
+                    </div>
+                  </div>
+                `;
+              });
+
+              hHtml += '</div>';
+              historyWrap.innerHTML = hHtml;
+            } else {
+              historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">暂无数据</div>';
+            }
+          }
+        } catch (_) {
+          const historyWrap = document.getElementById('leaderboardHistoryWrap');
+          if (historyWrap) {
+            historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">暂无数据</div>';
+          }
+        }
+      }
+
       let data = null;
       for (const endpoint of configured) {
         try {
@@ -4814,74 +4930,7 @@ const TYPE_META = {
         
         leaderboardContent.innerHTML = html;
 
-        // 最近7天每日前三（按天小卡片展示，跟随排行榜显示）
-        try {
-          const topHistoryEndpointsCfg = Array.isArray(window.QUIZ_CONFIG?.topHistoryEndpoints) && window.QUIZ_CONFIG.topHistoryEndpoints.length > 0
-            ? window.QUIZ_CONFIG.topHistoryEndpoints
-            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
-
-          // 使用已有占位：更新弹窗历史前三加载提示
-          const historyWrap = document.getElementById('leaderboardHistoryWrap');
-          if (historyWrap) {
-            historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>';
-          }
-
-          let history = null;
-          // 本地缓存优先（与排行榜一致的 15 分钟 TTL）
-          const histCacheKey = 'topHistoryCache:7:3:0';
-          if (!forceBust) {
-            const hCache = loadHistoryCache(histCacheKey);
-            if (hCache && hCache.data && Array.isArray(hCache.data.items) && hCache.data.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
-              history = hCache.data;
-            }
-          }
-          if (!history) {
-            for (const endpoint of topHistoryEndpointsCfg) {
-              try {
-                const url = `${endpoint}?days=7&limit=3&includeToday=0${forceBust ? `&bust=${Date.now()}` : ''}`;
-                const resp = await fetchWithTimeoutLocal(url, 3000);
-                const hdata = await resp.json();
-                if (hdata && Array.isArray(hdata.items)) { history = hdata; break; }
-              } catch (_) {}
-            }
-            if (history && Array.isArray(history.items) && history.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
-              try { saveHistoryCache(histCacheKey, history); } catch (_) {}
-            }
-          }
-
-          const hasItems = history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0;
-          if (hasItems) {
-            let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
-            hHtml += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin-top:8px;">';
-
-            history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).forEach((it) => {
-              hHtml += `
-                <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--theme-card-bg); color: var(--color-text-primary);">
-                  <div style="text-align:center; font-weight:600; color: var(--color-text-secondary);">${it.date}</div>
-                  <div style="display:grid; grid-template-columns: 36px 1fr 60px; gap:8px; margin-top:6px;">
-              `;
-              (Array.isArray(it.tops) ? it.tops : []).forEach((entry, idx) => {
-                const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-                hHtml += `
-                  <div style="display:contents;">
-                    <div>${rankIcon} ${idx + 1}</div>
-                    <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${entry.nickname}</div>
-                    <div style="text-align:right; font-weight:bold;">${entry.finalScore}</div>
-                  </div>
-                `;
-              });
-              hHtml += `
-                  </div>
-                </div>
-              `;
-            });
-
-            hHtml += '</div>';
-            historyWrap.innerHTML = hHtml;
-          } else {
-            historyWrap.innerHTML = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div><div style="padding:12px; text-align:center; color: var(--color-text-muted);">暂无数据</div>';
-          }
-        } catch (_) {}
+        await renderTopHistoryModal(forceBust);
 
       } else {
         leaderboardContent.innerHTML = `
@@ -4889,6 +4938,7 @@ const TYPE_META = {
             暂无排行榜数据
           </div>
         `;
+        await renderTopHistoryModal(forceBust);
       }
     } catch (error) {
       console.error('加载排行榜失败:', error);
@@ -4899,6 +4949,7 @@ const TYPE_META = {
             加载失败，请稍后重试
           </div>
         `;
+        await renderTopHistoryModal(forceBust);
       }
     }
   }

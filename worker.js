@@ -4,7 +4,7 @@
 // 配置常量
 const CONFIG = {
 
-  MAX_SUBMISSIONS_PER_IP: 1, // 每IP每日最大提交次数
+  MAX_SUBMISSIONS_PER_IP: 5, // 每IP每日最大提交次数
   
   MAX_NICKNAME_LENGTH: 20,   // 昵称最大长度
   
@@ -41,7 +41,7 @@ const SECURITY = {
     'localhost:8081', '127.0.0.1:8081'
   ]),
   SESSION_TTL_SEC: 3600, // 会话令牌有效期（秒）
-  MAX_SESSIONS_PER_IP_PER_DAY: 2 // 每IP每日最多创建会话次数
+  MAX_SESSIONS_PER_IP_PER_DAY: 5 // 每IP每日最多创建会话次数
 };
 
 function getHostFromOrigin(origin) {
@@ -589,6 +589,15 @@ async function handleScoreSubmission(request, env) {
       // no-op
     } catch (error) {
       // no-op
+    }
+    
+    // 将更新后的排行榜写回 KV（TTL 对齐至上海午夜）
+    try {
+      const ttlSec = getSecondsUntilMidnightShanghai();
+      await env.QUIZ_KV.put(leaderboardKey, JSON.stringify(currentBoard), { expirationTtl: ttlSec });
+    } catch (error) {
+      console.error('Leaderboard put error:', error);
+      // 写入失败不影响用户拿到提交结果，避免交互被阻断
     }
     
     // 按新规则：不再在提交端递增 IP 提交计数
