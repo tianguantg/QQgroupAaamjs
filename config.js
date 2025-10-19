@@ -45,6 +45,12 @@ PS：本群严厉禁止聊及互联网恶俗话题（包括但不限于开盒、
     assets: {
         avatar: "images/group-avatar.jpg", // 群头像文件路径
         qrcode: "images/qrcode.jpg"       // 二维码文件路径
+    },
+
+    // 功能开关
+    features_enabled: {
+        qrcode: true,     // 是否启用二维码功能
+        join_button: true // 是否启用加群按钮功能
     }
 };
 
@@ -165,24 +171,52 @@ function updatePageContent() {
         }
     }
 
-    // 更新二维码 - 已禁用
+    // 更新二维码 - 根据配置项控制启用/禁用
     const qrCode = document.getElementById('qrCode');
     if (qrCode) {
-        // 强制保持禁用：不展示图片，不响应点击
-        qrCode.classList.add('disabled');
-        qrCode.title = '二维码功能已禁用';
-        qrCode.innerHTML = '二维码已禁用';
-        qrCode.style.pointerEvents = 'none';
+        if (groupConfig.features_enabled.qrcode && groupConfig.assets.qrcode && checkImageExists(groupConfig.assets.qrcode)) {
+            // 启用二维码功能
+            qrCode.classList.remove('disabled');
+            qrCode.title = '点击放大二维码';
+            qrCode.innerHTML = `<img src="${groupConfig.assets.qrcode}" alt="加群二维码">`;
+            qrCode.style.pointerEvents = 'auto';
+            
+            // 添加点击事件，打开二维码图片
+            qrCode.onclick = function() {
+                window.open(groupConfig.assets.qrcode, '_blank');
+            };
+        } else {
+            // 禁用二维码功能
+            qrCode.classList.add('disabled');
+            qrCode.title = '二维码功能已禁用';
+            qrCode.innerHTML = '二维码已禁用';
+            qrCode.style.pointerEvents = 'none';
+        }
     }
 
-    // 禁用加群按钮
+    // 更新加群按钮 - 根据配置项控制启用/禁用
     const joinButton = document.getElementById('joinButton');
     if (joinButton) {
-        joinButton.classList.add('disabled');
-        joinButton.textContent = '加群功能已禁用';
-        joinButton.title = '功能已禁用';
-        joinButton.setAttribute('aria-disabled', 'true');
-        joinButton.style.pointerEvents = 'none';
+        if (groupConfig.features_enabled.join_button && groupConfig.basic_info.join_link) {
+            // 启用加群按钮功能
+            joinButton.classList.remove('disabled');
+            joinButton.textContent = '点击直接加群';
+            joinButton.title = '点击加入QQ群';
+            joinButton.setAttribute('aria-disabled', 'false');
+            joinButton.style.pointerEvents = 'auto';
+            
+            // 添加点击事件，跳转到加群链接
+            joinButton.onclick = function() {
+                window.open(groupConfig.basic_info.join_link, '_blank');
+            };
+        } else {
+            // 禁用加群按钮功能
+            joinButton.classList.add('disabled');
+            joinButton.textContent = '加群功能已禁用';
+            joinButton.title = '功能已禁用';
+            joinButton.setAttribute('aria-disabled', 'true');
+            joinButton.style.pointerEvents = 'none';
+        }
     }
 
     // 添加复制群号功能
