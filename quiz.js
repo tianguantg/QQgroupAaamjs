@@ -548,11 +548,7 @@ window.QUIZ_CONFIG = {
     'https://quiz-api.aaamjs.asia/api/leaderboard',
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard'
   ],
-  // Top1查询端点（用于显示历史冠军）
-  top1Endpoints: [
-    'https://quiz-leaderboard.ttgg98667.workers.dev/api/top1',
-    'https://quiz-api.aaamjs.asia/api/top1'
-  ],
+  // 已移除：Top1 接口不再使用
   // Top3历史查询端点（用于显示最近7天前三）
   topHistoryEndpoints: [
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history',
@@ -4429,7 +4425,7 @@ const TYPE_META = {
             refreshBtn.style.pointerEvents = 'none';
             try {
               renderLeaderboardCard(containerId, { forceBust: true });
-              try { sessionStorage.setItem('leaderboardForceBustUntil', String(Date.now() + 7 * 60 * 1000)); } catch (_) {}
+              try { sessionStorage.setItem('leaderboardForceBustUntil', String(Date.now() + 15 * 60 * 1000)); } catch (_) {}
             } finally {
               setTimeout(() => {
                 refreshing = false;
@@ -4454,7 +4450,7 @@ const TYPE_META = {
               return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
             })();
 
-        function renderBoard(data) {
+        async function renderBoard(data) {
           if (data.leaderboard && data.leaderboard.length > 0) {
             let html = `
               <div style="margin-bottom: 8px; color: var(--color-text-secondary); text-align: center;">
@@ -4477,6 +4473,69 @@ const TYPE_META = {
               `;
             });
             target.innerHTML = html;
+
+            // 最近7天每日前三（主页小卡片，跟随排行榜显示）
+            try {
+              const topHistoryEndpointsCfg = Array.isArray(window.QUIZ_CONFIG?.topHistoryEndpoints) && window.QUIZ_CONFIG.topHistoryEndpoints.length > 0
+                ? window.QUIZ_CONFIG.topHistoryEndpoints
+                : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
+
+              let history = null;
+              // 本地缓存优先（与排行榜一致的 15 分钟 TTL）
+              const histCacheKey = 'topHistoryCache:7:3:0';
+              if (!forceBust) {
+                const hCache = loadHistoryCache(histCacheKey);
+                if (hCache && hCache.data && Array.isArray(hCache.data.items) && hCache.data.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
+                  history = hCache.data;
+                }
+              }
+              if (!history) {
+                for (const endpoint of topHistoryEndpointsCfg) {
+                  try {
+                    const url = `${endpoint}?days=7&limit=3&includeToday=0${forceBust ? `&bust=${Date.now()}` : ''}`;
+                    const resp = await fetchWithTimeout(url, 3000);
+                    const hdata = await resp.json();
+                    if (hdata && Array.isArray(hdata.items)) { history = hdata; break; }
+                  } catch (_) {}
+                }
+                if (history && Array.isArray(history.items) && history.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
+                  try { saveHistoryCache(histCacheKey, history); } catch (_) {}
+                }
+              }
+
+              if (history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0) {
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);';
+                let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
+                hHtml += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin-top:8px;">';
+
+                history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).forEach((it) => {
+                  hHtml += `
+                    <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--color-bg-secondary);">
+                      <div style="text-align:center; font-weight:600; color: var(--color-text-secondary);">${it.date}</div>
+                      <div style="display:grid; grid-template-columns: 36px 1fr 60px; gap:8px; margin-top:6px;">
+                  `;
+                  (Array.isArray(it.tops) ? it.tops : []).forEach((entry, idx) => {
+                    const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+                    hHtml += `
+                      <div style="display:contents;">
+                        <div>${rankIcon} ${idx + 1}</div>
+                        <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${entry.nickname}</div>
+                        <div style="text-align:right; font-weight:bold;">${entry.finalScore}</div>
+                      </div>
+                    `;
+                  });
+                  hHtml += `
+                      </div>
+                    </div>
+                  `;
+                });
+
+                hHtml += '</div>';
+                wrap.innerHTML = hHtml;
+                target.appendChild(wrap);
+              }
+            } catch (_) {}
           } else {
             target.innerHTML = `
               <div style="text-align: center; color: var(--color-text-secondary); padding: 12px;">
@@ -4493,12 +4552,33 @@ const TYPE_META = {
           } catch (_) {}
         }
 
-        function loadCache() {
+        function loadCache(maxAgeMs = 15 * 60 * 1000) { // 默认最多使用15分钟内的缓存
           try {
             const raw = localStorage.getItem(CACHE_KEY);
             if (!raw) return null;
             const cache = JSON.parse(raw);
-            return cache && cache.data ? cache : null;
+            if (!cache || !cache.data || !cache.cachedAt) return null;
+            if (Date.now() - cache.cachedAt > maxAgeMs) return null; // 过旧缓存不使用
+            return cache;
+          } catch (_) { return null; }
+        }
+
+        // 统一历史前三缓存（与排行榜一致的 15 分钟 TTL）
+        function saveHistoryCache(key, data) {
+          try {
+            const cache = { data, cachedAt: Date.now() };
+            localStorage.setItem(key, JSON.stringify(cache));
+          } catch (_) {}
+        }
+
+        function loadHistoryCache(key, maxAgeMs = 15 * 60 * 1000) {
+          try {
+            const raw = localStorage.getItem(key);
+            if (!raw) return null;
+            const cache = JSON.parse(raw);
+            if (!cache || !cache.data || !cache.cachedAt) return null;
+            if (Date.now() - cache.cachedAt > maxAgeMs) return null;
+            return cache;
           } catch (_) { return null; }
         }
 
@@ -4558,16 +4638,40 @@ const TYPE_META = {
               const url = `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
               const response = await fetchWithTimeout(url, 3500);
               data = await response.json();
-              if (data && data.leaderboard) {
+              if (data && Array.isArray(data.leaderboard)) {
                 break;
               }
             } catch (e) {
               // 继续下一端点
             }
           }
-          if (data && data.leaderboard) {
-            renderBoard(data);
-            saveCache(data);
+          if (data && Array.isArray(data.leaderboard)) {
+            if (data.leaderboard.length > 0) {
+              await renderBoard(data);
+              // 仅当存在有效数据时缓存
+              saveCache(data);
+              return;
+            }
+            // 首次响应为空榜，自动进行一次 bust 重试以绕过CDN空缓存
+            try {
+              for (const endpoint of configured) {
+                try {
+                  const url2 = `${endpoint}?date=${encodeURIComponent(dateStr)}&bust=${Date.now()}`;
+                  const resp2 = await fetchWithTimeout(url2, 3000);
+                  const data2 = await resp2.json();
+                  if (data2 && Array.isArray(data2.leaderboard)) {
+                      if (data2.leaderboard.length > 0) {
+                        await renderBoard(data2);
+                        saveCache(data2);
+                        return;
+                      }
+                      break; // 二次仍为空，不再继续
+                    }
+                } catch (_) {}
+              }
+            } catch (_) {}
+            // 保持现有空态展示，但不写入空缓存
+            await renderBoard(data);
             return;
           }
           throw new Error('All endpoints failed');
@@ -4663,7 +4767,7 @@ const TYPE_META = {
           const url = `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
           const response = await fetchWithTimeoutLocal(url, 3500);
           data = await response.json();
-          if (data && data.leaderboard) {
+          if (data && Array.isArray(data.leaderboard)) {
             break;
           }
         } catch (e) {}
@@ -4696,69 +4800,66 @@ const TYPE_META = {
         
         leaderboardContent.innerHTML = html;
 
-        // 显示昨日前三 + 最近7天每日前三（通过 /api/top3/history 聚合查询）
+        // 最近7天每日前三（按天小卡片展示，跟随排行榜显示）
         try {
-          const baseDate = new Date(dateStr);
-          const y = new Date(baseDate.getTime() - 24 * 3600 * 1000);
-          const yStr = `${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,'0')}-${String(y.getDate()).padStart(2,'0')}`;
-
           const topHistoryEndpointsCfg = Array.isArray(window.QUIZ_CONFIG?.topHistoryEndpoints) && window.QUIZ_CONFIG.topHistoryEndpoints.length > 0
             ? window.QUIZ_CONFIG.topHistoryEndpoints
             : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
 
           let history = null;
-          for (const endpoint of topHistoryEndpointsCfg) {
-            try {
-              const url = `${endpoint}?days=7&limit=3${forceBust ? `&bust=${Date.now()}` : ''}`;
-              const resp = await fetchWithTimeoutLocal(url, 3000);
-              const hdata = await resp.json();
-              if (hdata && Array.isArray(hdata.items)) { history = hdata; break; }
-            } catch (_) {}
+          // 本地缓存优先（与排行榜一致的 15 分钟 TTL）
+          const histCacheKey = 'topHistoryCache:7:3:0';
+          if (!forceBust) {
+            const hCache = loadHistoryCache(histCacheKey);
+            if (hCache && hCache.data && Array.isArray(hCache.data.items) && hCache.data.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
+              history = hCache.data;
+            }
+          }
+          if (!history) {
+            for (const endpoint of topHistoryEndpointsCfg) {
+              try {
+                const url = `${endpoint}?days=7&limit=3&includeToday=0${forceBust ? `&bust=${Date.now()}` : ''}`;
+                const resp = await fetchWithTimeoutLocal(url, 3000);
+                const hdata = await resp.json();
+                if (hdata && Array.isArray(hdata.items)) { history = hdata; break; }
+              } catch (_) {}
+            }
+            if (history && Array.isArray(history.items) && history.items.some((it) => Array.isArray(it.tops) && it.tops.length > 0)) {
+              try { saveHistoryCache(histCacheKey, history); } catch (_) {}
+            }
           }
 
-          if (history && Array.isArray(history.items)) {
-            // 昨日前三
-            const yItem = history.items.find(it => it.date === yStr);
-            if (yItem && Array.isArray(yItem.tops) && yItem.tops.length > 0) {
-              const block = document.createElement('div');
-              block.style.cssText = 'margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);';
-              let yHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">昨日前三</div>';
-              yHtml += '<div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; font-weight: bold; padding: 8px 0; color: var(--color-text-secondary);"><div>排名</div><div>昵称</div><div>分数</div></div>';
-              yItem.tops.forEach((entry, idx) => {
+          if (history && Array.isArray(history.items) && history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).length > 0) {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);';
+            let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
+            hHtml += '<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:12px; margin-top:8px;">';
+
+            history.items.filter((it) => Array.isArray(it.tops) && it.tops.length > 0).forEach((it) => {
+              hHtml += `
+                <div style="border:1px solid var(--color-border-light); border-radius:8px; padding:8px; background: var(--color-bg-secondary);">
+                  <div style="text-align:center; font-weight:600; color: var(--color-text-secondary);">${it.date}</div>
+                  <div style="display:grid; grid-template-columns: 36px 1fr 60px; gap:8px; margin-top:6px;">
+              `;
+              (Array.isArray(it.tops) ? it.tops : []).forEach((entry, idx) => {
                 const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-                yHtml += `
-                  <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--color-border-light); color: var(--color-text-primary);">
+                hHtml += `
+                  <div style="display:contents;">
                     <div>${rankIcon} ${idx + 1}</div>
-                    <div style="overflow: hidden; text-overflow: ellipsis;">${entry.nickname}</div>
-                    <div style="font-weight: bold;">${entry.finalScore}</div>
+                    <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${entry.nickname}</div>
+                    <div style="text-align:right; font-weight:bold;">${entry.finalScore}</div>
                   </div>
                 `;
               });
-              block.innerHTML = yHtml;
-              leaderboardContent.appendChild(block);
-            }
+              hHtml += `
+                  </div>
+                </div>
+              `;
+            });
 
-            // 最近7天每日前三
-            if (history.items.length > 0) {
-              const histBlock = document.createElement('div');
-              histBlock.style.cssText = 'margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);';
-              let hHtml = '<div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>';
-              history.items.forEach((it) => {
-                hHtml += `<div style="margin-top:6px; color: var(--color-text-secondary);">${it.date}</div>`;
-                (Array.isArray(it.tops) ? it.tops : []).forEach((entry, idx) => {
-                  const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-                  hHtml += `
-                    <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--color-border-light); color: var(--color-text-primary);">
-                      <div>${rankIcon} ${idx + 1}</div>
-                      <div style="overflow: hidden; text-overflow: ellipsis;">${entry.nickname}</div>
-                      <div style="font-weight: bold;">${entry.finalScore}</div>
-                    </div>
-                  `;
-                });
-              });
-              histBlock.innerHTML = hHtml;
-              leaderboardContent.appendChild(histBlock);
-            }
+            hHtml += '</div>';
+            wrap.innerHTML = hHtml;
+            leaderboardContent.appendChild(wrap);
           }
         } catch (_) {}
 
