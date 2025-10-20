@@ -270,7 +270,7 @@ function validateSubmissionData(data) {
 
 // 速率限制检查
 async function checkRateLimit(env, clientIP, windowSec = CONFIG.RATE_LIMIT_WINDOW, maxReq = CONFIG.RATE_LIMIT_MAX, scope = 'write') {
-  console.log('checkRateLimit called for IP:', clientIP);
+  console.log('Rate limit check called for IP:', clientIP);
   
   try {
     const rateLimitKey = `rate_limit_${scope}_${clientIP}`;
@@ -751,7 +751,7 @@ async function handleLeaderboard(request, env) {
         // 解析失败，继续向下读取 KV
       }
     }
-
+  
     // 读取端限流
     const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
     const rateOk = await checkRateLimit(env, clientIP, CONFIG.READ_RATE_LIMIT_WINDOW, CONFIG.READ_RATE_LIMIT_MAX, 'read');
@@ -1098,6 +1098,154 @@ async function handleTopHistory(request, env) {
   }
 }
 
+// 聚合排行榜查询（跨所有日期），统一缓存策略：边缘缓存、ETag、TTL至上海午夜
+async function handleLeaderboardAggregate(request, env) {
+  try {
+    const url = new URL(request.url);
+    const bust = url.searchParams.get('bust');
+    const limitParam = parseInt(url.searchParams.get('limit') || '100', 10);
+    const limit = Math.min(Math.max(limitParam, 1), 1000);
+
+    // 边缘缓存优先（bust 参数时跳过缓存）
+    let cached = null;
+    if (!bust) {
+      cached = await caches.default.match(request);
+    }
+    if (cached) {
+      const incomingETag = request.headers.get('If-None-Match');
+      const cachedETag = cached.headers.get('ETag');
+      if (incomingETag && cachedETag && incomingETag === cachedETag) {
+        const ttlSec = getSecondsUntilMidnightShanghai();
+        return new Response(null, {
+          status: 304,
+          headers: {
+            'ETag': cachedETag,
+            'Cache-Control': `public, max-age=${ttlSec}, stale-while-revalidate=120`,
+            'Content-Type': cached.headers.get('Content-Type') || 'application/json',
+            ...buildCorsHeaders(request, false)
+          }
+        });
+      }
+      try {
+        const cachedText = await cached.clone().text();
+        const cachedJson = JSON.parse(cachedText);
+        const hasEntries = Array.isArray(cachedJson?.leaderboard) && cachedJson.leaderboard.length > 0;
+        if (hasEntries) {
+          return new Response(cachedText, { status: cached.status, headers: { ...Object.fromEntries(cached.headers), ...buildCorsHeaders(request, false) } });
+        }
+      } catch (_) {}
+    }
+
+    // 读取端限流
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const rateOk = await checkRateLimit(env, clientIP, CONFIG.READ_RATE_LIMIT_WINDOW, CONFIG.READ_RATE_LIMIT_MAX, 'read');
+    if (!rateOk) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+        status: 429,
+        headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
+      });
+    }
+
+    // 枚举全部 leaderboard_YYYY-MM-DD 的KV键并聚合
+    const aggregated = [];
+    let cursor = undefined;
+    let pageCount = 0;
+    while (true) {
+      const listResult = await env.QUIZ_KV.list({ prefix: 'leaderboard_', cursor });
+      pageCount++;
+      for (const k of listResult.keys || []) {
+        try {
+          const data = await env.QUIZ_KV.get(k.name);
+          if (data) {
+            const board = JSON.parse(data);
+            if (Array.isArray(board)) {
+              for (const entry of board) {
+                aggregated.push({
+                  nickname: entry.nickname,
+                  finalScore: entry.finalScore,
+                  questionScore: entry.questionScore,
+                  timeScore: entry.timeScore,
+                  correctAnswers: entry.correctAnswers,
+                  totalTime: entry.totalTime,
+                  timestamp: entry.timestamp,
+                  date: entry.date
+                });
+              }
+            }
+          }
+        } catch (_) {}
+      }
+      if (listResult.list_complete || !listResult.cursor) break;
+      cursor = listResult.cursor;
+      if (pageCount > 50) break; // 安全阈值，避免极端情况下长时间遍历
+    }
+
+    aggregated.sort((a, b) => {
+      if (b.finalScore !== a.finalScore) return b.finalScore - a.finalScore;
+      return a.timestamp - b.timestamp;
+    });
+
+    const publicBoard = aggregated.slice(0, limit).map((entry, index) => ({
+      rank: index + 1,
+      nickname: entry.nickname,
+      finalScore: entry.finalScore,
+      questionScore: entry.questionScore,
+      timeScore: entry.timeScore,
+      correctAnswers: entry.correctAnswers,
+      totalTime: entry.totalTime,
+      timestamp: entry.timestamp,
+      date: entry.date
+    }));
+
+    const body = JSON.stringify({
+      leaderboard: publicBoard,
+      totalEntries: aggregated.length
+    });
+
+    const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body));
+    const hashArr = Array.from(new Uint8Array(hashBuf));
+    const hashHex = hashArr.map(b => b.toString(16).padStart(2, '0')).join('');
+    const etag = `"sha256-${hashHex}"`;
+
+    const incomingETag = request.headers.get('If-None-Match');
+    if (!bust && incomingETag && incomingETag === etag) {
+      const ttlSec = getSecondsUntilMidnightShanghai();
+      return new Response(null, {
+        status: 304,
+        headers: {
+          'ETag': etag,
+          'Cache-Control': `public, max-age=${ttlSec}, stale-while-revalidate=120`,
+          'Content-Type': 'application/json',
+          ...buildCorsHeaders(request, false)
+        }
+      });
+    }
+
+    const ttlSec = getSecondsUntilMidnightShanghai();
+    const shouldCache = !bust && publicBoard.length > 0;
+    const response = new Response(body, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': shouldCache ? `public, max-age=${ttlSec}, stale-while-revalidate=120` : 'no-store',
+        ...buildCorsHeaders(request, false)
+      }
+    });
+    response.headers.set('ETag', etag);
+
+    if (shouldCache) {
+      await caches.default.put(request, response.clone());
+    }
+    return response;
+
+  } catch (error) {
+    console.error('Leaderboard aggregate error:', error);
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...buildCorsHeaders(request, false) }
+    });
+  }
+}
+
 // 主处理函数
 export default {
   async fetch(request, env, ctx) {
@@ -1124,6 +1272,8 @@ export default {
         response = await handleScoreSubmission(request, env);
       } else if (url.pathname === '/api/leaderboard' && request.method === 'GET') {
         response = await handleLeaderboard(request, env);
+      } else if (url.pathname === '/api/leaderboard/aggregate' && request.method === 'GET') {
+        response = await handleLeaderboardAggregate(request, env);
       } else if (url.pathname === '/api/top3' && request.method === 'GET') {
         response = await handleTop3(request, env);
       } else if (url.pathname === '/api/top3/history' && request.method === 'GET') {

@@ -543,10 +543,10 @@ window.QUIZ_CONFIG = {
     enemy: 0,
     skill: 0
   },
-  // 排行榜接口端点（优先使用国内域优先，减少网络阻塞）
+  // 排行榜接口端点（与提交端点保持一致，优先 Worker 域）
   leaderboardEndpoints: [
-    'https://quiz-api.aaamjs.asia/api/leaderboard',
-    'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard'
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard',
+    'https://quiz-api.aaamjs.asia/api/leaderboard'
   ],
   // 已移除：Top1 接口不再使用
   // Top3历史查询端点（用于显示最近7天前三）
@@ -569,6 +569,15 @@ window.QUIZ_CONFIG = {
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/attempt/status',
     'https://quiz-api.aaamjs.asia/api/attempt/status'
   ],
+  // 新增：排行榜视图模式（'daily_plus_history' | 'aggregate')
+  leaderboardViewMode: 'aggregate',
+  // 新增：聚合排行榜端点（跨所有日期聚合）
+  aggregateLeaderboardEndpoints: [
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard/aggregate',
+    'https://quiz-api.aaamjs.asia/api/leaderboard/aggregate'
+  ],
+  // 新增：聚合排行榜返回条目上限（默认100）
+  aggregateLimit: 100,
   turnstileSiteKey: '',
   types: {
     name: 1,
@@ -3778,7 +3787,7 @@ const TYPE_META = {
         
         // 每日挑战按钮事件（进入前确认）
         dailyChallengeBtn.addEventListener('click', async () => {
-          const ok = await showConfirmModal('提示', '若中途退出，今日内将无法再次作答');
+          const ok = await showConfirmModal('提示', '若中途退出，今日内可能无法再次作答');
           if (!ok) return;
           startDailyChallenge();
         });
@@ -3939,7 +3948,7 @@ const TYPE_META = {
           loadingOverlay.classList.remove('show');
           
           // 显示侧边提示：中途退出提醒（自动消失）
-          showSideToast('注意：中途退出将无法再次进入', 3500);
+          showSideToast('注意：中途退出可能无法再次进入', 3500);
           
           setControls(true);
           updateStatus();
@@ -4431,16 +4440,21 @@ const TYPE_META = {
           content.id = contentId;
           container.appendChild(content);
         }
-        container.innerHTML = `
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <h3 style="margin:0; color: var(--color-text-primary);">每日挑战排行榜（建设中）</h3>
-            <button id="${contentId}RefreshBtn" class="nav-btn" title="强制刷新（跳过缓存）"><span class="nav-btn-text">刷新</span></button>
-          </div>
-          <div id="${contentId}">加载中...</div>
+        const viewMode = (window.QUIZ_CONFIG?.leaderboardViewMode || 'daily_plus_history');
+        const isAggregate = viewMode === 'aggregate';
+        const titleText = isAggregate ? '排行榜' : '每日挑战排行榜';
+        const historyBlock = isAggregate ? '' : `
           <div id="${contentId}HistoryWrap" style="margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);">
             <div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>
             <div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>
+          </div>`;
+        container.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <h3 style="margin:0; color: var(--color-text-primary);">${titleText}</h3>
+            <button id="${contentId}RefreshBtn" class="nav-btn" title="强制刷新（跳过缓存）"><span class="nav-btn-text">刷新</span></button>
           </div>
+          <div id="${contentId}">加载中...</div>
+          ${historyBlock}
         `;
         const target = document.getElementById(contentId);
         const refreshBtn = document.getElementById(`${contentId}RefreshBtn`);
@@ -4466,8 +4480,8 @@ const TYPE_META = {
           });
         }
 
-        // 本地缓存键（按日期缓存最近一次成功结果)
-        const CACHE_KEY = 'dailyLeaderboardCache';
+        // 本地缓存键（按日期/模式缓存最近一次成功结果)
+        const CACHE_KEY = isAggregate ? 'aggregateLeaderboardCache' : 'dailyLeaderboardCache';
 
         // 请求参数：日期与强制刷新控制（默认尊重会话中的强制刷新偏好）
         const preferBust = (() => { try { const until = parseInt((sessionStorage.getItem('leaderboardForceBustUntil') || '0'), 10); return until > Date.now(); } catch (_) { return false; } })();
@@ -4484,7 +4498,7 @@ const TYPE_META = {
           if (data.leaderboard && data.leaderboard.length > 0) {
             let html = `
               <div style="margin-bottom: 8px; color: var(--color-text-secondary); text-align: center;">
-                ${data.date} | 共 ${data.totalEntries} 人参与
+                ${isAggregate ? ` ${data.totalEntries} 次记录` : `${data.date} | ${data.totalEntries} 次记录`}
               </div>
               <div class="leaderboard-header" style="display: grid; grid-template-columns: 60px 1fr 80px; gap: 10px;">
                 <div>排名</div>
@@ -4640,11 +4654,15 @@ const TYPE_META = {
           }
         }
 
-        const configured = Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
-          ? window.QUIZ_CONFIG.leaderboardEndpoints
-          : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
-              ? window.LEADERBOARD_ENDPOINTS
-              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']);
+        const configured = isAggregate
+          ? (Array.isArray(window.QUIZ_CONFIG?.aggregateLeaderboardEndpoints) && window.QUIZ_CONFIG.aggregateLeaderboardEndpoints.length > 0
+              ? window.QUIZ_CONFIG.aggregateLeaderboardEndpoints
+              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard/aggregate'])
+          : (Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
+              ? window.QUIZ_CONFIG.leaderboardEndpoints
+              : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
+                  ? window.LEADERBOARD_ENDPOINTS
+                  : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']));
 
         // 如果离线，直接展示离线提示并提供缓存回退
         if (navigator && typeof navigator.onLine === 'boolean' && !navigator.onLine) {
@@ -4672,7 +4690,7 @@ const TYPE_META = {
               target.appendChild(note);
             });
           }
-          await renderTopHistoryMain(forceBust);
+          if (!isAggregate) await renderTopHistoryMain(forceBust);
           return;
         }
 
@@ -4681,12 +4699,15 @@ const TYPE_META = {
           let data = null;
           for (const endpoint of configured) {
             try {
-              const url = `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
+              const url = isAggregate
+                ? `${endpoint}?limit=${encodeURIComponent(window.QUIZ_CONFIG?.aggregateLimit || 100)}${forceBust ? `&bust=${Date.now()}` : ''}`
+                : `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
               const response = await fetchWithTimeout(url, 3500);
               data = await response.json();
-              if (data && Array.isArray(data.leaderboard)) {
+              if (data && Array.isArray(data.leaderboard) && data.leaderboard.length > 0) {
                 break;
               }
+              // 当前端点为空榜或响应无效，继续尝试下一个端点
             } catch (e) {
               // 继续下一端点
             }
@@ -4696,31 +4717,34 @@ const TYPE_META = {
               await renderBoard(data);
               // 仅当存在有效数据时缓存
               saveCache(data);
-              await renderTopHistoryMain(forceBust);
+              if (!isAggregate) await renderTopHistoryMain(forceBust);
               return;
             }
-            // 首次响应为空榜，自动进行一次 bust 重试以绕过CDN空缓存
-            try {
-              for (const endpoint of configured) {
-                try {
-                  const url2 = `${endpoint}?date=${encodeURIComponent(dateStr)}&bust=${Date.now()}`;
-                  const resp2 = await fetchWithTimeout(url2, 3000);
-                  const data2 = await resp2.json();
-                  if (data2 && Array.isArray(data2.leaderboard)) {
-                      if (data2.leaderboard.length > 0) {
-                        await renderBoard(data2);
-                        saveCache(data2);
-                        await renderTopHistoryMain(true);
-                        return;
+            // 首次响应为空榜，自动进行一次 bust 重试以绕过 CDN 空缓存（仅每日模式）
+            if (!isAggregate) {
+              try {
+                for (const endpoint of configured) {
+                  try {
+                    const url2 = `${endpoint}?date=${encodeURIComponent(dateStr)}&bust=${Date.now()}`;
+                    const resp2 = await fetchWithTimeout(url2, 3000);
+                    const data2 = await resp2.json();
+                    if (data2 && Array.isArray(data2.leaderboard)) {
+                        if (data2.leaderboard.length > 0) {
+                          await renderBoard(data2);
+                          saveCache(data2);
+                          if (!isAggregate) await renderTopHistoryMain(true);
+                          return;
+                        }
+                        // 二次仍为空，继续尝试下一个端点
+                        continue;
                       }
-                      break; // 二次仍为空，不再继续
-                    }
-                } catch (_) {}
-              }
-            } catch (_) {}
+                  } catch (_) {}
+                }
+              } catch (_) {}
+            }
             // 保持现有空态展示，但不写入空缓存
             await renderBoard(data);
-            await renderTopHistoryMain(forceBust);
+            if (!isAggregate) await renderTopHistoryMain(forceBust);
             return;
           }
           throw new Error('All endpoints failed');
@@ -4750,7 +4774,7 @@ const TYPE_META = {
               target.appendChild(note);
             });
           }
-          await renderTopHistoryMain(forceBust);
+          if (!isAggregate) await renderTopHistoryMain(forceBust);
         }
       }
 
@@ -4768,17 +4792,20 @@ const TYPE_META = {
       modal.style.display = 'block';
       const content = document.createElement('div');
       content.className = 'modal-content';
+      const viewMode = (window.QUIZ_CONFIG?.leaderboardViewMode || 'daily_plus_history');
+      const isAggregate = viewMode === 'aggregate';
       content.innerHTML = `
         <div class="modal-header">
-          <h3>每日挑战排行榜</h3>
+          <h3>${isAggregate ? '全时段总排行榜' : '每日挑战排行榜'}</h3>
           <span class="close" id="closeLeaderboard">&times;</span>
         </div>
         <div class="modal-body">
           <div id="leaderboardContent">加载中...</div>
+          ${isAggregate ? '' : `
           <div id="leaderboardHistoryWrap" style="margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);">
             <div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>
             <div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>
-          </div>
+          </div>`}
         </div>
       `;
       modal.appendChild(content);
@@ -4798,11 +4825,15 @@ const TYPE_META = {
             return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
           })();
 
-      const configured = Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
-        ? window.QUIZ_CONFIG.leaderboardEndpoints
-        : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
-            ? window.LEADERBOARD_ENDPOINTS
-            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']);
+      const configured = isAggregate
+        ? (Array.isArray(window.QUIZ_CONFIG?.aggregateLeaderboardEndpoints) && window.QUIZ_CONFIG.aggregateLeaderboardEndpoints.length > 0
+            ? window.QUIZ_CONFIG.aggregateLeaderboardEndpoints
+            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard/aggregate'])
+        : (Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
+            ? window.QUIZ_CONFIG.leaderboardEndpoints
+            : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
+                ? window.LEADERBOARD_ENDPOINTS
+                : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']));
 
       const fetchWithTimeoutLocal = async (url, timeoutMs = 3500) => {
         const controller = new AbortController();
@@ -4894,7 +4925,9 @@ const TYPE_META = {
       let data = null;
       for (const endpoint of configured) {
         try {
-          const url = `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
+          const url = isAggregate
+            ? `${endpoint}?limit=${encodeURIComponent(window.QUIZ_CONFIG?.aggregateLimit || 100)}${forceBust ? `&bust=${Date.now()}` : ''}`
+            : `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
           const response = await fetchWithTimeoutLocal(url, 3500);
           data = await response.json();
           if (data && Array.isArray(data.leaderboard)) {
@@ -4908,7 +4941,7 @@ const TYPE_META = {
       if (data && data.leaderboard && data.leaderboard.length > 0) {
         let html = `
           <div style="margin-bottom: 10px; color: var(--color-text-secondary); text-align: center;">
-            ${data.date} | 共 ${data.totalEntries} 人参与
+            ${isAggregate ? `总计 ${data.totalEntries} 人` : `${data.date} | 共 ${data.totalEntries} 人参与`}
           </div>
           <div style="display: grid; grid-template-columns: 50px 1fr 80px; gap: 10px; font-weight: bold; padding: 10px 0; border-bottom: 1px solid var(--color-border); color: var(--color-text-secondary);">
             <div>排名</div>
@@ -4930,7 +4963,7 @@ const TYPE_META = {
         
         leaderboardContent.innerHTML = html;
 
-        await renderTopHistoryModal(forceBust);
+        if (!isAggregate) await renderTopHistoryModal(forceBust);
 
       } else {
         leaderboardContent.innerHTML = `
@@ -4938,7 +4971,7 @@ const TYPE_META = {
             暂无排行榜数据
           </div>
         `;
-        await renderTopHistoryModal(forceBust);
+        if (!isAggregate) await renderTopHistoryModal(forceBust);
       }
     } catch (error) {
       console.error('加载排行榜失败:', error);
@@ -4949,7 +4982,7 @@ const TYPE_META = {
             加载失败，请稍后重试
           </div>
         `;
-        await renderTopHistoryModal(forceBust);
+        if (!isAggregate) await renderTopHistoryModal(forceBust);
       }
     }
   }
