@@ -543,38 +543,38 @@ window.QUIZ_CONFIG = {
     enemy: 0,
     skill: 0
   },
-  // 排行榜接口端点（与提交端点保持一致，优先 Worker 域）
+  // 排行榜接口端点（优先国内域 aaamjs）
   leaderboardEndpoints: [
-    'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard',
-    'https://quiz-api.aaamjs.asia/api/leaderboard'
+    'https://quiz-api.aaamjs.asia/api/leaderboard',
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard'
   ],
   // 已移除：Top1 接口不再使用
   // Top3历史查询端点（用于显示最近7天前三）
   topHistoryEndpoints: [
-    'https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history',
-    'https://quiz-api.aaamjs.asia/api/top3/history'
+    'https://quiz-api.aaamjs.asia/api/top3/history',
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'
   ],
-  // 提交成绩接口端点（优先使用 Worker 域，减少跨域问题）
+  // 提交成绩接口端点（优先国内域 aaamjs）
   submitScoreEndpoints: [
-    'https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score',
-    'https://quiz-api.aaamjs.asia/api/submit-score'
+    'https://quiz-api.aaamjs.asia/api/submit-score',
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score'
   ],
   // 会话启动接口端点（用于获取一次性 sessionId，优先使用国内域，减少网络阻塞）
   sessionStartEndpoints: [
     'https://quiz-api.aaamjs.asia/api/session/start',
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/session/start'
   ],
-  // 每日尝试状态查询端点（优先 Worker 域）
+  // 每日尝试状态查询端点（优先国内域 aaamjs）
   attemptStatusEndpoints: [
-    'https://quiz-leaderboard.ttgg98667.workers.dev/api/attempt/status',
-    'https://quiz-api.aaamjs.asia/api/attempt/status'
+    'https://quiz-api.aaamjs.asia/api/attempt/status',
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/attempt/status'
   ],
   // 新增：排行榜视图模式（'daily_plus_history' | 'aggregate')
   leaderboardViewMode: 'aggregate',
-  // 新增：聚合排行榜端点（跨所有日期聚合）
+  // 新增：聚合排行榜端点（跨所有日期聚合，优先国内域 aaamjs）
   aggregateLeaderboardEndpoints: [
-    'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard/aggregate',
-    'https://quiz-api.aaamjs.asia/api/leaderboard/aggregate'
+    'https://quiz-api.aaamjs.asia/api/leaderboard/aggregate',
+    'https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard/aggregate'
   ],
   // 新增：聚合排行榜返回条目上限（默认100）
   aggregateLimit: 100,
@@ -3850,7 +3850,7 @@ const TYPE_META = {
           try {
             const attemptEndpoints = Array.isArray(window.QUIZ_CONFIG?.attemptStatusEndpoints) && window.QUIZ_CONFIG.attemptStatusEndpoints.length > 0
               ? window.QUIZ_CONFIG.attemptStatusEndpoints
-              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/attempt/status'];
+              : ['https://quiz-api.aaamjs.asia/api/attempt/status'];
             let attemptInfo = null;
             for (const ep of attemptEndpoints) {
               try {
@@ -3875,7 +3875,7 @@ const TYPE_META = {
           try {
             const sessEndpoints = Array.isArray(window.QUIZ_CONFIG?.sessionStartEndpoints) && window.QUIZ_CONFIG.sessionStartEndpoints.length > 0
               ? window.QUIZ_CONFIG.sessionStartEndpoints
-              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/session/start'];
+              : ['https://quiz-api.aaamjs.asia/api/session/start'];
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), 5000);
             try {
@@ -4349,7 +4349,7 @@ const TYPE_META = {
           // 端点顺序尝试，带超时控制
           const endpoints = Array.isArray(window.QUIZ_CONFIG?.submitScoreEndpoints) && window.QUIZ_CONFIG.submitScoreEndpoints.length > 0
             ? window.QUIZ_CONFIG.submitScoreEndpoints
-            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/submit-score'];
+            : ['https://quiz-api.aaamjs.asia/api/submit-score'];
 
           const postWithTimeout = async (url, timeoutMs = 7000, turnstileToken = null) => {
             const controller = new AbortController();
@@ -4393,7 +4393,7 @@ const TYPE_META = {
           }
 
           if (response && response.ok) {
-            statusDiv.textContent = `✅ 提交成功！排名：第 ${result.rank} 名`;
+            statusDiv.textContent = `✅ 提交成功！你在今日的排名为：第 ${result.rank} 名`;
             statusDiv.style.color = 'var(--color-success)';
             
             // 禁用弹窗内“确认提交”按钮与结算卡片的“提交成绩”按钮（如果存在）
@@ -4588,7 +4588,7 @@ const TYPE_META = {
 
             const topHistoryEndpointsCfg = Array.isArray(window.QUIZ_CONFIG?.topHistoryEndpoints) && window.QUIZ_CONFIG.topHistoryEndpoints.length > 0
               ? window.QUIZ_CONFIG.topHistoryEndpoints
-              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
+              : ['https://quiz-api.aaamjs.asia/api/top3/history'];
 
             let history = null;
             const histCacheKey = 'topHistoryCache:7:3:0';
@@ -4657,12 +4657,12 @@ const TYPE_META = {
         const configured = isAggregate
           ? (Array.isArray(window.QUIZ_CONFIG?.aggregateLeaderboardEndpoints) && window.QUIZ_CONFIG.aggregateLeaderboardEndpoints.length > 0
               ? window.QUIZ_CONFIG.aggregateLeaderboardEndpoints
-              : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard/aggregate'])
+              : ['https://quiz-api.aaamjs.asia/api/leaderboard/aggregate'])
           : (Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
               ? window.QUIZ_CONFIG.leaderboardEndpoints
               : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
                   ? window.LEADERBOARD_ENDPOINTS
-                  : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']));
+                  : ['https://quiz-api.aaamjs.asia/api/leaderboard']));
 
         // 如果离线，直接展示离线提示并提供缓存回退
         if (navigator && typeof navigator.onLine === 'boolean' && !navigator.onLine) {
@@ -4828,12 +4828,12 @@ const TYPE_META = {
       const configured = isAggregate
         ? (Array.isArray(window.QUIZ_CONFIG?.aggregateLeaderboardEndpoints) && window.QUIZ_CONFIG.aggregateLeaderboardEndpoints.length > 0
             ? window.QUIZ_CONFIG.aggregateLeaderboardEndpoints
-            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard/aggregate'])
+            : ['https://quiz-api.aaamjs.asia/api/leaderboard/aggregate'])
         : (Array.isArray(window.QUIZ_CONFIG?.leaderboardEndpoints) && window.QUIZ_CONFIG.leaderboardEndpoints.length > 0
             ? window.QUIZ_CONFIG.leaderboardEndpoints
             : (Array.isArray(window.LEADERBOARD_ENDPOINTS) && window.LEADERBOARD_ENDPOINTS.length > 0
                 ? window.LEADERBOARD_ENDPOINTS
-                : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/leaderboard']));
+                : ['https://quiz-api.aaamjs.asia/api/leaderboard']));
 
       const fetchWithTimeoutLocal = async (url, timeoutMs = 3500) => {
         const controller = new AbortController();
@@ -4856,7 +4856,7 @@ const TYPE_META = {
 
           const topHistoryEndpointsCfg = Array.isArray(window.QUIZ_CONFIG?.topHistoryEndpoints) && window.QUIZ_CONFIG.topHistoryEndpoints.length > 0
             ? window.QUIZ_CONFIG.topHistoryEndpoints
-            : ['https://quiz-leaderboard.ttgg98667.workers.dev/api/top3/history'];
+            : ['https://quiz-api.aaamjs.asia/api/top3/history'];
 
           let history = null;
           const histCacheKey = 'topHistoryCache:7:3:0';
