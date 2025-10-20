@@ -1534,6 +1534,7 @@ const TYPE_META = {
             display: `${enemy.active_skill.name}：${enemy.active_skill.description || '无描述'}`
           });
         }
+
         if (enemy.passive_skill && enemy.passive_skill.name) {
           skills.push({
             name: enemy.passive_skill.name,
@@ -4440,9 +4441,10 @@ const TYPE_META = {
           content.id = contentId;
           container.appendChild(content);
         }
+        try { const savedMode = localStorage.getItem('leaderboardViewMode'); if (savedMode) window.QUIZ_CONFIG.leaderboardViewMode = savedMode; } catch (_) {}
         const viewMode = (window.QUIZ_CONFIG?.leaderboardViewMode || 'daily_plus_history');
         const isAggregate = viewMode === 'aggregate';
-        const titleText = isAggregate ? '排行榜' : '每日挑战排行榜';
+        const titleText = isAggregate ? '全时段总排行榜' : '每日挑战排行榜';
         const historyBlock = isAggregate ? '' : `
           <div id="${contentId}HistoryWrap" style="margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);">
             <div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>
@@ -4451,7 +4453,13 @@ const TYPE_META = {
         container.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
             <h3 style="margin:0; color: var(--color-text-primary);">${titleText}</h3>
-            <button id="${contentId}RefreshBtn" class="nav-btn" title="强制刷新（跳过缓存）"><span class="nav-btn-text">刷新</span></button>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div id="${contentId}ModeSwitch" style="display:inline-flex; border:1px solid var(--color-border-light); border-radius:16px; overflow:hidden;">
+                <button id="${contentId}ModeAgg" class="nav-btn" style="border:none; ${isAggregate ? 'background: var(--color-accent); color: #fff;' : 'background: transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">总榜</span></button>
+                <button id="${contentId}ModeDaily" class="nav-btn" style="border:none; ${!isAggregate ? 'background: var(--color-accent); color: #fff;' : 'background: transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">今日</span></button>
+              </div>
+              <button id="${contentId}RefreshBtn" class="nav-btn" title="强制刷新（跳过缓存）"><span class="nav-btn-text">刷新</span></button>
+            </div>
           </div>
           <div id="${contentId}">加载中...</div>
           ${historyBlock}
@@ -4477,6 +4485,22 @@ const TYPE_META = {
                 refreshBtn.style.pointerEvents = prevPointer || '';
               }, 2000);
             }
+          });
+        }
+        const modeAgg = document.getElementById(`${contentId}ModeAgg`);
+        const modeDaily = document.getElementById(`${contentId}ModeDaily`);
+        if (modeAgg) {
+          modeAgg.addEventListener('click', () => {
+            window.QUIZ_CONFIG.leaderboardViewMode = 'aggregate';
+            try { localStorage.setItem('leaderboardViewMode', 'aggregate'); } catch (_) {}
+            renderLeaderboardCard(containerId, { forceBust: true });
+          });
+        }
+        if (modeDaily) {
+          modeDaily.addEventListener('click', () => {
+            window.QUIZ_CONFIG.leaderboardViewMode = 'daily_plus_history';
+            try { localStorage.setItem('leaderboardViewMode', 'daily_plus_history'); } catch (_) {}
+            renderLeaderboardCard(containerId, { forceBust: true });
           });
         }
 
@@ -4792,12 +4816,19 @@ const TYPE_META = {
       modal.style.display = 'block';
       const content = document.createElement('div');
       content.className = 'modal-content';
+      try { const savedMode = localStorage.getItem('leaderboardViewMode'); if (savedMode) window.QUIZ_CONFIG.leaderboardViewMode = savedMode; } catch (_) {}
       const viewMode = (window.QUIZ_CONFIG?.leaderboardViewMode || 'daily_plus_history');
       const isAggregate = viewMode === 'aggregate';
       content.innerHTML = `
-        <div class="modal-header">
+        <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
           <h3>${isAggregate ? '全时段总排行榜' : '每日挑战排行榜'}</h3>
-          <span class="close" id="closeLeaderboard">&times;</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div id="leaderboardModalModeSwitch" style="display:inline-flex; border:1px solid var(--color-border-light); border-radius:16px; overflow:hidden;">
+              <button id="leaderboardModalModeAgg" class="nav-btn" style="border:none; ${isAggregate ? 'background: var(--color-accent); color:#fff;' : 'background:transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">总榜</span></button>
+              <button id="leaderboardModalModeDaily" class="nav-btn" style="border:none; ${!isAggregate ? 'background: var(--color-accent); color:#fff;' : 'background:transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">今日</span></button>
+            </div>
+            <span class="close" id="closeLeaderboard">&times;</span>
+          </div>
         </div>
         <div class="modal-body">
           <div id="leaderboardContent">加载中...</div>
@@ -4813,6 +4844,25 @@ const TYPE_META = {
       const cleanup = () => { try { document.body.removeChild(modal); } catch (_) {} };
       document.getElementById('closeLeaderboard')?.addEventListener('click', cleanup);
       modal.addEventListener('click', (e) => { if (e.target === modal) cleanup(); });
+
+      const modeAggBtn = document.getElementById('leaderboardModalModeAgg');
+      const modeDailyBtn = document.getElementById('leaderboardModalModeDaily');
+      if (modeAggBtn) {
+        modeAggBtn.addEventListener('click', () => {
+          window.QUIZ_CONFIG.leaderboardViewMode = 'aggregate';
+          try { localStorage.setItem('leaderboardViewMode', 'aggregate'); } catch (_) {}
+          cleanup();
+          showDailyChallengeLeaderboard();
+        });
+      }
+      if (modeDailyBtn) {
+        modeDailyBtn.addEventListener('click', () => {
+          window.QUIZ_CONFIG.leaderboardViewMode = 'daily_plus_history';
+          try { localStorage.setItem('leaderboardViewMode', 'daily_plus_history'); } catch (_) {}
+          cleanup();
+          showDailyChallengeLeaderboard();
+        });
+      }
       
       // 加载排行榜数据（支持多端点与超时）
       const preferBust = (() => { try { const until = parseInt((sessionStorage.getItem('leaderboardForceBustUntil') || '0'), 10); return until > Date.now(); } catch (_) { return false; } })();
