@@ -4060,7 +4060,7 @@ const TYPE_META = {
         });
 
         // 分数>90时在结算界面展示“邀请函！”按钮，点击后出现弹窗
-        if (window.isDailyChallenge && scores && typeof scores.finalScore === 'number' && scores.finalScore > 95) {
+        if (window.isDailyChallenge && scores && typeof scores.finalScore === 'number' && scores.finalScore > 80) {
           const inviteBtn = document.createElement('button');
           inviteBtn.id = 'openInviteModalBtn';
           inviteBtn.className = 'nav-btn primary daily-challenge-btn';
@@ -4821,7 +4821,7 @@ const TYPE_META = {
       const isAggregate = viewMode === 'aggregate';
       content.innerHTML = `
         <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
-          <h3>${isAggregate ? '全时段总排行榜' : '每日挑战排行榜'}</h3>
+          <h3>${isAggregate ? '每日挑战总排行榜' : '每日挑战排行榜'}</h3>
           <div style="display:flex; align-items:center; gap:8px;">
             <div id="leaderboardModalModeSwitch" style="display:inline-flex; border:1px solid var(--color-border-light); border-radius:16px; overflow:hidden;">
               <button id="leaderboardModalModeAgg" class="nav-btn" style="border:none; ${isAggregate ? 'background: var(--color-accent); color:#fff;' : 'background:transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">总榜</span></button>
