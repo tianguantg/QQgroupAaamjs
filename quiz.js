@@ -4444,7 +4444,7 @@ const TYPE_META = {
         try { const savedMode = localStorage.getItem('leaderboardViewMode'); if (savedMode) window.QUIZ_CONFIG.leaderboardViewMode = savedMode; } catch (_) {}
         const viewMode = (window.QUIZ_CONFIG?.leaderboardViewMode || 'daily_plus_history');
         const isAggregate = viewMode === 'aggregate';
-        const titleText = isAggregate ? '全时段总排行榜' : '每日挑战排行榜';
+        const titleText = isAggregate ? '每日挑战总排行榜' : '每日挑战排行榜';
         const historyBlock = isAggregate ? '' : `
           <div id="${contentId}HistoryWrap" style="margin-top:12px; padding-top:8px; border-top:1px solid var(--color-border-light);">
             <div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>
