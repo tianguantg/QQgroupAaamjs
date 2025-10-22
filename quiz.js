@@ -569,6 +569,8 @@ window.QUIZ_CONFIG = {
     'https://quiz-api.aaamjs.asia/api/attempt/status',
     'https://quiz-leaderboard.ttgg98667.workers.dev/api/attempt/status'
   ],
+  // 新增：排行榜选择模式（'both' | 'daily_only' | 'aggregate_only'），控制是否显示切换控件
+  leaderboardSelectionMode: 'aggregate_only',
   // 新增：排行榜视图模式（'daily_plus_history' | 'aggregate')
   leaderboardViewMode: 'aggregate',
   // 新增：聚合排行榜端点（跨所有日期聚合，优先国内域 aaamjs）
@@ -4441,8 +4443,18 @@ const TYPE_META = {
           content.id = contentId;
           container.appendChild(content);
         }
-        try { const savedMode = localStorage.getItem('leaderboardViewMode'); if (savedMode) window.QUIZ_CONFIG.leaderboardViewMode = savedMode; } catch (_) {}
-        const viewMode = (window.QUIZ_CONFIG?.leaderboardViewMode || 'daily_plus_history');
+        const selectionMode = (window.QUIZ_CONFIG?.leaderboardSelectionMode || 'both');
+        if (selectionMode === 'both') {
+          try { const savedMode = localStorage.getItem('leaderboardViewMode'); if (savedMode) window.QUIZ_CONFIG.leaderboardViewMode = savedMode; } catch (_) {}
+        }
+        let viewMode = (window.QUIZ_CONFIG?.leaderboardViewMode || 'daily_plus_history');
+        if (selectionMode === 'daily_only') {
+          viewMode = 'daily_plus_history';
+          window.QUIZ_CONFIG.leaderboardViewMode = 'daily_plus_history';
+        } else if (selectionMode === 'aggregate_only') {
+          viewMode = 'aggregate';
+          window.QUIZ_CONFIG.leaderboardViewMode = 'aggregate';
+        }
         const isAggregate = viewMode === 'aggregate';
         const titleText = isAggregate ? '每日挑战总排行榜' : '每日挑战排行榜';
         const historyBlock = isAggregate ? '' : `
@@ -4450,14 +4462,16 @@ const TYPE_META = {
             <div style="text-align:center; color: var(--color-text-secondary); font-weight:600;">最近7天每日前三</div>
             <div style="padding:12px; text-align:center; color: var(--color-text-muted);">加载中...</div>
           </div>`;
+        const switchMarkup = selectionMode === 'both' ? `
+              <div id="${contentId}ModeSwitch" style="display:inline-flex; border:1px solid var(--color-border-light); border-radius:16px; overflow:hidden;">
+                <button id="${contentId}ModeAgg" class="nav-btn" style="border:none; ${isAggregate ? 'background: var(--color-accent); color: #fff;' : 'background: transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">总榜</span></button>
+                <button id="${contentId}ModeDaily" class="nav-btn" style="border:none; ${!isAggregate ? 'background: var(--color-accent); color: #fff;' : 'background: transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">今日</span></button>
+              </div>` : '';
         container.innerHTML = `
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
             <h3 style="margin:0; color: var(--color-text-primary);">${titleText}</h3>
             <div style="display:flex; align-items:center; gap:8px;">
-              <div id="${contentId}ModeSwitch" style="display:inline-flex; border:1px solid var(--color-border-light); border-radius:16px; overflow:hidden;">
-                <button id="${contentId}ModeAgg" class="nav-btn" style="border:none; ${isAggregate ? 'background: var(--color-accent); color: #fff;' : 'background: transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">总榜</span></button>
-                <button id="${contentId}ModeDaily" class="nav-btn" style="border:none; ${!isAggregate ? 'background: var(--color-accent); color: #fff;' : 'background: transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">今日</span></button>
-              </div>
+              ${switchMarkup}
               <button id="${contentId}RefreshBtn" class="nav-btn" title="强制刷新（跳过缓存）"><span class="nav-btn-text">刷新</span></button>
             </div>
           </div>
@@ -4487,21 +4501,23 @@ const TYPE_META = {
             }
           });
         }
-        const modeAgg = document.getElementById(`${contentId}ModeAgg`);
-        const modeDaily = document.getElementById(`${contentId}ModeDaily`);
-        if (modeAgg) {
-          modeAgg.addEventListener('click', () => {
-            window.QUIZ_CONFIG.leaderboardViewMode = 'aggregate';
-            try { localStorage.setItem('leaderboardViewMode', 'aggregate'); } catch (_) {}
-            renderLeaderboardCard(containerId, { forceBust: true });
-          });
-        }
-        if (modeDaily) {
-          modeDaily.addEventListener('click', () => {
-            window.QUIZ_CONFIG.leaderboardViewMode = 'daily_plus_history';
-            try { localStorage.setItem('leaderboardViewMode', 'daily_plus_history'); } catch (_) {}
-            renderLeaderboardCard(containerId, { forceBust: true });
-          });
+        if ((window.QUIZ_CONFIG?.leaderboardSelectionMode || 'both') === 'both') {
+          const modeAgg = document.getElementById(`${contentId}ModeAgg`);
+          const modeDaily = document.getElementById(`${contentId}ModeDaily`);
+          if (modeAgg) {
+            modeAgg.addEventListener('click', () => {
+              window.QUIZ_CONFIG.leaderboardViewMode = 'aggregate';
+              try { localStorage.setItem('leaderboardViewMode', 'aggregate'); } catch (_) {}
+              renderLeaderboardCard(containerId, { forceBust: true });
+            });
+          }
+          if (modeDaily) {
+            modeDaily.addEventListener('click', () => {
+              window.QUIZ_CONFIG.leaderboardViewMode = 'daily_plus_history';
+              try { localStorage.setItem('leaderboardViewMode', 'daily_plus_history'); } catch (_) {}
+              renderLeaderboardCard(containerId, { forceBust: true });
+            });
+          }
         }
 
         // 本地缓存键（按日期/模式缓存最近一次成功结果)
@@ -4816,17 +4832,29 @@ const TYPE_META = {
       modal.style.display = 'block';
       const content = document.createElement('div');
       content.className = 'modal-content';
-      try { const savedMode = localStorage.getItem('leaderboardViewMode'); if (savedMode) window.QUIZ_CONFIG.leaderboardViewMode = savedMode; } catch (_) {}
-      const viewMode = (window.QUIZ_CONFIG?.leaderboardViewMode || 'daily_plus_history');
+      const selectionMode = (window.QUIZ_CONFIG?.leaderboardSelectionMode || 'both');
+      if (selectionMode === 'both') {
+        try { const savedMode = localStorage.getItem('leaderboardViewMode'); if (savedMode) window.QUIZ_CONFIG.leaderboardViewMode = savedMode; } catch (_) {}
+      }
+      let viewMode = (window.QUIZ_CONFIG?.leaderboardViewMode || 'daily_plus_history');
+      if (selectionMode === 'daily_only') {
+        viewMode = 'daily_plus_history';
+        window.QUIZ_CONFIG.leaderboardViewMode = 'daily_plus_history';
+      } else if (selectionMode === 'aggregate_only') {
+        viewMode = 'aggregate';
+        window.QUIZ_CONFIG.leaderboardViewMode = 'aggregate';
+      }
       const isAggregate = viewMode === 'aggregate';
+      const switchModalMarkup = selectionMode === 'both' ? `
+            <div id="leaderboardModalModeSwitch" style="display:inline-flex; border:1px solid var(--color-border-light); border-radius:16px; overflow:hidden;">
+              <button id="leaderboardModalModeAgg" class="nav-btn" style="border:none; ${isAggregate ? 'background: var(--color-accent); color:#fff;' : 'background:transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">总榜</span></button>
+              <button id="leaderboardModalModeDaily" class="nav-btn" style="border:none; ${!isAggregate ? 'background: var(--color-accent); color:#fff;' : 'background:transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">今日</span></button>
+            </div>` : '';
       content.innerHTML = `
         <div class="modal-header" style="display:flex; align-items:center; justify-content:space-between;">
           <h3>${isAggregate ? '每日挑战总排行榜' : '每日挑战排行榜'}</h3>
           <div style="display:flex; align-items:center; gap:8px;">
-            <div id="leaderboardModalModeSwitch" style="display:inline-flex; border:1px solid var(--color-border-light); border-radius:16px; overflow:hidden;">
-              <button id="leaderboardModalModeAgg" class="nav-btn" style="border:none; ${isAggregate ? 'background: var(--color-accent); color:#fff;' : 'background:transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">总榜</span></button>
-              <button id="leaderboardModalModeDaily" class="nav-btn" style="border:none; ${!isAggregate ? 'background: var(--color-accent); color:#fff;' : 'background:transparent; color: var(--color-text-secondary);'}"><span class="nav-btn-text">今日</span></button>
-            </div>
+            ${switchModalMarkup}
             <span class="close" id="closeLeaderboard">&times;</span>
           </div>
         </div>
@@ -4845,23 +4873,25 @@ const TYPE_META = {
       document.getElementById('closeLeaderboard')?.addEventListener('click', cleanup);
       modal.addEventListener('click', (e) => { if (e.target === modal) cleanup(); });
 
-      const modeAggBtn = document.getElementById('leaderboardModalModeAgg');
-      const modeDailyBtn = document.getElementById('leaderboardModalModeDaily');
-      if (modeAggBtn) {
-        modeAggBtn.addEventListener('click', () => {
-          window.QUIZ_CONFIG.leaderboardViewMode = 'aggregate';
-          try { localStorage.setItem('leaderboardViewMode', 'aggregate'); } catch (_) {}
-          cleanup();
-          showDailyChallengeLeaderboard();
-        });
-      }
-      if (modeDailyBtn) {
-        modeDailyBtn.addEventListener('click', () => {
-          window.QUIZ_CONFIG.leaderboardViewMode = 'daily_plus_history';
-          try { localStorage.setItem('leaderboardViewMode', 'daily_plus_history'); } catch (_) {}
-          cleanup();
-          showDailyChallengeLeaderboard();
-        });
+      if ((window.QUIZ_CONFIG?.leaderboardSelectionMode || 'both') === 'both') {
+        const modeAggBtn = document.getElementById('leaderboardModalModeAgg');
+        const modeDailyBtn = document.getElementById('leaderboardModalModeDaily');
+        if (modeAggBtn) {
+          modeAggBtn.addEventListener('click', () => {
+            window.QUIZ_CONFIG.leaderboardViewMode = 'aggregate';
+            try { localStorage.setItem('leaderboardViewMode', 'aggregate'); } catch (_) {}
+            cleanup();
+            showDailyChallengeLeaderboard();
+          });
+        }
+        if (modeDailyBtn) {
+          modeDailyBtn.addEventListener('click', () => {
+            window.QUIZ_CONFIG.leaderboardViewMode = 'daily_plus_history';
+            try { localStorage.setItem('leaderboardViewMode', 'daily_plus_history'); } catch (_) {}
+            cleanup();
+            showDailyChallengeLeaderboard();
+          });
+        }
       }
       
       // 加载排行榜数据（支持多端点与超时）
