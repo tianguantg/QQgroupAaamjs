@@ -4,7 +4,7 @@
 // 配置常量
 const CONFIG = {
 
-  MAX_SUBMISSIONS_PER_IP: 5, // 每IP每日最大提交次数
+  MAX_SUBMISSIONS_PER_IP: 1, // 每IP每日最大提交次数
   
   MAX_NICKNAME_LENGTH: 20,   // 昵称最大长度
   
@@ -591,9 +591,9 @@ async function handleScoreSubmission(request, env) {
       // no-op
     }
     
-    // 将更新后的排行榜写回 KV（TTL 对齐至上海午夜）
+    // 将更新后的排行榜写回 KV（TTL 设置为一年）
     try {
-      const ttlSec = getSecondsUntilMidnightShanghai();
+      const ttlSec = 365 * 24 * 36000; // 保留十年（3650天）
       await env.QUIZ_KV.put(leaderboardKey, JSON.stringify(currentBoard), { expirationTtl: ttlSec });
     } catch (error) {
       console.error('Leaderboard put error:', error);

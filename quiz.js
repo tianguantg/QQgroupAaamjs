@@ -515,7 +515,7 @@ window.QUIZ_CONFIG = {
       description: '极具挑战性，考验深度理解',
       questionCount: 20,
       difficultyRatio: { easy: 1, normal: 2, hard: 4 }, // 主要是普通和困难题
-      pools: { card: 2, character: 1.5, event: 2, profile: 0, decision: 3, enemy: 2, skill: 2}
+      pools: { card: 2, character: 1, event: 2, profile: 0, decision: 3, enemy: 2, skill: 2}
     },
     profile: {
       name: '档案模式',
@@ -4737,18 +4737,30 @@ const TYPE_META = {
         // 依次尝试各端点（支持国内镜像，通过 window.QUIZ_CONFIG.leaderboardEndpoints 配置）
         try {
           let data = null;
+          let lastError = null;
+          let successfulEndpoint = null;
+          
           for (const endpoint of configured) {
             try {
               const url = isAggregate
                 ? `${endpoint}?limit=${encodeURIComponent(window.QUIZ_CONFIG?.aggregateLimit || 100)}${forceBust ? `&bust=${Date.now()}` : ''}`
                 : `${endpoint}?date=${encodeURIComponent(dateStr)}${forceBust ? `&bust=${Date.now()}` : ''}`;
               const response = await fetchWithTimeout(url, 3500);
+              
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              }
+              
               data = await response.json();
               if (data && Array.isArray(data.leaderboard) && data.leaderboard.length > 0) {
+                successfulEndpoint = endpoint;
                 break;
               }
               // 当前端点为空榜或响应无效，继续尝试下一个端点
+              lastError = new Error(`端点返回空数据: ${endpoint}`);
             } catch (e) {
+              lastError = e;
+              console.warn(`排行榜端点失败 ${endpoint}:`, e.message);
               // 继续下一端点
             }
           }
@@ -4767,6 +4779,12 @@ const TYPE_META = {
                   try {
                     const url2 = `${endpoint}?date=${encodeURIComponent(dateStr)}&bust=${Date.now()}`;
                     const resp2 = await fetchWithTimeout(url2, 3000);
+                    
+                    if (!resp2.ok) {
+                      console.warn(`重试端点HTTP错误 ${endpoint}: ${resp2.status} ${resp2.statusText}`);
+                      continue;
+                    }
+                    
                     const data2 = await resp2.json();
                     if (data2 && Array.isArray(data2.leaderboard)) {
                         if (data2.leaderboard.length > 0) {
@@ -4778,7 +4796,9 @@ const TYPE_META = {
                         // 二次仍为空，继续尝试下一个端点
                         continue;
                       }
-                  } catch (_) {}
+                  } catch (retryErr) {
+                    console.warn(`重试端点失败 ${endpoint}:`, retryErr.message);
+                  }
                 }
               } catch (_) {}
             }
@@ -4787,13 +4807,21 @@ const TYPE_META = {
             if (!isAggregate) await renderTopHistoryMain(forceBust);
             return;
           }
-          throw new Error('All endpoints failed');
+          
+          // 所有端点都失败了，抛出详细错误
+          const errorMsg = lastError 
+            ? `所有排行榜端点都无法访问。最后错误: ${lastError.message}` 
+            : '所有排行榜端点都无法访问';
+          throw new Error(errorMsg);
         } catch (error) {
           console.error('加载排行榜失败:', error);
           const cached = loadCache();
           let html = `
             <div style="text-align: center; color: var(--color-error); padding: 12px;">
-              无法连接排行榜服务。
+              无法连接排行榜服务
+            </div>
+            <div style="text-align: center; color: var(--color-text-secondary); padding: 8px; font-size: 12px;">
+              ${error.message || '网络连接异常'}
             </div>
             <div style="display:flex; gap:8px; justify-content:center;">
               <button id="${contentId}Retry" class="nav-btn"><span class="nav-btn-text">重试</span></button>
@@ -5060,6 +5088,9 @@ const TYPE_META = {
         leaderboardContent.innerHTML = `
           <div style="text-align: center; color: var(--color-error); padding: 20px;">
             加载失败，请稍后重试
+          </div>
+          <div style="text-align: center; color: var(--color-text-secondary); padding: 8px; font-size: 12px;">
+            ${error.message || '网络连接异常'}
           </div>
         `;
         if (!isAggregate) await renderTopHistoryModal(forceBust);
