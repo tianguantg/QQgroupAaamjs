@@ -1,6 +1,7 @@
-const CACHE_NAME = 'quiz-assets-v1';
+const CACHE_NAME = 'quiz-assets-v2';
 const PRECACHE_URLS = [
   'assets/fonts/Blippo.ttf',
+  'assets/fonts/JingNanBoBoHei-Bold-2.ttf',
   'images/decisions/A.png',
   'images/decisions/X.png',
   'images/decisions/D.png',

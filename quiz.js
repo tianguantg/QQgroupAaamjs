@@ -74,6 +74,274 @@
       }
     })();
 
+    // 获取当前主题的辅助函数
+    function getIsDarkTheme() {
+      try {
+        if (window.themeSwitcher && typeof window.themeSwitcher.getCurrentTheme === 'function') {
+          return window.themeSwitcher.getCurrentTheme() === 'dark';
+        }
+        return document.body.classList.contains('theme-dark');
+      } catch (_) {
+        return false;
+      }
+    }
+
+    // 生成结算表格图片的函数
+    async function generateSettlementImage(data) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      // 设置画布尺寸 (高DPI支持)
+      const scale = Math.max(2, window.devicePixelRatio || 1);
+      const width = 400;
+      // 估算布局高度（考虑顶部 logo 与表格行数）
+      const qrSize = 72;
+      const qrMargin = 12;
+      const captionText = '扫一扫进入测验';
+      const captionFont = '12px "JingNanBoBoHei-Bold-2", system-ui, sans-serif';
+      const captionMargin = 4;
+      const captionHeightApprox = 14; // 文本高度近似值
+      // 顶部 logo 目标高度（与下方绘制使用一致）
+      const desiredLogoH = 150;
+      const estimatedStartY = 10 + desiredLogoH + 12; // logo 下方起始 Y
+      const rowsCount = 5; // 当前结算表格行数
+      const rowHeightApprox = 48;
+      const contentReserve = 16; // 表格底部额外留白
+      const baseHeight = Math.max(estimatedStartY + rowsCount * rowHeightApprox + contentReserve, 280);
+      const footerReserve = qrSize + captionMargin + captionHeightApprox + qrMargin; // 底部为二维码和说明预留空间
+      const height = baseHeight + footerReserve;
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.scale(scale, scale);
+
+      // 确保中文与数字字体可用
+      try {
+        if (!document.fonts.check('21px "JingNanBoBoHei-Bold-2"')) {
+          const jFont = new FontFace('JingNanBoBoHei-Bold-2', 'url(assets/fonts/JingNanBoBoHei-Bold-2.ttf)');
+          await jFont.load();
+          document.fonts.add(jFont);
+        }
+        await document.fonts.load('21px "JingNanBoBoHei-Bold-2"');
+      } catch (_) {}
+      try { await document.fonts.load('24px "Blippo"'); } catch (_) {}
+      try { await document.fonts.load('24px "JingNanBoBoHei-Bold-2"'); } catch (_) {}
+
+      // 获取当前主题
+      const isDark = getIsDarkTheme();
+
+      // 读取主题色变量（若不存在则使用回退值）
+      const rootStyle = getComputedStyle(document.documentElement);
+      const primary = (rootStyle.getPropertyValue('--color-primary') || (isDark ? '#2d3748' : '#4facfe')).trim();
+      const secondary = (rootStyle.getPropertyValue('--color-secondary') || (isDark ? '#4a5568' : '#e081e9')).trim();
+      const primaryDark = (rootStyle.getPropertyValue('--color-primary-dark') || (isDark ? '#1a202c' : '#1a1a2e')).trim();
+
+      // 工具函数：hex颜色转rgba
+      function hexToRgba(hex, alpha) {
+        const h = hex.replace('#','');
+        const bigint = parseInt(h.length === 3 ? h.split('').map(x=>x+x).join('') : h, 16);
+        const r = (bigint >> 16) & 255;
+        const g = (bigint >> 8) & 255;
+        const b = bigint & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
+      // 工具函数：绘制圆角矩形路径
+      function roundRectPath(ctx, x, y, w, h, r) {
+        const radius = Math.min(r, w/2, h/2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + w - radius, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+        ctx.lineTo(x + w, y + h - radius);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+        ctx.lineTo(x + radius, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+      }
+
+      // 主题颜色
+      const colors = isDark ? {
+        labelText: '#e0e0e0',
+        labelTextStrong: '#f5f5f5',
+        valueText: '#f0f0f0',
+        totalText: '#ffffff',
+        line: 'rgba(255, 255, 255, 0.10)',
+        border: 'rgba(255, 255, 255, 0.18)'
+      } : {
+        labelText: '#666666',
+        labelTextStrong: '#333333',
+        valueText: '#111111',
+        totalText: '#000000',
+        line: 'rgba(0, 0, 0, 0.08)',
+        border: 'rgba(0, 0, 0, 0.10)'
+      };
+
+      // 绘制更淡的主题渐变背景并使用圆角
+      const radius = 16;
+      ctx.save();
+      roundRectPath(ctx, 0.5, 0.5, width - 1, height - 1, radius);
+      ctx.clip();
+      // 先铺一层纯色（暗黑主题为黑，浅色主题为白）
+      ctx.fillStyle = isDark ? '#000000' : '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      // 再覆盖更淡的主题渐变
+      const lg = ctx.createLinearGradient(0, 0, width, height);
+      lg.addColorStop(0, hexToRgba(secondary, isDark ? 0.30 : 0.35));
+      lg.addColorStop(1, hexToRgba(primary,   isDark ? 0.30 : 0.35));
+      ctx.fillStyle = lg;
+      ctx.fillRect(0, 0, width, height);
+      // 叠加角落的径向渐变光晕（更淡）
+      const rg1 = ctx.createRadialGradient(width * 0.20, height * 0.20, 0, width * 0.20, height * 0.20, Math.max(width, height) * 0.60);
+      rg1.addColorStop(0, hexToRgba(primaryDark, isDark ? 0.12 : 0.10));
+      rg1.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = rg1;
+      ctx.fillRect(0, 0, width, height);
+      const rg2 = ctx.createRadialGradient(width * 0.80, height * 0.80, 0, width * 0.80, height * 0.80, Math.max(width, height) * 0.60);
+      rg2.addColorStop(0, hexToRgba(secondary, isDark ? 0.10 : 0.08));
+      rg2.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = rg2;
+      ctx.fillRect(0, 0, width, height);
+      ctx.restore();
+
+      // 渐变粗边框（圆角）
+      const borderGrad = ctx.createLinearGradient(0, 0, width, height);
+      borderGrad.addColorStop(0.00, '#5a6fd8');
+      borderGrad.addColorStop(0.20, '#6b4190');
+      borderGrad.addColorStop(0.40, '#e081e9');
+      borderGrad.addColorStop(0.60, '#e3456a');
+      borderGrad.addColorStop(0.80, '#3d9aec');
+      borderGrad.addColorStop(1.00, '#00e0ec');
+      ctx.strokeStyle = borderGrad;
+      ctx.lineWidth = 6;
+      roundRectPath(ctx, 3, 3, width - 6, height - 6, radius);
+      ctx.stroke();
+
+      // 字体
+      const labelFont = '21px "JingNanBoBoHei-Bold-2", system-ui, sans-serif';
+      const valueFont = 'bold 24px "Blippo", "JingNanBoBoHei-Bold-2", Arial, sans-serif';
+      const totalFont = 'bold 27px "Blippo", "JingNanBoBoHei-Bold-2", Arial, sans-serif';
+
+      // 表格数据
+      const rows = [
+        { label: '测验难度', value: data.difficulty },
+        { label: '用时', value: data.time },
+        { label: '题目得分', value: `${data.questionScore}分` },
+        { label: '时间得分', value: `${data.timeScore}分` },
+        { label: '总得分', value: `${data.finalScore}分`, isTotal: true }
+      ];
+
+      // 工具函数：加载图片
+      function loadImage(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = src;
+        });
+      }
+
+      // 顶部logo
+      let startY = 24;
+      try {
+        const logoImg = await loadImage('images/quiz/logo.png');
+        const ratio = logoImg.width && logoImg.height ? (logoImg.width / logoImg.height) : 1;
+        const logoW = Math.min(width - 40, Math.round(desiredLogoH * ratio));
+        const logoX = Math.round((width - logoW) / 2);
+        const logoY = 10;
+        ctx.drawImage(logoImg, logoX, logoY, logoW, desiredLogoH);
+        startY = logoY + desiredLogoH + 12; // 表格起始位置下移，避免与logo重叠
+      } catch (_) {
+        // 如果logo加载失败，则使用默认起始位置
+        startY = 24;
+      }
+
+      // 布局
+      const rowHeight = 48;
+      const marginX = 36; // 左右边距加大
+      const labelX = marginX;
+      const valueX = width - marginX;
+      const linePad = 28; // 分隔线距离边缘更远
+
+      rows.forEach((row, index) => {
+        const y = startY + index * rowHeight;
+        // 分隔线
+        if (index > 0) {
+          ctx.strokeStyle = colors.line;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(linePad, y - 12);
+          ctx.lineTo(width - linePad, y - 12);
+          ctx.stroke();
+        }
+        // 标签（提升可读性）
+        ctx.font = labelFont;
+        ctx.fillStyle = row.isTotal ? colors.totalText : colors.labelTextStrong;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.save();
+        ctx.shadowColor = isDark ? 'rgba(0,0,0,0.25)' : 'rgba(255,255,255,0.15)';
+        ctx.shadowBlur = 0.8;
+        ctx.shadowOffsetY = 0.4;
+        ctx.fillText(row.label, labelX, y + 12);
+        ctx.restore();
+        // 值
+        ctx.font = row.isTotal ? totalFont : valueFont;
+        ctx.fillStyle = row.isTotal ? colors.totalText : colors.valueText;
+        ctx.textAlign = 'right';
+        ctx.fillText(row.value, valueX, y + 12);
+      });
+
+      // 计算最后一行基线位置，用于避免二维码覆盖文字
+      const lastBaseline = startY + (rows.length - 1) * rowHeight + 12;
+
+      // 右下角绘制quiz二维码（根据主题选择）
+      const qrSrc = isDark ? 'images/quiz/qrcode_quiz_dark.png' : 'images/quiz/qrcode_quiz_light.png';
+      try {
+        const qrImg = await loadImage(qrSrc);
+        const minClearance = 16; // 二维码与文字之间的最小间距
+        const yBottomCandidate = height - qrSize - qrMargin - captionHeightApprox - captionMargin;
+        const qy = Math.max(yBottomCandidate, lastBaseline + minClearance);
+        const qx = width - qrSize - qrMargin;
+        // 圆角裁剪绘制二维码
+        ctx.save();
+        roundRectPath(ctx, qx, qy, qrSize, qrSize, 8);
+        ctx.clip();
+        ctx.drawImage(qrImg, qx, qy, qrSize, qrSize);
+        ctx.restore();
+        // 细边框
+        ctx.strokeStyle = colors.border;
+        ctx.lineWidth = 1;
+        roundRectPath(ctx, qx, qy, qrSize, qrSize, 8);
+        ctx.stroke();
+        // 在二维码下方绘制说明文字
+        ctx.font = captionFont;
+        ctx.fillStyle = colors.labelTextStrong;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const captionY = qy + qrSize + captionMargin;
+        const captionX = qx + qrSize / 2;
+        ctx.fillText(captionText, captionX, captionY);
+      } catch (_) {
+        // 若二维码加载失败，忽略不影响其它内容
+      }
+
+      // 创建图片元素（圆角显示）
+      const img = document.createElement('img');
+      img.src = canvas.toDataURL('image/png');
+      img.alt = '结算表格';
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+      img.style.display = 'block';
+      img.style.margin = '0 auto';
+      img.style.borderRadius = radius + 'px';
+      
+      return img;
+    }
+
     // 反馈回复功能
     (function() {
       let feedbackData = [];
@@ -3056,17 +3324,6 @@ const TYPE_META = {
       // 安排预加载（不阻塞主渲染）
       try { preloadQuizQrImages(); } catch (_) {}
 
-      function getIsDarkTheme() {
-        try {
-          if (window.themeSwitcher && typeof window.themeSwitcher.getCurrentTheme === 'function') {
-            return window.themeSwitcher.getCurrentTheme() === 'dark';
-          }
-          return document.body.classList.contains('theme-dark');
-        } catch (_) {
-          return false;
-        }
-      }
-
       function ensureSettlementQr(targetView) {
         if (!targetView) return;
         // 容器与定位
@@ -3157,7 +3414,7 @@ const TYPE_META = {
       document.addEventListener('themeChanged', () => { updateSettlementQrImage(); updateSettlementQrLayout(); });
       window.addEventListener('resize', () => { updateSettlementQrLayout(); });
 
-      function endQuiz(){
+      async function endQuiz(){
         // 停止计时器
         stopTimer();
         
@@ -3206,41 +3463,35 @@ const TYPE_META = {
         questionText.innerHTML = '';
         optEls.forEach(btn => { btn.style.display='none'; });
         
-        // 显示结算表格
+        // 生成结算表格图片
         const resultCard = document.createElement('div');
         resultCard.className = 'result-card';
         
         const difficultyName = getDifficultyDisplayName();
         const timeFormatted = formatTime(finalTime);
         
-        resultCard.innerHTML = `
-          <table class="result-table">
-            <tr>
-              <td class="result-label">测验难度</td>
-              <td class="result-value">${difficultyName}</td>
-            </tr>
-            <tr>
-              <td class="result-label">用时</td>
-              <td class="result-value">${timeFormatted}</td>
-            </tr>
-            <tr>
-              <td class="result-label">题目得分</td>
-              <td class="result-value">${scores.questionScore}分</td>
-            </tr>
-            <tr>
-              <td class="result-label">时间得分</td>
-              <td class="result-value">${scores.timeScore}分</td>
-            </tr>
-            <tr class="result-total">
-              <td class="result-label">总得分</td>
-              <td class="result-value">${scores.finalScore}分</td>
-            </tr>
-          </table>
-        `;
+        // 创建结算表格图片
+        const resultImage = await generateSettlementImage({
+          difficulty: difficultyName,
+          time: timeFormatted,
+          questionScore: scores.questionScore,
+          timeScore: scores.timeScore,
+          finalScore: scores.finalScore
+        });
+
+        // 移动端提示：图片外部提示保存分享
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia('(max-width: 768px)').matches;
+        if (isMobile) {
+          const tipEl = document.createElement('div');
+          tipEl.textContent = '长按下方图片可以保存/分享';
+          tipEl.style.cssText = 'margin: 10px 0 6px; font-size: 12px; color: var(--text-secondary, #666); text-align:center;';
+          resultCard.appendChild(tipEl);
+        }
         
+        resultCard.appendChild(resultImage);
         resultView.appendChild(resultCard);
         // 在结算界面右下角添加二维码
-        ensureSettlementQr(resultView);
+        // 二维码已嵌入结算图片，不再单独显示
         
         // 如果是每日挑战：显示提交按钮，并在结算界面显示主界面的排行榜卡片
         if (window.isDailyChallenge) {
