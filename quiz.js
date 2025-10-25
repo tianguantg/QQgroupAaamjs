@@ -4104,26 +4104,10 @@ const TYPE_META = {
           if (closeBtn) closeBtn.addEventListener('click', close);
           modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
            const joinBtn = document.getElementById('joinGroupInviteBtn');
-           if (joinBtn && typeof groupConfig !== 'undefined' && groupConfig && groupConfig.basic_info) {
-             const url = groupConfig.basic_info.join_link || `https://qm.qq.com/cgi-bin/qm/qr?k=${groupConfig.basic_info.qq_number}`;
+           if (joinBtn) {
              joinBtn.addEventListener('click', () => {
-               try { window.open(url, '_blank'); } catch (_) {}
-               const imgPath = (groupConfig.assets && groupConfig.assets.qrcode) ? groupConfig.assets.qrcode : 'images/qrcode.jpg';
-               const overlay = document.createElement('div');
-               overlay.style.cssText = [
-                 'position:fixed', 'left:0', 'top:0', 'width:100vw', 'height:100vh',
-                 'background:rgba(0,0,0,0.9)', 'z-index:10000', 'display:flex', 'align-items:center', 'justify-content:center'
-               ].join(';');
-               const img = document.createElement('img');
-               img.src = imgPath;
-               img.alt = 'QQ群二维码';
-               img.style.cssText = [
-                 'max-width:80vw', 'max-height:80vh', 'border-radius:12px',
-                 'box-shadow:0 10px 30px rgba(0,0,0,0.6)', 'border:2px solid rgba(255,255,255,0.8)'
-               ].join(';');
-               overlay.appendChild(img);
-               document.body.appendChild(overlay);
-               overlay.addEventListener('click', () => { if (document.body.contains(overlay)) document.body.removeChild(overlay); });
+               // 在新标签页中打开index.html
+               window.open('index.html', '_blank');
              });
            }
         } catch (_) {}
