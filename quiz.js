@@ -3024,6 +3024,139 @@ const TYPE_META = {
         };
       }
 
+      // 结算二维码：预加载与主题联动
+      const QUIZ_QR_CONFIG = {
+        lightSrc: 'images/quiz/qrcode_quiz_light.png',
+        darkSrc: 'images/quiz/qrcode_quiz_dark.png'
+      };
+      let quizQrPreloaded = false;
+      const quizQrImages = {
+        light: new Image(),
+        dark: new Image()
+      };
+      function preloadQuizQrImages() {
+        const load = () => {
+          try {
+            quizQrImages.light.decoding = 'async';
+            quizQrImages.dark.decoding = 'async';
+            quizQrImages.light.src = QUIZ_QR_CONFIG.lightSrc;
+            quizQrImages.dark.src = QUIZ_QR_CONFIG.darkSrc;
+            Promise.allSettled([
+              typeof quizQrImages.light.decode === 'function' ? quizQrImages.light.decode() : Promise.resolve(),
+              typeof quizQrImages.dark.decode === 'function' ? quizQrImages.dark.decode() : Promise.resolve()
+            ]).then(() => { quizQrPreloaded = true; });
+          } catch (_) { /* ignore */ }
+        };
+        if (typeof window.requestIdleCallback === 'function') {
+          window.requestIdleCallback(load);
+        } else {
+          setTimeout(load, 0);
+        }
+      }
+      // 安排预加载（不阻塞主渲染）
+      try { preloadQuizQrImages(); } catch (_) {}
+
+      function getIsDarkTheme() {
+        try {
+          if (window.themeSwitcher && typeof window.themeSwitcher.getCurrentTheme === 'function') {
+            return window.themeSwitcher.getCurrentTheme() === 'dark';
+          }
+          return document.body.classList.contains('theme-dark');
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function ensureSettlementQr(targetView) {
+        if (!targetView) return;
+        // 容器与定位
+        targetView.style.position = 'relative';
+        let container = targetView.querySelector('#quizSettlementQr');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'quizSettlementQr';
+          // 默认在宽屏右下角悬浮
+          container.style.position = 'absolute';
+          container.style.right = '16px';
+          container.style.bottom = '16px';
+          container.style.zIndex = '10';
+          container.style.maxWidth = '120px';
+          container.style.pointerEvents = 'none';
+          container.style.textAlign = 'center';
+          const img = document.createElement('img');
+          img.id = 'quizSettlementQrImg';
+          img.style.width = '100%';
+          img.style.height = 'auto';
+          img.style.borderRadius = '8px';
+          img.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+          img.style.transition = 'opacity 160ms ease';
+          img.alt = '加群二维码';
+          container.appendChild(img);
+          // 底部提示文字
+          const label = document.createElement('div');
+          label.id = 'quizSettlementQrLabel';
+          label.textContent = '扫一扫进入测验';
+          label.style.fontSize = '12px';
+          label.style.lineHeight = '1.2';
+          label.style.marginTop = '6px';
+          label.style.color = 'var(--text-color, #666)';
+          label.style.opacity = '0.85';
+          label.style.userSelect = 'none';
+          container.appendChild(label);
+          targetView.appendChild(container);
+        }
+        updateSettlementQrImage();
+        updateSettlementQrLayout();
+      }
+
+      function updateSettlementQrImage() {
+        const img = document.getElementById('quizSettlementQrImg');
+        if (!img) return;
+        const isDark = getIsDarkTheme();
+        const nextSrc = isDark ? QUIZ_QR_CONFIG.darkSrc : QUIZ_QR_CONFIG.lightSrc;
+        if (img.getAttribute('data-src') === nextSrc) return;
+
+        const preloadImg = isDark ? quizQrImages.dark : quizQrImages.light;
+        const doSwap = () => {
+          img.style.opacity = '0';
+          setTimeout(() => {
+            img.src = nextSrc;
+            img.setAttribute('data-src', nextSrc);
+            img.style.opacity = '1';
+          }, 50);
+        };
+
+        if (quizQrPreloaded && preloadImg && typeof preloadImg.decode === 'function') {
+          preloadImg.decode().then(doSwap).catch(doSwap);
+        } else {
+          doSwap();
+        }
+      }
+
+      // 响应式布局：窄屏下改为置于表格下方居中
+      function updateSettlementQrLayout() {
+        const container = document.getElementById('quizSettlementQr');
+        if (!container) return;
+        const isNarrow = window.innerWidth <= 600;
+        if (isNarrow) {
+          container.style.position = 'static';
+          container.style.right = '';
+          container.style.bottom = '';
+          container.style.maxWidth = '100px';
+          container.style.margin = '12px auto 0';
+        } else {
+          container.style.position = 'absolute';
+          container.style.right = '16px';
+          container.style.bottom = '16px';
+          container.style.maxWidth = '120px';
+          container.style.margin = '';
+        }
+      }
+
+      // 主题切换事件与窗口大小变化时实时更新
+      document.addEventListener('themeChanged', () => { updateSettlementQrImage(); updateSettlementQrLayout(); });
+      window.addEventListener('resize', () => { updateSettlementQrLayout(); });
+
       function endQuiz(){
         // 停止计时器
         stopTimer();
@@ -3106,6 +3239,8 @@ const TYPE_META = {
         `;
         
         resultView.appendChild(resultCard);
+        // 在结算界面右下角添加二维码
+        ensureSettlementQr(resultView);
         
         // 如果是每日挑战：显示提交按钮，并在结算界面显示主界面的排行榜卡片
         if (window.isDailyChallenge) {

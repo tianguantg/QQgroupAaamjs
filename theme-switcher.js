@@ -596,20 +596,21 @@ class ThemeSwitcher {
         // 从本地存储加载主题
         this.loadThemeFromStorage();
         
-        // 如果是首次访问，设置随机主题为默认选择
-        if (!localStorage.getItem('randomThemeMode') && !localStorage.getItem('selectedTheme')) {
-            localStorage.setItem('randomThemeMode', 'true');
-            this.startRandomThemeTimer();
-            // 立即应用一个随机主题
-            this.applyRandomTheme();
+        // 首次访问：默认跟随系统浅色/暗黑，不启用随机主题
+        if (!localStorage.getItem('selectedTheme')) {
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = prefersDark ? 'dark' : 'default';
+            this.currentTheme = initialTheme;
+            this.saveThemeToStorage(initialTheme);
+            this.applyTheme(initialTheme);
         } else {
             // 应用当前主题
             this.applyTheme(this.currentTheme);
-            
-            // 检查是否启用随机主题模式
-            if (localStorage.getItem('randomThemeMode') === 'true') {
-                this.startRandomThemeTimer();
-            }
+        }
+        
+        // 若用户开启了随机主题模式，则启动定时器
+        if (localStorage.getItem('randomThemeMode') === 'true') {
+            this.startRandomThemeTimer();
         }
         
         // 监听存储变化（多标签页同步）
