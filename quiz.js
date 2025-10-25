@@ -3484,7 +3484,7 @@ const TYPE_META = {
         if (isMobile) {
           const tipEl = document.createElement('div');
           tipEl.textContent = '长按下方图片可以保存/分享';
-          tipEl.style.cssText = 'margin: 10px 0 6px; font-size: 12px; color: var(--text-secondary, #666); text-align:center;';
+          tipEl.style.cssText = 'margin: 0 0 6px; font-size: 12px; color: var(--color-text-secondary); text-align:center;';
           resultCard.appendChild(tipEl);
         }
         
@@ -4433,6 +4433,9 @@ const TYPE_META = {
         const actions = document.createElement('div');
         actions.style.cssText = 'margin-top: 16px; display:flex; flex-direction: column; align-items:center; gap: 10px;';
         actions.innerHTML = `
+          <div class="submit-tip" style="font-size: 13px; color: var(--color-text-secondary); text-align: center; margin-bottom: 6px;">
+            提交成绩之后才会进入排行榜！
+          </div>
           <button id="openSubmitModalBtn" class="nav-btn primary">
             <span class="nav-btn-text">提交成绩</span>
           </button>

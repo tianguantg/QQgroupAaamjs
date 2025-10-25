@@ -596,10 +596,24 @@ class ThemeSwitcher {
         // 从本地存储加载主题
         this.loadThemeFromStorage();
         
-        // 首次访问：默认跟随系统浅色/暗黑，不启用随机主题
+        // 首次访问：默认跟随系统浅色/暗黑；若无法跟随系统，则按本地时间回退
         if (!localStorage.getItem('selectedTheme')) {
-            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const initialTheme = prefersDark ? 'dark' : 'default';
+            let initialTheme = 'default';
+            if (window.matchMedia && typeof window.matchMedia === 'function') {
+                try {
+                    const media = window.matchMedia('(prefers-color-scheme: dark)');
+                    if (typeof media.matches === 'boolean') {
+                        initialTheme = media.matches ? 'dark' : 'default';
+                    } else {
+                        initialTheme = this.getTimeBasedTheme();
+                    }
+                } catch (e) {
+                    initialTheme = this.getTimeBasedTheme();
+                }
+            } else {
+                initialTheme = this.getTimeBasedTheme();
+            }
+
             this.currentTheme = initialTheme;
             this.saveThemeToStorage(initialTheme);
             this.applyTheme(initialTheme);
@@ -637,6 +651,15 @@ class ThemeSwitcher {
      */
     saveThemeToStorage(themeName) {
         localStorage.setItem('selectedTheme', themeName);
+    }
+
+    /**
+     * 根据时间判定浅色/暗黑（无法跟随系统时的回退）
+     * 夜间（19:00-06:00）使用暗黑主题，其余时间使用浅色主题
+     */
+    getTimeBasedTheme() {
+        const hour = new Date().getHours();
+        return (hour >= 19 || hour < 6) ? 'dark' : 'default';
     }
 
     /**
@@ -780,9 +803,9 @@ class ThemeSwitcher {
      * 45% 特殊主题（春节、樱花、万圣节平均概率）
      * 5% 隐藏主题（卓别林主题）
      */
-    selectRandomTheme() {
-        // 检查冷却期
-        if (this.isInCooldown()) {
+    selectRandomTheme(force = false) {
+        // 检查冷却期（手动切换为随机主题时允许强制绕过）
+        if (!force && this.isInCooldown()) {
             console.log('随机主题选择在冷却期内，跳过');
             return null;
         }
@@ -803,7 +826,7 @@ class ThemeSwitcher {
             selectedTheme = 'chaplin';
         }
 
-        // 记录随机选择时间
+        // 记录随机选择时间（用于定时器冷却）
         localStorage.setItem('lastRandomThemeTime', Date.now().toString());
         
         return selectedTheme;
@@ -812,8 +835,8 @@ class ThemeSwitcher {
     /**
      * 应用随机主题（如果不在冷却期）
      */
-    applyRandomTheme() {
-        const randomTheme = this.selectRandomTheme();
+    applyRandomTheme(force = false) {
+        const randomTheme = this.selectRandomTheme(force);
         if (randomTheme) {
             console.log(`随机选择主题: ${randomTheme}`);
             this.switchTheme(randomTheme);

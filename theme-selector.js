@@ -225,8 +225,8 @@ class ThemeSelector {
             // 启用随机主题模式
             localStorage.setItem('randomThemeMode', 'true');
             window.themeSwitcher.startRandomThemeTimer();
-            // 立即应用一个随机主题
-            window.themeSwitcher.applyRandomTheme();
+            // 手动切换为随机主题时，强制立即随机一次
+            window.themeSwitcher.applyRandomTheme(true);
         } else {
             // 禁用随机主题模式
             localStorage.setItem('randomThemeMode', 'false');
