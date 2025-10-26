@@ -18,6 +18,10 @@
   <link rel="preload" href="images/decisions/X.png" as="image">
   <link rel="preload" href="images/decisions/D.png" as="image">
   <link rel="preload" href="images/decisions/HP.png" as="image">
+  <!-- 结算图片关键资源预加载：logo与二维码（明/暗） -->
+  <link rel="preload" href="images/quiz/logo.png" as="image">
+  <link rel="preload" href="images/quiz/qrcode_quiz_light.png" as="image">
+  <link rel="preload" href="images/quiz/qrcode_quiz_dark.png" as="image">
   <style>
     /* 字体定义 */
     @font-face {
@@ -497,6 +501,44 @@
       font-size: 18px;
       font-weight: bold;
       margin-top: 16px;
+    }
+
+    /* 加载提示与进度条样式 */
+    .loading-hint {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #fff; /* 固定白色 */
+      text-align: center;
+      user-select: none;
+    }
+    .loading-progress {
+      width: min(480px, 80%);
+      margin: 10px auto 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .loading-percent {
+      font-size: 12px;
+      color: #fff; /* 固定白色 */
+      min-width: 36px;
+      text-align: right;
+      user-select: none;
+    }
+    .loading-progress-track {
+      flex: 1;
+      height: 5px; /* 4-6px */
+      background: rgba(255, 255, 255, 0.25);
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.15);
+    }
+    .loading-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--color-accent, #1a365d), var(--color-secondary, #4a5568));
+      border-radius: 999px;
+      transition: width 250ms ease; /* 平滑过渡 */
     }
     
     /* 决策题样式 */
@@ -1161,9 +1203,16 @@
 </head>
 <body>
   <!-- 加载动画覆盖层 -->
-  <div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-overlay show" id="loadingOverlay">
     <div class="loading-content">
       <img src="images/loading.png" alt="Loading" class="loading-image" id="loadingImage">
+      <div class="loading-hint">首次加载可能需要较长时间，请稍候...</div>
+      <div class="loading-progress">
+        <div class="loading-progress-track">
+          <div class="loading-progress-fill" id="loadingBar"></div>
+        </div>
+        <div class="loading-percent" id="loadingPercent">0%</div>
+      </div>
     </div>
   </div>
 
@@ -1186,22 +1235,22 @@
         <div class="quiz-controls">
           <!-- 难度按钮区域 -->
           <div id="difficultyButtons" class="difficulty-buttons" style="margin-bottom: 20px;">
-            <button id="normalBtn" class="nav-btn difficulty-btn" data-difficulty="normal">
+            <button id="normalBtn" class="nav-btn difficulty-btn" data-difficulty="normal" onclick="window.__earlyStartDifficulty('normal')">
               <span class="nav-btn-text">普通</span>
             </button>
-            <button id="hardBtn" class="nav-btn difficulty-btn" data-difficulty="hard">
+            <button id="hardBtn" class="nav-btn difficulty-btn" data-difficulty="hard" onclick="window.__earlyStartDifficulty('hard')">
               <span class="nav-btn-text">困难</span>
             </button>
-            <button id="nightmareBtn" class="nav-btn difficulty-btn" data-difficulty="nightmare">
+            <button id="nightmareBtn" class="nav-btn difficulty-btn" data-difficulty="nightmare" onclick="window.__earlyStartDifficulty('nightmare')">
               <span class="nav-btn-text">噩梦</span>
             </button>
-            <button id="dailyChallengeBtn" class="nav-btn difficulty-btn daily-challenge-btn" style="margin-top: 30px;">
+            <button id="dailyChallengeBtn" class="nav-btn difficulty-btn daily-challenge-btn" style="margin-top: 30px;" onclick="window.__earlyStartDaily()">
               <span class="nav-btn-text">每日挑战</span>
             </button>
             <div style="margin-top: 6px; text-align: center; margin-top: 10px;">
               <small style="color: var(--color-text-muted, #888); font-size: 15px;">—— 以下为特殊模式 ——</small>
             </div>
-            <button id="profileBtn" class="nav-btn difficulty-btn" data-difficulty="profile">
+            <button id="profileBtn" class="nav-btn difficulty-btn" data-difficulty="profile" onclick="window.__earlyStartDifficulty('profile')">
               <span class="nav-btn-text">档案模式</span>
             </button>
             <div style="margin: 16px 0; text-align: center;">
@@ -1336,6 +1385,56 @@
 
   
   <div id="turnstile-container" style="display:none;"></div>
+  <script>
+    // 早期点击存储与遮罩控制（quiz.js未加载时生效）
+    window.__quizReady = false;
+    window.__pendingDifficulty = null;
+    window.__pendingDaily = false;
+    window.__earlyStartDifficulty = function(diff) {
+      if (window.__quizReady) return;
+      window.__pendingDifficulty = diff;
+      try { document.getElementById('loadingOverlay')?.classList.add('show'); } catch (_) {}
+    };
+    window.__earlyStartDaily = function() {
+      if (window.__quizReady) return;
+      window.__pendingDaily = true;
+      try { document.getElementById('loadingOverlay')?.classList.add('show'); } catch (_) {}
+    };
+
+    // 轻量进度条模拟：初期缓慢递增，准备就绪时快速补满
+    (function(){
+      try {
+        var overlay = document.getElementById('loadingOverlay');
+        var bar = document.getElementById('loadingBar');
+        var pctEl = document.getElementById('loadingPercent');
+        if (!overlay || !bar) return;
+        var progress = 0;
+        var maxBeforeReady = 96; // 未就绪最多到96%
+        function setProgress(p){
+          progress = Math.max(0, Math.min(100, p));
+          bar.style.width = progress + '%';
+          if (pctEl) pctEl.textContent = Math.round(progress) + '%';
+        }
+        bar.style.transition = 'width 250ms ease';
+        setProgress(0);
+        var tickMs = 120;
+        var timer = setInterval(function(){
+          if (window.__quizReady) {
+            clearInterval(timer);
+            setProgress(100);
+            setTimeout(function(){ overlay.classList.remove('show'); }, 250); // 300ms内淡出
+            return;
+          }
+          var step = 0.2;
+          if (progress < 25) step = (Math.random() * 0.4) + 0.2;      // 0.2-0.6 缓慢
+          else if (progress < 60) step = (Math.random() * 0.7) + 0.5; // 0.5-1.2 中速
+          else if (progress < 85) step = (Math.random() * 0.5) + 0.3; // 0.3-0.8 略慢
+          else step = (Math.random() * 0.2);                          // 0-0.2 接近停滞
+          setProgress(Math.min(progress + step, maxBeforeReady));
+        }, tickMs);
+      } catch (_) {}
+    })();
+  </script>
   <script src="quiz.js?v=202510260316"></script>
 
   <!-- 注册 Service Worker：缓存关键图片与字体，提升加载可靠性 -->

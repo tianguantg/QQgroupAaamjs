@@ -1760,6 +1760,34 @@ body::before {
                 inset 0 1px 0 var(--color-border-medium);
 }
 
+/* 测验图片题目样式 */
+.quiz-card-image {
+    max-width: 100%;
+    max-height: 280px; /* 限制图片最大高度 */
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    object-fit: contain; /* 保持图片比例，适应容器 */
+    background: var(--color-bg-glass);
+}
+
+/* 响应式图片大小 */
+@media (max-width: 768px) {
+    .quiz-card-image {
+        max-height: 200px; /* 移动端进一步减小高度 */
+        border-radius: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .quiz-card-image {
+        max-height: 160px; /* 小屏幕更小的图片 */
+        border-radius: 4px;
+    }
+}
+
 /* 图片加载占位符和错误状态样式 */
 .image-placeholder, .image-error {
     display: flex;

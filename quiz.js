@@ -86,6 +86,107 @@
       }
     }
 
+    // 结算图片资源预加载器（字体与图片）
+    window.settlementPreloader = (function(){
+      const state = {
+        fontsReady: false,
+        fontsLoading: false,
+        logo: null,
+        qrLight: null,
+        qrDark: null,
+        imagesReady: false,
+        imagesLoading: false
+      };
+
+      function preloadFonts() {
+        if (state.fontsReady || state.fontsLoading) return state._fontsPromise;
+        state.fontsLoading = true;
+        state._fontsPromise = (async () => {
+          try {
+            if (!document.fonts.check('21px "JingNanBoBoHei-Bold-2"')) {
+              const jFont = new FontFace('JingNanBoBoHei-Bold-2', 'url(assets/fonts/JingNanBoBoHei-Bold-2.ttf)');
+              await jFont.load();
+              document.fonts.add(jFont);
+            }
+            if (!document.fonts.check('24px "Blippo"')) {
+              try {
+                const bFont = new FontFace('Blippo', 'url(assets/fonts/Blippo.ttf)');
+                await bFont.load();
+                document.fonts.add(bFont);
+              } catch (_) {}
+            }
+            await Promise.all([
+              document.fonts.load('21px "JingNanBoBoHei-Bold-2"'),
+              document.fonts.load('24px "Blippo"'),
+              document.fonts.load('24px "JingNanBoBoHei-Bold-2"')
+            ]);
+            state.fontsReady = true;
+          } catch (_) {
+          } finally {
+            state.fontsLoading = false;
+          }
+        })();
+        return state._fontsPromise;
+      }
+
+      function preloadImages() {
+        if (state.imagesReady || state.imagesLoading) return state._imagesPromise;
+        state.imagesLoading = true;
+        function load(src) {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = src;
+          });
+        }
+        state._imagesPromise = (async () => {
+          try {
+            const [logo, qrLight, qrDark] = await Promise.all([
+              load('images/quiz/logo.png'),
+              load('images/quiz/qrcode_quiz_light.png'),
+              load('images/quiz/qrcode_quiz_dark.png'),
+            ]);
+            state.logo = logo;
+            state.qrLight = qrLight;
+            state.qrDark = qrDark;
+            state.imagesReady = true;
+          } catch (_) {
+          } finally {
+            state.imagesLoading = false;
+          }
+        })();
+        return state._imagesPromise;
+      }
+
+      async function ensureReady() {
+        await Promise.all([preloadFonts(), preloadImages()]);
+      }
+
+      function getAssets() {
+        return {
+          logo: state.logo,
+          qrLight: state.qrLight,
+          qrDark: state.qrDark,
+          fontsReady: state.fontsReady,
+          imagesReady: state.imagesReady
+        };
+      }
+
+      return { preloadFonts, preloadImages, ensureReady, getAssets };
+    })();
+
+    // 页面加载即开始预加载关键资源
+    try {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+          window.settlementPreloader.ensureReady();
+        }, { once: true });
+      } else {
+        window.settlementPreloader.ensureReady();
+      }
+    } catch (_) {}
+
     // 生成结算表格图片的函数
     async function generateSettlementImage(data) {
       const canvas = document.createElement('canvas');
@@ -117,16 +218,30 @@
       ctx.scale(scale, scale);
 
       // 确保中文与数字字体可用
+      // 确保字体已经准备好（优先使用预加载结果）
       try {
-        if (!document.fonts.check('21px "JingNanBoBoHei-Bold-2"')) {
-          const jFont = new FontFace('JingNanBoBoHei-Bold-2', 'url(assets/fonts/JingNanBoBoHei-Bold-2.ttf)');
-          await jFont.load();
-          document.fonts.add(jFont);
+        const assets = (window.settlementPreloader && typeof window.settlementPreloader.getAssets === 'function') ? window.settlementPreloader.getAssets() : null;
+        const fontsReady = assets && assets.fontsReady;
+        if (!fontsReady) {
+          if (!document.fonts.check('21px "JingNanBoBoHei-Bold-2"')) {
+            const jFont = new FontFace('JingNanBoBoHei-Bold-2', 'url(assets/fonts/JingNanBoBoHei-Bold-2.ttf)');
+            await jFont.load();
+            document.fonts.add(jFont);
+          }
+          if (!document.fonts.check('24px "Blippo"')) {
+            try {
+              const bFont = new FontFace('Blippo', 'url(assets/fonts/Blippo.ttf)');
+              await bFont.load();
+              document.fonts.add(bFont);
+            } catch (_) {}
+          }
+          await Promise.all([
+            document.fonts.load('21px "JingNanBoBoHei-Bold-2"'),
+            document.fonts.load('24px "Blippo"'),
+            document.fonts.load('24px "JingNanBoBoHei-Bold-2"')
+          ]);
         }
-        await document.fonts.load('21px "JingNanBoBoHei-Bold-2"');
       } catch (_) {}
-      try { await document.fonts.load('24px "Blippo"'); } catch (_) {}
-      try { await document.fonts.load('24px "JingNanBoBoHei-Bold-2"'); } catch (_) {}
 
       // 获取当前主题
       const isDark = getIsDarkTheme();
@@ -247,15 +362,15 @@
       // 顶部logo
       let startY = 24;
       try {
-        const logoImg = await loadImage('images/quiz/logo.png');
+        const assets = (window.settlementPreloader && typeof window.settlementPreloader.getAssets === 'function') ? window.settlementPreloader.getAssets() : null;
+        const logoImg = assets && assets.logo ? assets.logo : await loadImage('images/quiz/logo.png');
         const ratio = logoImg.width && logoImg.height ? (logoImg.width / logoImg.height) : 1;
         const logoW = Math.min(width - 40, Math.round(desiredLogoH * ratio));
         const logoX = Math.round((width - logoW) / 2);
         const logoY = 10;
         ctx.drawImage(logoImg, logoX, logoY, logoW, desiredLogoH);
-        startY = logoY + desiredLogoH + 12; // 表格起始位置下移，避免与logo重叠
+        startY = logoY + desiredLogoH + 12;
       } catch (_) {
-        // 如果logo加载失败，则使用默认起始位置
         startY = 24;
       }
 
@@ -299,25 +414,24 @@
       const lastBaseline = startY + (rows.length - 1) * rowHeight + 12;
 
       // 右下角绘制quiz二维码（根据主题选择）
+      const assets = (window.settlementPreloader && typeof window.settlementPreloader.getAssets === 'function') ? window.settlementPreloader.getAssets() : null;
       const qrSrc = isDark ? 'images/quiz/qrcode_quiz_dark.png' : 'images/quiz/qrcode_quiz_light.png';
       try {
-        const qrImg = await loadImage(qrSrc);
-        const minClearance = 16; // 二维码与文字之间的最小间距
+        const preQr = assets ? (isDark ? assets.qrDark : assets.qrLight) : null;
+        const qrImg = preQr || await loadImage(qrSrc);
+        const minClearance = 16;
         const yBottomCandidate = height - qrSize - qrMargin - captionHeightApprox - captionMargin;
         const qy = Math.max(yBottomCandidate, lastBaseline + minClearance);
         const qx = width - qrSize - qrMargin;
-        // 圆角裁剪绘制二维码
         ctx.save();
         roundRectPath(ctx, qx, qy, qrSize, qrSize, 8);
         ctx.clip();
         ctx.drawImage(qrImg, qx, qy, qrSize, qrSize);
         ctx.restore();
-        // 细边框
         ctx.strokeStyle = colors.border;
         ctx.lineWidth = 1;
         roundRectPath(ctx, qx, qy, qrSize, qrSize, 8);
         ctx.stroke();
-        // 在二维码下方绘制说明文字
         ctx.font = captionFont;
         ctx.fillStyle = colors.labelTextStrong;
         ctx.textAlign = 'center';
@@ -325,20 +439,36 @@
         const captionY = qy + qrSize + captionMargin;
         const captionX = qx + qrSize / 2;
         ctx.fillText(captionText, captionX, captionY);
-      } catch (_) {
-        // 若二维码加载失败，忽略不影响其它内容
-      }
+      } catch (_) {}
+
 
       // 创建图片元素（圆角显示）
       const img = document.createElement('img');
-      img.src = canvas.toDataURL('image/png');
+
+      // 修复长按保存问题：将Canvas转换为Blob，然后创建Object URL
+      canvas.toBlob(function(blob) {
+        if (blob) {
+          // 创建Object URL以便更好的浏览器兼容性
+          const objectUrl = URL.createObjectURL(blob);
+          img.src = objectUrl;
+
+          img.style.cursor = 'default';
+        } else {
+          // 回退到dataURL
+          img.src = canvas.toDataURL('image/png');
+        }
+      }, 'image/png', 0.95);
+
       img.alt = '结算表格';
       img.style.maxWidth = '100%';
       img.style.height = 'auto';
       img.style.display = 'block';
       img.style.margin = '0 auto';
       img.style.borderRadius = radius + 'px';
-      
+      img.style.userSelect = 'none'; // 防止意外选择
+      img.style.webkitTouchCallout = 'default'; // 允许iOS长按菜单
+      img.style.webkitUserSelect = 'none';
+
       return img;
     }
 
@@ -3466,11 +3596,28 @@ const TYPE_META = {
         // 生成结算表格图片
         const resultCard = document.createElement('div');
         resultCard.className = 'result-card';
-        
+
         const difficultyName = getDifficultyDisplayName();
         const timeFormatted = formatTime(finalTime);
-        
-        // 创建结算表格图片
+
+        // 添加结算图片生成加载提示
+        const loadingEl = document.createElement('div');
+        loadingEl.className = 'settlement-loading';
+        loadingEl.innerHTML = `
+          <div class="loading-spinner"></div>
+          <div class="loading-text">正在生成结算图片...</div>
+        `;
+        loadingEl.style.cssText = `
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 40px 20px;
+          color: var(--color-text-secondary);
+        `;
+        resultCard.appendChild(loadingEl);
+        resultView.appendChild(resultCard);
+
+        // 异步生成结算表格图片
         const resultImage = await generateSettlementImage({
           difficulty: difficultyName,
           time: timeFormatted,
@@ -3478,6 +3625,11 @@ const TYPE_META = {
           timeScore: scores.timeScore,
           finalScore: scores.finalScore
         });
+
+        // 移除加载提示，添加实际图片
+        if (loadingEl.parentNode === resultCard) {
+          resultCard.removeChild(loadingEl);
+        }
 
         // 移动端提示：图片外部提示保存分享
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia('(max-width: 768px)').matches;
@@ -3487,9 +3639,8 @@ const TYPE_META = {
           tipEl.style.cssText = 'margin: 0 0 6px; font-size: 12px; color: var(--color-text-secondary); text-align:center;';
           resultCard.appendChild(tipEl);
         }
-        
+  
         resultCard.appendChild(resultImage);
-        resultView.appendChild(resultCard);
         // 在结算界面右下角添加二维码
         // 二维码已嵌入结算图片，不再单独显示
         
@@ -3526,6 +3677,8 @@ const TYPE_META = {
           const loadingOverlay = document.getElementById('loadingOverlay');
           loadingOverlay.classList.add('show');
           
+          try { window.settlementPreloader && window.settlementPreloader.ensureReady && window.settlementPreloader.ensureReady(); } catch (_) {}
+          
           await loadData();
           
           // 隐藏难度选择器
@@ -3555,8 +3708,7 @@ const TYPE_META = {
           // 重置计时器（但不启动）
           resetTimer();
           
-          // 添加等待时间（1.5秒）
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          // 移除强制等待，直接进入题目
           
           // 隐藏加载动画
           loadingOverlay.classList.remove('show');
@@ -3996,59 +4148,67 @@ const TYPE_META = {
       });
 
       // 默认加载主题后不再自动应用随机主题
-      document.addEventListener('DOMContentLoaded', function() {
-        if (window.themeSwitcher) {
-          // 不再自动应用随机主题，改为由主题选择器控制
-        }
-        
-        // 初始化难度按钮
-        initializeDifficultyButtons();
-
-        // 绑定反馈方式选择弹窗的通用事件
-        (function bindFeedbackChoiceModalEvents() {
-          const choiceModal = document.getElementById('feedbackChoiceModal');
-          const closeChoice = document.getElementById('closeFeedbackChoice');
-          const bilibiliBtn = document.getElementById('feedbackBilibiliBtn');
-          const questionnaireBtn = document.getElementById('feedbackQuestionnaireBtn');
-
-          // 关闭按钮
-          if (closeChoice && !closeChoice.hasAttribute('data-feedback-choice-bound')) {
-            closeChoice.addEventListener('click', hideFeedbackChoice);
-            closeChoice.setAttribute('data-feedback-choice-bound', 'true');
+      (function initPage() {
+        const run = function() {
+          if (window.themeSwitcher) {
+            // 不再自动应用随机主题，改为由主题选择器控制
           }
+          
+          // 初始化难度按钮 - 移除此处的调用，已在页面加载后立即执行
+          // initializeDifficultyButtons();
 
-          // 点击遮罩关闭
-          if (choiceModal && !choiceModal.hasAttribute('data-feedback-choice-bound')) {
-            choiceModal.addEventListener('click', function(e) {
-              if (e.target === choiceModal) {
+          // 绑定反馈方式选择弹窗的通用事件
+          (function bindFeedbackChoiceModalEvents() {
+            const choiceModal = document.getElementById('feedbackChoiceModal');
+            const closeChoice = document.getElementById('closeFeedbackChoice');
+            const bilibiliBtn = document.getElementById('feedbackBilibiliBtn');
+            const questionnaireBtn = document.getElementById('feedbackQuestionnaireBtn');
+
+            // 关闭按钮
+            if (closeChoice && !closeChoice.hasAttribute('data-feedback-choice-bound')) {
+              closeChoice.addEventListener('click', hideFeedbackChoice);
+              closeChoice.setAttribute('data-feedback-choice-bound', 'true');
+            }
+
+            // 点击遮罩关闭
+            if (choiceModal && !choiceModal.hasAttribute('data-feedback-choice-bound')) {
+              choiceModal.addEventListener('click', function(e) {
+                if (e.target === choiceModal) {
+                  hideFeedbackChoice();
+                }
+              });
+              choiceModal.setAttribute('data-feedback-choice-bound', 'true');
+            }
+
+            // B站（推荐）
+            if (bilibiliBtn && !bilibiliBtn.hasAttribute('data-feedback-choice-bound')) {
+              bilibiliBtn.addEventListener('click', function() {
+                window.open('https://www.bilibili.com/video/BV1srHPz4EqN/', '_blank');
                 hideFeedbackChoice();
-              }
-            });
-            choiceModal.setAttribute('data-feedback-choice-bound', 'true');
-          }
+              });
+              bilibiliBtn.setAttribute('data-feedback-choice-bound', 'true');
+            }
 
-          // B站（推荐）
-          if (bilibiliBtn && !bilibiliBtn.hasAttribute('data-feedback-choice-bound')) {
-            bilibiliBtn.addEventListener('click', function() {
-              window.open('https://www.bilibili.com/video/BV1srHPz4EqN/', '_blank');
-              hideFeedbackChoice();
-            });
-            bilibiliBtn.setAttribute('data-feedback-choice-bound', 'true');
-          }
+            // 问卷按钮（问卷链接在显示弹窗时动态设置）
+            if (questionnaireBtn && !questionnaireBtn.hasAttribute('data-feedback-choice-bound')) {
+              questionnaireBtn.addEventListener('click', function() {
+                const url = questionnaireBtn.getAttribute('data-questionnaire-url');
+                if (url) {
+                  window.open(url, '_blank');
+                }
+                hideFeedbackChoice();
+              });
+              questionnaireBtn.setAttribute('data-feedback-choice-bound', 'true');
+            }
+          })();
+        };
 
-          // 问卷按钮（问卷链接在显示弹窗时动态设置）
-          if (questionnaireBtn && !questionnaireBtn.hasAttribute('data-feedback-choice-bound')) {
-            questionnaireBtn.addEventListener('click', function() {
-              const url = questionnaireBtn.getAttribute('data-questionnaire-url');
-              if (url) {
-                window.open(url, '_blank');
-              }
-              hideFeedbackChoice();
-            });
-            questionnaireBtn.setAttribute('data-feedback-choice-bound', 'true');
-          }
-        })();
-      });
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', run, { once: true });
+        } else {
+          run();
+        }
+      })();
       
       // 显示/隐藏反馈方式选择弹窗
       function showFeedbackChoice(questionnaireUrl) {
@@ -4330,8 +4490,7 @@ const TYPE_META = {
           // 重置计时器但不启动
           resetTimer();
           
-          // 添加等待时间（1.5秒）
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          // 移除强制等待，直接进入题目
           
           // 隐藏加载动画
           loadingOverlay.classList.remove('show');
@@ -4403,8 +4562,7 @@ const TYPE_META = {
           // 重置计时器（但不启动）
           resetTimer();
           
-          // 添加等待时间（1.5秒）
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          // 移除强制等待，直接进入题目
           
           // 隐藏加载动画
           loadingOverlay.classList.remove('show');
@@ -5219,11 +5377,35 @@ const TYPE_META = {
         }
       }
 
-      // 页面加载后在主界面卡片下方渲染排行榜
+      // 立即初始化按钮，确保用户可以立即点击
+      initializeDifficultyButtons();
+      
+      // 页面加载后在主界面卡片下方渲染排行榜（异步进行，不阻塞按钮）
       const mainLeaderboardEl = document.getElementById('leaderboardCardMain');
       if (mainLeaderboardEl) {
-        renderLeaderboardCard('leaderboardCardMain');
+        // 使用 setTimeout 确保排行榜渲染不会阻塞按钮初始化
+        setTimeout(() => {
+          renderLeaderboardCard('leaderboardCardMain');
+        }, 0);
       }
+      
+      // 就绪标记与早期点击处理
+      try {
+        window.__quizReady = true;
+        const ov = document.getElementById('loadingOverlay');
+        if (window.__pendingDaily) {
+          window.__pendingDaily = false;
+          // 触发每日挑战按钮点击以保留确认流程
+          const btn = document.getElementById('dailyChallengeBtn');
+          if (btn) btn.click();
+        } else if (window.__pendingDifficulty) {
+          const diff = window.__pendingDifficulty;
+          window.__pendingDifficulty = null;
+          startQuizWithDifficulty(diff);
+        } else {
+          if (ov) ov.classList.remove('show');
+        }
+      } catch (_) {}
       
       // 显示每日挑战排行榜
   async function showDailyChallengeLeaderboard() {
