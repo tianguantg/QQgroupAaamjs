@@ -1,0 +1,46 @@
+* { box-sizing: border-box; }
+body { font-family: sans-serif; margin: 0; background: #f7f7f9; }
+.container { max-width: 1280px; margin: 24px auto; padding: 16px; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+h1 { margin: 0 0 16px; font-size: 20px; }
+.settings { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+.settings input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+.settings button { padding: 8px 12px; border: 1px solid #0a66c2; background: #0a66c2; color: #fff; border-radius: 6px; }
+.drop { border: 2px dashed #aaa; padding: 24px; text-align: center; color: #666; border-radius: 8px; cursor: pointer; }
+.drop.dragover { border-color: #0a66c2; color: #0a66c2; }
+.status { margin: 12px 0; color: #333; }
+.global { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 12px 0; }
+.global label { display: block; font-size: 12px; color: #555; }
+.global input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+th, td { border: 1px solid #eee; padding: 8px; text-align: left; }
+th { background: #fafafa; }
+td input { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 6px; }
+.actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+.actions button { padding: 10px 16px; border: 1px solid #0a66c2; background: #0a66c2; color: #fff; border-radius: 6px; }
+.players { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+.player-card { border: 1px solid #eee; border-radius: 8px; padding: 12px; }
+.player-title { font-weight: 600; margin-bottom: 8px; }
+.field { display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+.field label { font-size: 12px; color: #555; }
+.field input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
+
+/* 识别置信度标注 */
+.field input.conf-lt90 { border-color: #f0ad4e; background: #fff7e6; }
+.field input.conf-lt70 { border-color: #ff9800; background: #ffe8cc; }
+.field input.conf-lt50 { border-color: #dc3545; background: #ffe1e1; }
+.field input.conf-miss { border-color: #8b0000; background: #ffeded; box-shadow: 0 0 0 2px rgba(139,0,0,0.15); }
+
+/* 角色识别专用阈值（<10%、<6%、<2%） */
+.field input.conf-char-lt10 { border-color: #f0ad4e; background: #fff7e6; }
+.field input.conf-char-lt6  { border-color: #ff9800; background: #ffe8cc; }
+.field input.conf-char-lt2  { border-color: #dc3545; background: #ffe1e1; }
+
+@media (max-width: 1200px) {
+  .players { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .players { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .players { grid-template-columns: 1fr; }
+}

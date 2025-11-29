@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>客服秋叶</title>
+    <style>
+        :root {
+            --tmall-red: #ff0036;
+            --orange: #ff9100;
+            --bg-gray: #f4f4f4;
+            --text-dark: #333;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-gray);
+            padding-bottom: 80px; 
+            color: var(--text-dark);
+        }
+
+        /* 顶部通告 */
+        .marquee {
+            background: #ffeae6;
+            color: var(--tmall-red);
+            padding: 8px;
+            font-size: 12px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* 商品主图 */
+        .product-img-container {
+            width: 100%;
+            height: 350px;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .product-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .img-fallback {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #ccc;
+            z-index: -1;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* 秒杀条 */
+        .flash-sale-bar {
+            background: linear-gradient(90deg, #f10215, #ff5000);
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 价格与标题 */
+        .price-section {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: baseline;
+            color: var(--tmall-red);
+        }
+
+        .currency { font-size: 14px; font-weight: bold; }
+        .price { font-size: 36px; font-weight: 800; }
+        .price-tag { 
+            background: #ffe1e1; 
+            color: var(--tmall-red); 
+            font-size: 11px; 
+            padding: 2px 5px; 
+            border-radius: 4px;
+            margin-left: 10px;
+            transform: translateY(-5px);
+        }
+        .old-price { 
+            color: #999; 
+            text-decoration: line-through; 
+            font-size: 12px; 
+            margin-left: 10px;
+        }
+
+        .product-title {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-top: 10px;
+            color: #333;
+        }
+
+        /* 规格选择 */
+        .section-box {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .spec-title { font-size: 14px; color: #333; margin-bottom: 10px; font-weight: bold; }
+        
+        .spec-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .spec-btn {
+            padding: 6px 15px;
+            background: #f8f8f8;
+            border-radius: 20px;
+            font-size: 13px;
+            border: 1px solid #f8f8f8;
+            color: #333;
+            cursor: pointer;
+        }
+        
+        .spec-btn.active {
+            background: #fff5f7;
+            border-color: var(--tmall-red);
+            color: var(--tmall-red);
+        }
+
+        /* 评价区 */
+        .review-item {
+            font-size: 12px;
+            margin-top: 8px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+        .review-user { color: #999; margin-right: 5px; }
+        .review-content { color: #333; margin-top: 2px; }
+
+        /* 详情页 - 正式说明 */
+        .details {
+            background: #fff;
+            padding: 20px 15px;
+            min-height: 200px;
+        }
+        
+        .detail-header {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .detail-header::before, .detail-header::after {
+            content: "";
+            height: 1px;
+            width: 30px;
+            background: #eee;
+            margin: 0 10px;
+        }
+
+        .formal-desc h3 {
+            font-size: 16px;
+            font-weight: bold;
+            color: #000;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--tmall-red);
+            padding-left: 10px;
+        }
+
+        .formal-desc p {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        /* 底部 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            display: flex;
+            height: 55px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 100;
+        }
+
+        .icon-btn {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+            cursor: pointer;
+        }
+        
+        .main-btn {
+            flex: 3;
+            background: linear-gradient(90deg, #ff9000, #ff0036);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .shake-animation {
+            animation: shake 0.8s ease-in-out infinite alternate;
+        }
+
+        @keyframes shake {
+            from { transform: scale(1); }
+            to { transform: scale(1.05); }
+        }
+
+        /* 弹窗样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            background: #fff;
+            width: 80%;
+            max-width: 320px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .modal-qq {
+            font-size: 24px;
+            color: var(--tmall-red);
+            font-weight: bold;
+            margin: 10px 0 20px 0;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .modal-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-copy {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        .btn-jump {
+            background: linear-gradient(90deg, #00c6ff, #0072ff);
+            color: white;
+        }
+
+        .close-btn {
+            margin-top: 10px;
+            color: #999;
+            font-size: 12px;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="marquee">[紧急通知] 库存告急！刚才又有一位群友把秋叶领走了！</div>
+
+    <!-- 图片区域 -->
+    <div class="product-img-container">
+        <!-- 指向本地 ./image/avatar.jpg -->
+        <img src="./image/avatar.jpg" alt="秋叶头像" onerror="this.style.display='none'; document.querySelector('.img-fallback').style.zIndex='1';">
+        <div class="img-fallback">
+            <p>[商品图片]</p>
+        </div>
+    </div>
+
+    <!-- 秒杀条 -->
+    <div class="flash-sale-bar">
+        <div>
+            <strong style="font-size: 18px;">限时免费</strong> · 倒计时
+        </div>
+        <div id="timer" style="font-family: monospace; font-size: 14px; font-weight: bold;">
+            00:59:59
+        </div>
+    </div>
+
+    <!-- 价格标题区 -->
+    <div class="price-section">
+        <div class="price-row">
+            <span class="currency">¥</span>
+            <span class="price">0.00</span>
+            <span class="price-tag">白给</span>
+            <span class="old-price">原价 ¥199999</span>
+        </div>
+        <div class="product-title">
+            <span style="background: var(--tmall-red); color: white; padding: 1px 4px; border-radius: 3px; font-size: 12px; margin-right: 5px;">自营</span>
+            全能客服秋叶，能够解决你一切问题，居家旅行群聊水群必备神器
+        </div>
+    </div>
+
+    <!-- 规格选择 -->
+    <div class="section-box">
+        <div class="spec-title">外观选择</div>
+        <div class="spec-options">
+            <div class="spec-btn active" onclick="selectSpec(this)">默认皮肤</div>
+            <div class="spec-btn" onclick="selectSpec(this)">恋恋形态</div>
+            <div class="spec-btn" onclick="selectSpec(this)">自定义COS (需加钱)</div>
+        </div>
+        
+        <div class="spec-title" style="margin-top: 15px;">发货方式</div>
+        <div class="spec-options">
+            <div class="spec-btn active" id="normal-delivery">QQ极速达</div>
+            <div class="spec-btn" onclick="illegalWarning()">绑架发货</div>
+        </div>
+    </div>
+
+    <!-- 评价区 -->
+    <div class="section-box">
+        <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px;">
+            <strong>宝贝评价 (10万+)</strong>
+            <span style="color: var(--tmall-red);">查看全部 ></span>
+        </div>
+        <div class="review-item">
+            <div class="review-user">匿名买家：</div>
+            <div class="review-content">怎么是一个笨蛋啊？除了卖萌什么都不会，感觉被骗了但是又没花钱...</div>
+        </div>
+        <div class="review-item">
+            <div class="review-user">受害者小明：</div>
+            <div class="review-content">太离谱了！点击发货之后，把我绑架到一个奇怪的群里去了！警察叔叔救命！</div>
+        </div>
+    </div>
+
+    <!-- 详情 -->
+    <div class="details">
+        <div class="detail-header">宝贝详情</div>
+        
+        <div class="formal-desc">
+            <h3>真实情况说明</h3>
+            <p>
+                <strong>秋叶是本群管理员。</strong>
+            </p>
+            <p>
+                点击下方的【立即0元抢购】按钮，添加管理员为好友，然后就可以把你拉进群啦。
+            </p>
+        </div>
+    </div>
+
+    <!-- 底部按钮 -->
+    <div class="bottom-bar">
+        <div class="icon-btn">
+            <span>[店铺]</span>
+        </div>
+        <div class="icon-btn">
+            <span>[收藏]</span>
+        </div>
+        <!-- 移除直接跳转链接，改为onclick -->
+        <div class="main-btn shake-animation" onclick="openModal()">
+            立即0元抢购
+        </div>
+    </div>
+
+    <!-- 弹窗结构 -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal-box">
+            <div class="modal-title">请选择联系方式</div>
+            <div style="font-size: 12px; color: #666;">客服秋叶 QQ号</div>
+            <div class="modal-qq" id="qq-number">3129479588</div>
+            
+            <button class="modal-btn btn-copy" onclick="copyQQ()">复制QQ号</button>
+            <a href="mqqapi://card/show_pslcard?src_type=internal&source=sharecard&version=1&uin=3129479588" class="modal-btn btn-jump">直接添加好友 (仅手机)</a>
+            
+            <div class="close-btn" onclick="closeModal()">关闭窗口</div>
+        </div>
+    </div>
+
+    <script>
+        // 规格选择
+        function selectSpec(element) {
+            let siblings = element.parentNode.children;
+            for(let i=0; i<siblings.length; i++) {
+                siblings[i].classList.remove('active');
+            }
+            element.classList.add('active');
+        }
+
+        // 警告逻辑
+        function illegalWarning() {
+            alert("这是犯法的喵！");
+        }
+
+        // 弹窗逻辑
+        function openModal() {
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // 复制功能
+        function copyQQ() {
+            const qqText = document.getElementById('qq-number').innerText;
+            
+            // 创建临时的textarea元素
+            const textarea = document.createElement('textarea');
+            textarea.value = qqText;
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                alert('复制成功！快去QQ添加好友吧');
+            } catch (err) {
+                alert('复制失败，请手动复制');
+            }
+            
+            document.body.removeChild(textarea);
+        }
+
+        // 倒计时
+        let time = 3600;
+        setInterval(() => {
+            time--;
+            if(time < 0) time = 3600;
+            let h = Math.floor(time / 3600).toString().padStart(2, '0');
+            let m = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
+            let s = (time % 60).toString().padStart(2, '0');
+            document.getElementById('timer').innerText = `${h}:${m}:${s}`;
+        }, 1000);
+    </script>
+</body>
+</html>

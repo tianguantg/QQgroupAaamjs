@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🔥秋叶 - 限时0元购</title>
+    <style>
+        :root {
+            --tmall-red: #ff0036;
+            --jd-red: #f10215;
+            --orange: #ff9100;
+            --yellow: #fff3cd;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f4f4f4;
+            padding-bottom: 80px; /* 留出底部按钮空间 */
+        }
+
+        /* 顶部通告栏 */
+        .marquee {
+            background: #333;
+            color: #fff;
+            padding: 5px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* 商品主图区域（模拟） */
+        .product-img {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(180deg, #ffecd2 0%, #fcb69f 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: #d35400;
+            position: relative;
+        }
+        
+        .product-avatar {
+            font-size: 80px;
+            margin-bottom: 10px;
+            animation: bounce 2s infinite;
+        }
+
+        .flash-sale-bar {
+            background: linear-gradient(90deg, #ff0036, #ff5000);
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .price-section {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: baseline;
+            color: var(--tmall-red);
+        }
+
+        .currency { font-size: 16px; font-weight: bold; }
+        .price { font-size: 32px; font-weight: 800; }
+        .old-price { 
+            color: #999; 
+            text-decoration: line-through; 
+            font-size: 14px; 
+            margin-left: 10px;
+        }
+
+        .product-title {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-top: 10px;
+            color: #333;
+        }
+        
+        .product-title span {
+            background: var(--tmall-red);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        /* 营销标签 */
+        .tags {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+        }
+        
+        .tag-item {
+            color: var(--tmall-red);
+            background: #ffeef1;
+            padding: 2px 6px;
+            border-radius: 2px;
+        }
+
+        /* 规格选择 */
+        .specs {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .spec-title { font-size: 14px; color: #666; margin-bottom: 10px; }
+        .spec-btn {
+            display: inline-block;
+            padding: 6px 15px;
+            background: #f8f8f8;
+            border-radius: 20px;
+            font-size: 13px;
+            margin-right: 10px;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+        }
+        .spec-btn.active {
+            background: #fff5f7;
+            border-color: var(--tmall-red);
+            color: var(--tmall-red);
+        }
+
+        /* 详情图模拟 */
+        .details {
+            background: #fff;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .detail-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            color: #999;
+            font-size: 12px;
+        }
+        
+        .detail-header::before, .detail-header::after {
+            content: "";
+            height: 1px;
+            width: 50px;
+            background: #ddd;
+            margin: 0 10px;
+        }
+
+        .feature-box {
+            border: 2px dashed var(--orange);
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+            background: #fffdf0;
+        }
+
+        /* 底部浮动栏 */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            height: 60px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            z-index: 999;
+        }
+
+        .icons {
+            flex: 1;
+            display: flex;
+            justify-content: space-around;
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+        }
+
+        .icons div {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .buy-btn {
+            flex: 2;
+            height: 100%;
+            background: linear-gradient(90deg, #ff9000 0%, #ff5000 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .buy-btn.now {
+            background: linear-gradient(90deg, #ff5000 0%, #ff0036 100%);
+        }
+
+        /* 动画 */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes shake {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            75% { transform: rotate(-5deg); }
+            100% { transform: rotate(0deg); }
+        }
+        
+        .shake-btn {
+            animation: shake 0.5s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="marquee">📢 恭喜群友 [二狗] 刚刚成功下单了秋叶！库存仅剩 3 件！</div>
+
+    <!-- 商品图 -->
+    <div class="product-img">
+        <div class="product-avatar">🍁</div>
+        <h2 style="font-style: italic; font-weight: 900; font-size: 2rem; text-shadow: 2px 2px 0px rgba(255,255,255,0.5);">全能工具人</h2>
+        <p>此商品不支持七天无理由退货</p>
+    </div>
+
+    <!-- 限时抢购条 -->
+    <div class="flash-sale-bar">
+        <div>
+            <strong style="font-size: 18px;">聚划算</strong> · 限时秒杀
+        </div>
+        <div style="font-size: 12px;">
+            距结束仅剩 <span id="timer" style="background: black; padding: 2px 4px; border-radius: 4px; font-weight: bold;">02:14:59</span>
+        </div>
+    </div>
+
+    <!-- 价格标题区 -->
+    <div class="price-section">
+        <div class="price-row">
+            <span class="currency">¥</span>
+            <span class="price">0.5</span>
+            <span class="old-price">原价 ¥9999</span>
+        </div>
+        <div class="tags">
+            <span class="tag-item">当天发货</span>
+            <span class="tag-item">全能型</span>
+            <span class="tag-item">耐劳耐骂</span>
+        </div>
+        <div class="product-title">
+            <span>自营</span>【现货速发】客服秋叶 24小时在线陪聊 游戏代打 情感垃圾桶 只有你想不到没有他干不了
+        </div>
+    </div>
+
+    <!-- 规格选择（恶搞点） -->
+    <div class="specs">
+        <div class="spec-title">选择外观/属性</div>
+        <div>
+            <span class="spec-btn active">默认皮肤</span>
+            <span class="spec-btn">女装大佬(缺货)</span>
+            <span class="spec-btn">暴躁老哥(需加价)</span>
+        </div>
+        <div class="spec-title" style="margin-top: 15px;">发货方式</div>
+        <div>
+            <span class="spec-btn active">QQ极速达</span>
+            <span class="spec-btn">顺丰冷链(暂不支持)</span>
+        </div>
+    </div>
+
+    <!-- 评价区 -->
+    <div class="specs">
+        <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px;">
+            <strong>宝贝评价 (999+)</strong>
+            <span style="color: var(--tmall-red);">查看全部 ></span>
+        </div>
+        <div style="font-size: 12px; color: #333; margin-bottom: 5px;">
+            <span style="color: #999;">群友A**：</span> 发货很快，就是有点话痨，能不能退货？
+        </div>
+        <div style="font-size: 12px; color: #333;">
+            <span style="color: #999;">匿名买家：</span> 全能型是真的，甚至帮我写了作业，好评！
+        </div>
+    </div>
+
+    <!-- 详情 -->
+    <div class="details">
+        <div class="detail-header">宝贝详情</div>
+        <div class="feature-box">
+            <h3>⚡️ 今天下单，当天发货</h3>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                不要问为什么这么快，因为秋叶就在群里。<br>
+                随叫随到，不仅发货快，回消息更快。
+            </p>
+        </div>
+        <div class="feature-box">
+            <h3>🛠️ 全能型选手</h3>
+            <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                上得厅堂下得厨房（并不）<br>
+                精通：装傻、卖萌、复制粘贴、被群主禁言。
+            </p>
+        </div>
+        <img src="https://via.placeholder.com/600x400/ff0036/ffffff?text=秋叶本叶+点击带走" style="width: 100%; border-radius: 10px; margin-top: 10px;">
+    </div>
+
+    <!-- 底部悬浮按钮 -->
+    <div class="bottom-bar">
+        <div class="icons">
+            <div><span>🏠</span>店铺</div>
+            <div><span>🎧</span>客服</div>
+            <div><span>⭐️</span>收藏</div>
+        </div>
+        <a href="https://ti.qq.com/open_qq/index2.html?url=mqqapi%3a%2f%2fuserprofile%2ffriend_profile_card%3fsrc_type%3dweb%26version%3d1.0%26source%3d2%26uin%3d3129479588" class="buy-btn">
+            <span style="font-size: 14px;">加入购物车</span>
+        </a>
+        <a href="https://ti.qq.com/open_qq/index2.html?url=mqqapi%3a%2f%2fuserprofile%2ffriend_profile_card%3fsrc_type%3dweb%26version%3d1.0%26source%3d2%26uin%3d3129479588" class="buy-btn now shake-btn">
+            <span style="font-size: 14px;">立即下单</span>
+            <span style="font-size: 10px;">(当天发货)</span>
+        </a>
+    </div>
+
+    <script>
+        // 简单的倒计时脚本
+        function startTimer(duration, display) {
+            var timer = duration, hours, minutes, seconds;
+            setInterval(function () {
+                hours = parseInt(timer / 3600, 10);
+                minutes = parseInt((timer % 3600) / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                hours = hours < 10 ? "0" + hours : hours;
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = hours + ":" + minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    timer = duration;
+                }
+            }, 1000);
+        }
+
+        window.onload = function () {
+            var twoHours = 60 * 60 * 2 + 15 * 60; // 2小时15分
+            var display = document.querySelector('#timer');
+            startTimer(twoHours, display);
+        };
+    </script>
+</body>
+</html>

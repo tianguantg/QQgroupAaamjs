@@ -5,7 +5,7 @@
       "name": "全部数据",
       "description": "包含所有时期的完整数据",
       "start_date": "2025-05-01",
-      "end_date": "2025-08-26",
+      "end_date": "2025-11-01",
       "folder": "1_all",
       "status": "ongoing"
     },
@@ -41,9 +41,27 @@
       "name": "红魔馆 - 复活",
       "description": "复活担任群主期间的数据",
       "start_date": "2025-08-07",
-      "end_date": "2025-08-25",
+      "end_date": "2025-09-04",
       "folder": "5_fuhuo",
-      "status": "ongoing"
+      "status": "completed"
+    },
+    {
+      "id": "6",
+      "name": "下北泽の大天使 - PPL",
+      "description": "PPL担任群主期间的数据",
+      "start_date": "2025-09-04",
+      "end_date": "2025-10-02",
+      "folder": "6_PPL",
+      "status": "completed"
+    },
+        {
+      "id": "7",
+      "name": "[　　] - 虚无",
+      "description": "虚无担任群主期间的数据",
+      "start_date": "2025-10-02",
+      "end_date": "2025-10-31",
+      "folder": "7_xuwu",
+      "status": "completed"
     }
   ],
   "default_period": "1_all",

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>结算识别前端</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>结算识别</h1>
+    <div class="settings">
+      <label>后端地址</label>
+      <input id="apiBase" placeholder="http://localhost:8000" />
+      <button id="loadOptions">加载选项</button>
+    </div>
+    <div id="drop" class="drop">拖拽图片到此或点击选择</div>
+    <input id="fileInput" type="file" accept="image/*" style="display:none" />
+    <div class="status" id="status"></div>
+    <div class="global">
+      <div>
+        <label>地图</label>
+        <input id="mapName" list="mapsList" />
+        <datalist id="mapsList"></datalist>
+      </div>
+      <div>
+        <label>难度</label>
+        <input id="difficulty" list="difficultiesList" />
+        <datalist id="difficultiesList"></datalist>
+      </div>
+      <div>
+        <label>回合数</label>
+        <input id="roundsUsed" />
+      </div>
+    </div>
+    <div id="playersContainer" class="players"></div>
+    <datalist id="charactersList"></datalist>
+    <div class="actions">
+      <button id="saveBtn">保存</button>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
