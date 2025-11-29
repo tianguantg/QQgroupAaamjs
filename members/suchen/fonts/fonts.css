@@ -1,0 +1,25 @@
+/* 本地字体定义 */
+
+/* SourceHanSans 常规体 - 用于正文和一般文本 */
+@font-face {
+    font-family: 'GenJyuuGothic'; /* 保持原有字体族名，避免修改HTML */
+    src: url('SourceHanSans-Regular-subset.woff2') format('woff2');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* SourceHanSans 粗体 - 用于标题和强调文本 */
+@font-face {
+    font-family: 'GenJyuuGothic'; /* 保持原有字体族名，避免修改HTML */
+    src: url('SourceHanSans-Bold-subset.woff2') format('woff2');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* CSS变量定义 */
+:root {
+    --font-serif: 'GenJyuuGothic', 'Microsoft YaHei', 'SimSun', sans-serif;
+    --font-display: 'GenJyuuGothic', 'Microsoft YaHei', sans-serif;
+}

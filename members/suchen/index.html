@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐷🐷苏辰</title>
+    <link rel="stylesheet" href="fonts/fonts.css">
+    <style>
+        :root {
+            --gold-light: #f4d03f;
+            --gold: #d4af37;
+            --gold-dark: #b8860b;
+            --black: #0a0a0a;
+            --black-light: #1a1a1a;
+            --black-lighter: #2a2a2a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* GenJyuuGothic (源柔黑体) 用于正文 */
+        body {
+            font-family: var(--font-serif);
+            background: var(--black);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* 噪点纹理 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* 金色光晕动画 */
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes goldGlow {
+            0%, 100% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.5), 0 0 40px rgba(212, 175, 55, 0.3); }
+            50% { text-shadow: 0 0 30px rgba(212, 175, 55, 0.8), 0 0 60px rgba(212, 175, 55, 0.5); }
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { border-color: var(--gold-dark); }
+            50% { border-color: var(--gold-light); }
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(10,10,10,0.95) 0%, transparent 100%);
+            z-index: 100;
+        }
+
+        /* GenJyuuGothic Bold (源柔黑体粗体) 用于Logo */
+        .logo {
+            font-family: var(--font-display);
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 0.1em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 3rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            letter-spacing: 0.15em;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: var(--gold);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--gold);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 6rem 4rem;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 30% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+                linear-gradient(180deg, var(--black) 0%, var(--black-light) 100%);
+        }
+
+        .hero-content {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .crown {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: float 4s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(212, 175, 55, 0.5));
+        }
+
+        /* GenJyuuGothic Bold (源柔黑体粗体) 用于主标题 */
+        .hero-title {
+            font-family: var(--font-display);
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 30%, #fff 50%, var(--gold) 70%, var(--gold-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 1s ease-out, goldGlow 3s ease-in-out infinite;
+            letter-spacing: 0.2em;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: #888;
+            letter-spacing: 0.3em;
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1.2rem 3rem;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            font-family: var(--font-serif);
+            font-size: 1rem;
+            letter-spacing: 0.2em;
+            text-decoration: none;
+            transition: all 0.4s ease;
+            animation: fadeInUp 1s ease-out 0.4s both, borderGlow 2s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cta-button:hover {
+            background: var(--gold);
+            color: var(--black);
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.4);
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        /* Founder Section */
+        .founder {
+            padding: 8rem 4rem;
+            position: relative;
+            background: var(--black-light);
+        }
+
+        .founder::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .section-label {
+            text-align: center;
+            color: var(--gold);
+            font-size: 0.8rem;
+            letter-spacing: 0.5em;
+            margin-bottom: 1rem;
+        }
+
+        /* GenJyuuGothic Bold (源柔黑体粗体) 用于章节标题 */
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 4rem;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .founder-card {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            padding: 3rem;
+            background: linear-gradient(135deg, var(--black-lighter) 0%, var(--black) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            position: relative;
+        }
+
+        .founder-card::before,
+        .founder-card::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--gold);
+        }
+
+        .founder-card::before {
+            top: -1px;
+            left: -1px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .founder-card::after {
+            bottom: -1px;
+            right: -1px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .founder-avatar {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            object-fit: cover;
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+            flex-shrink: 0;
+        }
+
+        /* GenJyuuGothic Bold (源柔黑体粗体) 用于创始人名字 */
+        .founder-info h3 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+        }
+
+        .founder-title {
+            color: #888;
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            margin-bottom: 1rem;
+        }
+
+        .founder-date {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(212, 175, 55, 0.1);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: var(--gold-light);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            margin-bottom: 1.5rem;
+        }
+
+        .founder-bio {
+            color: #aaa;
+            line-height: 1.8;
+        }
+
+        /* Mission Section */
+        .mission {
+            padding: 8rem 4rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mission-statement {
+            max-width: 600px;
+            margin: 0 auto 4rem;
+            font-size: 1.5rem;
+            color: #ccc;
+            line-height: 2;
+            position: relative;
+        }
+
+        /* GenJyuuGothic (源柔黑体) 用于引用符号 */
+        .mission-statement::before,
+        .mission-statement::after {
+            content: '"';
+            font-family: var(--font-serif);
+            font-size: 4rem;
+            color: var(--gold);
+            opacity: 0.3;
+            position: absolute;
+        }
+
+        .mission-statement::before {
+            top: -20px;
+            left: -40px;
+        }
+
+        .mission-statement::after {
+            bottom: -40px;
+            right: -40px;
+        }
+
+        /* Criteria Section */
+        .criteria {
+            padding: 8rem 4rem;
+            background: var(--black-light);
+            position: relative;
+        }
+
+        .criteria::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .criteria-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .criteria-warning {
+            text-align: center;
+            color: #ff6b6b;
+            font-size: 1rem;
+            letter-spacing: 0.1em;
+            margin-top: -2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .criteria-card {
+            padding: 2.5rem;
+            background: linear-gradient(180deg, var(--black-lighter) 0%, var(--black) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        /* GenJyuuGothic Bold (源柔黑体粗体) 用于编号 */
+        .criteria-number {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--gold);
+            opacity: 0.3;
+            font-weight: 700;
+        }
+
+        .criteria-card.final-card {
+            border-color: rgba(255, 107, 107, 0.3);
+            background: linear-gradient(180deg, rgba(255, 107, 107, 0.05) 0%, var(--black) 100%);
+        }
+
+        .criteria-card.final-card .criteria-number {
+            color: #ff6b6b;
+        }
+
+        .highlight {
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .highlight-gold {
+            color: var(--gold);
+            font-weight: 600;
+        }
+
+        .criteria-card {
+            padding: 2.5rem;
+            background: linear-gradient(180deg, var(--black-lighter) 0%, var(--black) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .criteria-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .criteria-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(212, 175, 55, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .criteria-card:hover::before {
+            opacity: 1;
+        }
+
+        .criteria-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.3));
+        }
+
+        .criteria-card h4 {
+            font-size: 1.1rem;
+            color: var(--gold);
+            margin-bottom: 1rem;
+            letter-spacing: 0.1em;
+        }
+
+        .criteria-card p {
+            color: #888;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* Process Section */
+        .process {
+            padding: 8rem 4rem;
+            position: relative;
+            background: linear-gradient(180deg, var(--black) 0%, var(--black-light) 50%, var(--black) 100%);
+            overflow: hidden;
+        }
+
+        .process::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+
+        .process-subtitle {
+            text-align: center;
+            color: #888;
+            font-size: 1.1rem;
+            letter-spacing: 0.2em;
+            margin-top: -2rem;
+            margin-bottom: 2rem;
+        }
+
+        .timeline {
+            max-width: 900px;
+            margin: 3rem auto 0;
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, transparent, var(--gold), var(--gold), transparent);
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3rem;
+            position: relative;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .timeline-item:nth-child(odd) {
+            flex-direction: row;
+            padding-right: calc(50% + 40px);
+        }
+
+        .timeline-item:nth-child(even) {
+            flex-direction: row-reverse;
+            padding-left: calc(50% + 40px);
+        }
+
+        .timeline-item:nth-child(2) { animation-delay: 0.1s; }
+        .timeline-item:nth-child(3) { animation-delay: 0.2s; }
+        .timeline-item:nth-child(4) { animation-delay: 0.3s; }
+        .timeline-item:nth-child(5) { animation-delay: 0.4s; }
+        .timeline-item:nth-child(6) { animation-delay: 0.5s; }
+        .timeline-item:nth-child(7) { animation-delay: 0.6s; }
+
+        /* GenJyuuGothic Bold (源柔黑体粗体) 用于时间轴节点 */
+        .timeline-node {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            background: var(--black);
+            border: 2px solid var(--gold);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            color: var(--gold);
+            font-weight: 700;
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+
+        .timeline-content {
+            background: linear-gradient(135deg, var(--black-lighter) 0%, rgba(26, 26, 26, 0.8) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 2rem;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .timeline-content::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 20px;
+            height: 2px;
+            background: var(--gold);
+            opacity: 0.5;
+        }
+
+        .timeline-item:nth-child(odd) .timeline-content::before {
+            right: -20px;
+        }
+
+        .timeline-item:nth-child(even) .timeline-content::before {
+            left: -20px;
+        }
+
+        .timeline-content:hover {
+            border-color: var(--gold);
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.15);
+            transform: translateY(-3px);
+        }
+
+        .timeline-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+        }
+
+        /* GenJyuuGothic Bold (源柔黑体粗体) 用于时间轴标题 */
+        .timeline-content h4 {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            color: var(--gold);
+            margin-bottom: 0.8rem;
+            letter-spacing: 0.1em;
+        }
+
+        .timeline-content p {
+            color: #999;
+            line-height: 1.7;
+            font-size: 0.9rem;
+        }
+
+        .process-footer {
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .process-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            position: relative;
+        }
+
+        .process-badge::before,
+        .process-badge::after {
+            content: '✦';
+            color: var(--gold);
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .badge-icon {
+            font-size: 1.5rem;
+        }
+
+        .badge-text {
+            color: var(--gold);
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+        }
+
+        /* Responsive Timeline */
+        @media (max-width: 768px) {
+            .timeline-line {
+                left: 25px;
+            }
+
+            .timeline-item:nth-child(odd),
+            .timeline-item:nth-child(even) {
+                flex-direction: row;
+                padding-left: 70px;
+                padding-right: 0;
+            }
+
+            .timeline-node {
+                left: 25px;
+                width: 40px;
+                height: 40px;
+                font-size: 0.8rem;
+            }
+
+            .timeline-content::before {
+                display: none;
+            }
+
+            .process {
+                padding: 4rem 1.5rem;
+            }
+        }
+
+        /* Footer */
+        footer {
+            padding: 4rem;
+            text-align: center;
+            border-top: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        /* GenJyuuGothic Bold (源柔黑体粗体) 用于页脚Logo */
+        .footer-logo {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .footer-text {
+            color: #555;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+        }
+
+        /* Decorative Elements */
+        .gold-line {
+            width: 60px;
+            height: 1px;
+            background: var(--gold);
+            margin: 2rem auto;
+        }
+
+        .floating-pig {
+            position: fixed;
+            font-size: 2rem;
+            opacity: 0.1;
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .floating-pig:nth-child(1) { top: 20%; left: 5%; animation-delay: 0s; }
+        .floating-pig:nth-child(2) { top: 60%; right: 5%; animation-delay: 2s; }
+        .floating-pig:nth-child(3) { bottom: 20%; left: 10%; animation-delay: 4s; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem 2rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero {
+                padding: 4rem 2rem;
+            }
+
+            .founder-card {
+                flex-direction: column;
+                text-align: center;
+                padding: 2rem;
+            }
+
+            .founder-avatar {
+                width: 150px;
+                height: 150px;
+            }
+
+            .criteria {
+                padding: 4rem 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Decorations -->
+    <div class="floating-pig">🐷</div>
+    <div class="floating-pig">🐷</div>
+    <div class="floating-pig">🐷</div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="logo">🐷🐷 CORP</div>
+        <ul class="nav-links">
+            <li><a href="#home">首页</a></li>
+            <li><a href="#founder">创始人</a></li>
+            <li><a href="#mission">使命</a></li>
+            <li><a href="#process">工艺</a></li>
+            <li><a href="#join">加入我们</a></li>
+        </ul>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <div class="crown">👑</div>
+            <h1 class="hero-title">豬豬公司</h1>
+            <p class="hero-subtitle">让 所 有 人 变 成 猪 猪</p>
+            <a href="#join" class="cta-button">你是猪猪吗？</a>
+        </div>
+    </section>
+
+    <!-- Founder Section -->
+    <section class="founder" id="founder">
+        <p class="section-label">FOUNDER</p>
+        <h2 class="section-title">创始人</h2>
+        <div class="founder-card">
+            <img src="image/avatar.jpg" alt="苏辰" class="founder-avatar" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22%231a1a1a%22 width=%22200%22 height=%22200%22/><text x=%22100%22 y=%22110%22 text-anchor=%22middle%22 font-size=%2260%22>🐷</text></svg>'">
+            <div class="founder-info">
+                <h3>苏 辰</h3>
+                <p class="founder-title">🐷🐷公司创始人 · 首席猪猪官</p>
+                <div class="founder-date">🐷🐷头衔获得时间：2025-08-01 18:29:02</div>
+                <p class="founder-bio">
+                    作为🐷🐷公司的开创者，苏辰以其卓越的猪猪精神引领着公司走向辉煌。
+                    在他的带领下，无数人发现了自己内心深处的猪猪本质。
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mission Section -->
+    <section class="mission" id="mission">
+        <p class="section-label">OUR MISSION</p>
+        <h2 class="section-title">我们的使命</h2>
+        <div class="gold-line"></div>
+        <p class="mission-statement">
+            让所有人变成猪猪，<br>
+            享受最纯粹的🐷🐷生活
+        </p>
+    </section>
+
+    <!-- Process Section -->
+    <section class="process" id="process">
+        <p class="section-label">CRAFTSMANSHIP</p>
+        <h2 class="section-title">匠心工艺</h2>
+        <p class="process-subtitle">从🐷到🥓的华丽蜕变</p>
+        <div class="gold-line"></div>
+        
+        <div class="timeline">
+            <div class="timeline-line"></div>
+            
+            <div class="timeline-item">
+                <div class="timeline-node">01</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon">🐷</div>
+                    <h4>甄选良猪</h4>
+                    <p>严选符合五大🐷🐷标准的优质成员，确保每一位都具备纯正的🐷🐷血统与精神内核。</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-node">02</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon">🔪</div>
+                    <h4>精准分割</h4>
+                    <p>大师级刀工庖丁解猪，每一刀都恰到好处，将🐷🐷的精华部位完美分离。</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-node">03</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon">🥩</div>
+                    <h4>臻选部位</h4>
+                    <p>只取最具🐷🐷灵魂的五花与里脊，肥瘦相间，纹理如大理石般优雅。</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-node">04</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon">🧂</div>
+                    <h4>秘制腌渍</h4>
+                    <p>采用外卖调料包的精华配方，72小时深度腌制，锁住🐷🐷的灵魂风味。</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-node">05</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon">🔥</div>
+                    <h4>匠心熏烤</h4>
+                    <p>以午夜零食的烟火气息进行慢熏，让每一寸纹理都渗透着宵夜的灵魂香气。</p>
+                </div>
+            </div>
+            
+            <div class="timeline-item">
+                <div class="timeline-node">06</div>
+                <div class="timeline-content">
+                    <div class="timeline-icon">🥓</div>
+                    <h4>尊享呈现</h4>
+                    <p>历经千锤百炼，终成至臻🥓品。每一口都是对🐷🐷精神的极致礼赞，值得躺着细细品味。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="process-footer">
+            <div class="process-badge">
+                <span class="badge-icon">🏆</span>
+                <span class="badge-text">匠心传承 · 始于2025</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Criteria Section -->
+    <section class="criteria" id="join">
+        <p class="section-label">⚠️ WARNING ⚠️</p>
+        <h2 class="section-title">猪猪鉴定指南</h2>
+        <p class="criteria-warning">如果你曾经有过以下行为，你可能已经是🐷🐷的一员了...</p>
+        <div class="gold-line"></div>
+        <div class="criteria-grid">
+            <div class="criteria-card">
+                <div class="criteria-number">01</div>
+                <div class="criteria-icon">😴</div>
+                <h4>《睡眠》</h4>
+                <p>在太阳升起后依然沉睡，直到正午才不情愿地醒来——<span class="highlight">你可能已经是猪猪了。</span></p>
+            </div>
+            <div class="criteria-card">
+                <div class="criteria-number">02</div>
+                <div class="criteria-icon">🌙</div>
+                <h4>《进食》</h4>
+                <p>喜欢在非饭点的时刻进食，尤其是晚上——<span class="highlight">你可能已经是猪猪了。</span></p>
+            </div>
+            <div class="criteria-card">
+                <div class="criteria-number">03</div>
+                <div class="criteria-icon">📱</div>
+                <h4>《外卖》</h4>
+                <p>总是点外卖，骑手甚至比你的朋友更熟悉你家地址——<span class="highlight">你可能已经是猪猪了。</span></p>
+            </div>
+            <div class="criteria-card">
+                <div class="criteria-number">04</div>
+                <div class="criteria-icon">🎮</div>
+                <h4>《笨蛋》</h4>
+                <p>曾在游戏中做出让队友疑惑的笨蛋操作，然后赶紧澄清“按错了”——<span class="highlight">你可能已经是猪猪了。</span></p>
+            </div>
+            <div class="criteria-card">
+                <div class="criteria-number">05</div>
+                <div class="criteria-icon">🛏️</div>
+                <h4>《被窝》</h4>
+                <p>在被窝里连续待上5个小时并且不是为了睡觉——<span class="highlight">你可能已经是猪猪了。</span></p>
+            </div>
+            <div class="criteria-card final-card">
+                <div class="criteria-number">！</div>
+                <div class="criteria-icon">🐷</div>
+                <h4>最终警告</h4>
+                <p>如果你在阅读以上规则时，发现自己符合<span class="highlight-gold">三条及以上</span>——<span class="highlight">你已经成为猪猪的一员了。</span></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-logo">🐷🐷 CORPORATION</div>
+        <p class="footer-text">© 2025 猪猪公司 · 让所有人变成猪猪</p>
+    </footer>
+
+    <script>
+        // 滚动时的视差效果
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const hero = document.querySelector('.hero-content');
+            if (hero) {
+                hero.style.transform = `translateY(${scrolled * 0.3}px)`;
+                hero.style.opacity = 1 - (scrolled / 800);
+            }
+        });
+
+        // 卡片入场动画
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.6s ease-out forwards';
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.criteria-card').forEach(card => {
+            card.style.opacity = '0';
+            observer.observe(card);
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>
