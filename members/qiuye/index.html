@@ -1,122 +1,202 @@
-<!-- 工艺流程 (The Process: From Soul to Sizzle) -->
-    <section class="py-32 bg-[#050505] relative overflow-hidden">
-        <!-- 装饰性背景字 -->
-        <div class="absolute top-10 left-0 text-[10rem] md:text-[20rem] font-bold text-white/5 opacity-20 pointer-events-none select-none serif-font leading-none z-0">
-            BACON
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SU CHEN & CO. | The Art of Pig</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        /* 自定义高级配置 */
+        :root {
+            --pig-pink: #EDB6B2;
+            --luxury-gold: #D4AF37;
+        }
+        body {
+            background-color: #050505;
+            color: #E5E5E5;
+            font-family: 'Lato', sans-serif;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, .serif-font {
+            font-family: 'Playfair Display', serif;
+        }
+        .logo-font {
+            font-family: 'Cinzel', serif;
+        }
+        
+        /* 缓慢浮动动画 */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* 图片滤镜：黑白高噪点，显得更有艺术感 */
+        .artistic-img {
+            filter: grayscale(100%) contrast(120%) brightness(80%);
+            transition: all 0.7s ease;
+        }
+        .artistic-img:hover {
+            filter: grayscale(0%) contrast(100%) sepia(20%);
+            transform: scale(1.02);
+        }
+
+        /* 滚动条隐藏 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050505; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333; 
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-pink-900 selection:text-white">
+
+    <!-- 顶部导航 -->
+    <nav class="fixed w-full z-50 flex justify-between items-center px-10 py-6 mix-blend-difference text-white">
+        <div class="text-2xl tracking-widest font-bold logo-font">SC. GROUP</div>
+        <div class="hidden md:flex space-x-12 text-xs tracking-[0.2em] uppercase opacity-70">
+            <a href="#" class="hover:text-pink-300 transition">Heritage</a>
+            <a href="#" class="hover:text-pink-300 transition">Philosophy</a>
+            <a href="#" class="hover:text-pink-300 transition">Contact</a>
+        </div>
+        <div class="w-8 h-8 rounded-full border border-white/30 flex items-center justify-center">
+            <span class="text-[10px]">🐷</span>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="relative h-screen flex flex-col justify-center items-center text-center px-4 overflow-hidden">
+        <!-- 背景图：使用Unsplash的高级猪图 -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1516467508483-a7212febe31a?q=80&w=2073&auto=format&fit=crop" class="w-full h-full object-cover artistic-img opacity-40" alt="Artistic Pig">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/80"></div>
         </div>
 
-        <div class="relative z-10 max-w-4xl mx-auto px-6">
-            <div class="text-center mb-24">
-                <span class="text-[#D4AF37] tracking-[0.4em] text-xs uppercase border-b border-[#D4AF37] pb-2">The Metamorphosis</span>
-                <h2 class="text-4xl md:text-6xl serif-font mt-8 text-white">The Journey of Essence</h2>
-                <p class="text-gray-500 mt-6 font-light italic">
-                    "From a breathing masterpiece to a crispy legacy." <br>
-                    <span class="text-xs not-italic text-gray-700">（从会呼吸的艺术品，到酥脆的传世经典。）</span>
-                </p>
+        <div class="relative z-10 space-y-6">
+            <p class="text-xs md:text-sm tracking-[0.5em] text-[#D4AF37] uppercase animate-pulse">Established 2024</p>
+            <h1 class="text-6xl md:text-9xl serif-font italic font-thin tracking-tighter leading-none">
+                Maison de <br>
+                <span class="text-white drop-shadow-2xl">Su Chen</span>
+            </h1>
+            <p class="text-sm md:text-lg font-light opacity-60 tracking-widest mt-8 max-w-2xl mx-auto">
+                REDEFINING THE ART OF DOING ABSOLUTELY NOTHING.
+                <br><span class="text-[10px] italic text-pink-200/50">（重新定义“啥也不干”的艺术）</span>
+            </p>
+        </div>
+        
+        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-30">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+        </div>
+    </header>
+
+    <!-- 创始人介绍 (The Visionary) -->
+    <section class="py-32 px-6 md:px-20 max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center">
+        <div class="space-y-8">
+            <h2 class="text-4xl serif-font text-[#D4AF37]">The Visionary</h2>
+            <div class="h-px w-20 bg-gray-700"></div>
+            <blockquote class="text-2xl font-light leading-relaxed italic opacity-80">
+                "Others see a trough. I see a dining table of opportunity. Others see sleep. I see deep meditative hibernation."
+            </blockquote>
+            <p class="text-sm tracking-widest uppercase text-gray-500">
+                — Su Chen, <br>Founder & Chief Oinking Officer (COO)
+            </p>
+            <p class="text-gray-400 font-light leading-7">
+                苏辰先生（Mr. Su Chen）作为全球顶级“躺平学”研究专家，致力于将人类从直立行走的疲惫中解放出来。他创立的 🐷🐷 控股集团，不仅是一家公司，更是一种对高碳水、低运动量生活的极致追求。
+            </p>
+        </div>
+        <div class="relative group">
+            <div class="absolute -inset-4 border border-[#D4AF37]/30 opacity-50 group-hover:rotate-2 transition duration-700"></div>
+            <!-- 这里可以换成苏辰的照片，暂时用高级猪代替 -->
+            <img src="https://images.unsplash.com/photo-1541689221361-ad95003448dc?q=80&w=2070&auto=format&fit=crop" class="w-full h-[500px] object-cover filter grayscale hover:grayscale-0 transition duration-1000" alt="Su Chen Portrait">
+            <div class="absolute bottom-4 right-4 text-[10px] tracking-widest text-white/50">SC. PORTRAIT © 2024</div>
+        </div>
+    </section>
+
+    <!-- 核心业务 (Core Competence) -->
+    <section class="py-24 bg-[#0a0a0a]">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center mb-20">
+                <span class="text-[#E6B0AA] tracking-[0.3em] text-xs uppercase">Our Expertise</span>
+                <h2 class="text-4xl md:text-5xl serif-font mt-4">The Trinity of Pig</h2>
             </div>
 
-            <!-- 垂直时间轴 -->
-            <div class="relative border-l border-[#D4AF37]/30 ml-4 md:ml-1/2 space-y-24">
-                
-                <!-- Step 1: 原始形态 -->
-                <div class="relative pl-12 md:pl-0">
-                    <!-- 时间轴节点 -->
-                    <div class="absolute -left-[5px] md:left-1/2 md:-ml-[5px] w-[11px] h-[11px] rounded-full bg-[#D4AF37] shadow-[0_0_15px_#D4AF37]"></div>
-                    
-                    <div class="md:flex md:justify-between items-center group">
-                        <div class="md:w-[45%] md:text-right md:pr-12 order-1">
-                            <h3 class="text-2xl serif-font text-white mb-2 group-hover:text-pink-300 transition">01. The Origin</h3>
-                            <p class="text-sm text-[#EDB6B2] uppercase tracking-widest mb-4">Raw Material Identification</p>
-                            <p class="text-gray-500 font-light text-sm leading-relaxed">
-                                Selecting the finest specimen with the highest laziness index. The subject (Su Chen) is cultivated in a zero-stress environment to ensure maximum tenderness.
-                                <br><span class="text-xs text-gray-700">（甄选懒惰指数最高的苏辰，在零压力环境中精心饲养，确保肉质极度松弛。）</span>
-                            </p>
-                        </div>
-                        <div class="md:w-[45%] md:pl-12 mt-6 md:mt-0 order-2">
-                            <div class="w-full h-40 bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                                <span class="text-6xl grayscale group-hover:grayscale-0 transition duration-700">🐷</span>
-                            </div>
-                        </div>
-                    </div>
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Card 1 -->
+                <div class="group p-10 border border-white/5 hover:bg-white/5 transition duration-500 cursor-none">
+                    <div class="text-4xl mb-6 opacity-50 group-hover:scale-110 transition">🍽️</div>
+                    <h3 class="text-xl serif-font mb-4 text-[#D4AF37]">Haute Cuisine</h3>
+                    <p class="text-sm text-gray-500 font-light leading-6">
+                        Focusing on 24/7 continuous calorie intake. We don't just eat; we curate biological mass.
+                        <br><br>
+                        <span class="text-xs text-gray-600">（核心业务：全天候持续进食，精准堆积每一克脂肪。）</span>
+                    </p>
                 </div>
 
-                <!-- Step 2: 解构与重塑 -->
-                <div class="relative pl-12 md:pl-0">
-                    <div class="absolute -left-[5px] md:left-1/2 md:-ml-[5px] w-[11px] h-[11px] rounded-full bg-[#333] border border-[#D4AF37]"></div>
-                    
-                    <div class="md:flex md:justify-between items-center group">
-                        <!-- 只有在大屏幕交换顺序，保持时间轴居中视觉 -->
-                        <div class="md:w-[45%] md:text-right md:pr-12 md:order-1 hidden md:block">
-                            <div class="w-full h-40 bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                                <span class="text-6xl group-hover:scale-110 transition duration-700">🔪</span>
-                            </div>
-                        </div>
-                        <div class="md:w-[45%] md:pl-12 md:order-2">
-                            <h3 class="text-2xl serif-font text-white mb-2 group-hover:text-red-900 transition">02. The Deconstruction</h3>
-                            <p class="text-sm text-[#EDB6B2] uppercase tracking-widest mb-4">Artistic Separation</p>
-                            <p class="text-gray-500 font-light text-sm leading-relaxed">
-                                A philosophical separation of spirit and matter. We don't say "butchery"; we call it "liberating the inner potential."
-                                <br><span class="text-xs text-gray-700">（这不是屠宰，这是释放内在潜能。灵肉分离的哲学时刻。）</span>
-                            </p>
-                        </div>
-                        <!-- 移动端显示的图片 -->
-                        <div class="md:hidden mt-6">
-                            <div class="w-full h-40 bg-white/5 border border-white/10 flex items-center justify-center">
-                                <span class="text-6xl">🔪</span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Card 2 -->
+                <div class="group p-10 border border-white/5 hover:bg-white/5 transition duration-500 cursor-none">
+                    <div class="text-4xl mb-6 opacity-50 group-hover:scale-110 transition">💤</div>
+                    <h3 class="text-xl serif-font mb-4 text-[#D4AF37]">Deep Slumber</h3>
+                    <p class="text-sm text-gray-500 font-light leading-6">
+                        Advanced horizontal lifestyle consulting. Achieving 18 hours of REM sleep daily.
+                        <br><br>
+                        <span class="text-xs text-gray-600">（核心技术：每天18小时深度睡眠，在此期间不回微信。）</span>
+                    </p>
                 </div>
 
-                <!-- Step 3: 时间的沉淀 (腌制) -->
-                <div class="relative pl-12 md:pl-0">
-                    <div class="absolute -left-[5px] md:left-1/2 md:-ml-[5px] w-[11px] h-[11px] rounded-full bg-[#333] border border-[#D4AF37]"></div>
-                    
-                    <div class="md:flex md:justify-between items-center group">
-                        <div class="md:w-[45%] md:text-right md:pr-12 order-1">
-                            <h3 class="text-2xl serif-font text-white mb-2 group-hover:text-yellow-200 transition">03. Crystalline Infusion</h3>
-                            <p class="text-sm text-[#EDB6B2] uppercase tracking-widest mb-4">Salt & Time</p>
-                            <p class="text-gray-500 font-light text-sm leading-relaxed">
-                                Buried in sea salt derived from the tears of gym trainers. A 48-hour silent meditation to lock in the flavor of sloth.
-                                <br><span class="text-xs text-gray-700">（掩埋在由健身教练的眼泪提取的海盐中。48小时静默冥想，锁住“懒”的原味。）</span>
-                            </p>
-                        </div>
-                        <div class="md:w-[45%] md:pl-12 mt-6 md:mt-0 order-2">
-                            <div class="w-full h-40 bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                                <span class="text-6xl group-hover:rotate-12 transition duration-700">🧂</span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Card 3 -->
+                <div class="group p-10 border border-white/5 hover:bg-white/5 transition duration-500 cursor-none">
+                    <div class="text-4xl mb-6 opacity-50 group-hover:scale-110 transition">🗣️</div>
+                    <h3 class="text-xl serif-font mb-4 text-[#D4AF37]">Sonic Grunting</h3>
+                    <p class="text-sm text-gray-500 font-light leading-6">
+                        Communication reduced to its purest form. Why speak when you can grunt?
+                        <br><br>
+                        <span class="text-xs text-gray-600">（沟通哲学：能哼哼解决的问题，绝不使用人类语言。）</span>
+                    </p>
                 </div>
-
-                <!-- Step 4: 终极形态 (培根) -->
-                <div class="relative pl-12 md:pl-0">
-                    <div class="absolute -left-[5px] md:left-1/2 md:-ml-[5px] w-[11px] h-[11px] rounded-full bg-[#D4AF37] animate-ping"></div>
-                    <div class="absolute -left-[5px] md:left-1/2 md:-ml-[5px] w-[11px] h-[11px] rounded-full bg-[#D4AF37]"></div>
-                    
-                    <div class="md:flex md:justify-between items-center group">
-                         <div class="md:w-[45%] md:text-right md:pr-12 md:order-1 hidden md:block">
-                            <div class="w-full h-40 bg-gradient-to-br from-red-900/20 to-orange-900/20 border border-[#D4AF37]/20 flex items-center justify-center overflow-hidden">
-                                <span class="text-6xl drop-shadow-[0_0_15px_rgba(212,175,55,0.5)] group-hover:scale-125 transition duration-700">🥓</span>
-                            </div>
-                        </div>
-                        <div class="md:w-[45%] md:pl-12 md:order-2">
-                            <h3 class="text-3xl serif-font text-[#D4AF37] mb-2">04. The Legacy</h3>
-                            <p class="text-sm text-white uppercase tracking-widest mb-4">Crispy Transcendence</p>
-                            <p class="text-gray-400 font-light text-sm leading-relaxed">
-                                The final form. Thin, crispy, and full of guilt. Su Chen has finally become useful to society.
-                                <br><span class="text-xs text-gray-600">（终极形态。薄、脆、充满罪恶感。苏辰终于成为了对社会有用的人/食材。）</span>
-                            </p>
-                        </div>
-                         <!-- 移动端图片 -->
-                         <div class="md:hidden mt-6">
-                            <div class="w-full h-40 bg-gradient-to-br from-red-900/20 to-orange-900/20 border border-[#D4AF37]/20 flex items-center justify-center">
-                                <span class="text-6xl">🥓</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </section>
+
+    <!-- 数据展示 (The Numbers) -->
+    <section class="py-20 border-t border-white/5">
+        <div class="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+                <div class="text-4xl serif-font text-white mb-2">108<span class="text-sm align-top text-[#D4AF37]">kg</span></div>
+                <div class="text-xs tracking-widest text-gray-500 uppercase">Target Weight</div>
+            </div>
+            <div>
+                <div class="text-4xl serif-font text-white mb-2">0<span class="text-sm align-top text-[#D4AF37]">%</span></div>
+                <div class="text-xs tracking-widest text-gray-500 uppercase">Motivation</div>
+            </div>
+            <div>
+                <div class="text-4xl serif-font text-white mb-2">∞</div>
+                <div class="text-xs tracking-widest text-gray-500 uppercase">Snacks Consumed</div>
+            </div>
+            <div>
+                <div class="text-4xl serif-font text-white mb-2">VIP</div>
+                <div class="text-xs tracking-widest text-gray-500 uppercase">Canteen Status</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-black py-12 border-t border-white/10">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+            <div class="text-2xl serif-font tracking-tighter mb-4 md:mb-0">SU CHEN</div>
+            <div class="text-[10px] text-gray-600 tracking-widest uppercase text-center md:text-right">
+                © 2024 Piggy Holdings International.<br>
+                All rights reserved. No exercise permitted on these premises.
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
