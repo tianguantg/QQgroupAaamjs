@@ -14,8 +14,8 @@
             --text-color: #4e342e;
             --shadow-light: rgba(255, 255, 255, 0.3);
             --shadow-dark: rgba(0, 0, 0, 0.2);
-            --cell-size: 30px; /* 动态变量 */
-            --cols: 9; /* 动态变量 */
+            --cell-size: 30px;
+            --cols: 9;
         }
 
         * {
@@ -30,35 +30,35 @@
             padding: 0;
             background-color: var(--bg-color);
             color: var(--text-color);
-                height: 100vh;
-    height: 100dvh; 
+            height: 100vh;
+            height: 100dvh; 
             width: 100vw;
             display: flex;
-            flex-direction: column; /* 垂直排列 */
-            overflow: hidden; /* 禁止滚动 */
+            flex-direction: column;
+            overflow: hidden;
         }
 
         /* --- 顶部信息栏 --- */
         header {
-            flex-shrink: 0; /* 防止被压缩 */
-            padding: 10px 20px;
+            flex-shrink: 0;
+            padding: 8px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: #fff;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             z-index: 10;
-            height: 60px;
+            min-height: 50px;
         }
 
         .status-box { text-align: center; font-weight: bold; min-width: 60px; }
         .status-label { font-size: 10px; color: #888; margin-bottom: 2px; }
-        .status-value { font-size: 20px; font-family: monospace; }
+        .status-value { font-size: 18px; font-family: monospace; }
         
         .emoji-btn {
-            font-size: 26px;
+            font-size: 24px;
             cursor: pointer;
-            width: 40px; height: 40px;
+            width: 36px; height: 36px;
             display: flex; justify-content: center; align-items: center;
             border-radius: 50%;
             background: #f5f5f5;
@@ -66,27 +66,27 @@
         }
         .emoji-btn:active { transform: scale(0.9); background: #eee; }
 
-        /* --- 游戏主区域 (自适应核心) --- */
+        /* --- 游戏主区域 --- */
         #game-container {
-            flex: 1; /* 占据剩余所有空间 */
+            flex: 1;
             display: flex;
             justify-content: center;
-            align-items: center; /* 垂直居中 */
-            padding: 10px;
-            overflow: hidden; /* 禁止内部滚动 */
+            align-items: center;
+            padding: 6px;
+            overflow: hidden;
             position: relative;
+            min-height: 0; /* 关键：允许flex子项缩小 */
         }
 
         #grid {
             display: grid;
-            /* 核心：使用 CSS 变量定义列数和大小 */
             grid-template-columns: repeat(var(--cols), var(--cell-size));
             gap: 2px;
             background-color: var(--board-bg);
             padding: 4px;
             border-radius: 6px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: transform 0.2s; /* 简单的缩放动画 */
+            transition: transform 0.2s;
         }
 
         .cell {
@@ -98,7 +98,6 @@
             justify-content: center;
             align-items: center;
             font-weight: 900;
-            /* 字体大小随格子大小变化 */
             font-size: calc(var(--cell-size) * 0.6); 
             cursor: pointer;
             box-shadow: inset 2px 2px 0 var(--shadow-light), inset -2px -2px 0 var(--shadow-dark);
@@ -110,7 +109,6 @@
             border: 1px solid #d7ccc8;
         }
         
-        /* 标记 */
         .cell.flagged { font-size: calc(var(--cell-size) * 0.5); }
 
         /* 数字颜色 */
@@ -120,24 +118,24 @@
 
         /* --- 底部控制栏 --- */
         footer {
-            flex-shrink: 0; /* 防止被压缩 */
-            padding: 10px 15px;
+            flex-shrink: 0;
+            padding: 8px 15px;
             background: #fff;
             display: flex;
             justify-content: space-around;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* 适配 iPhone 底部条 */
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
         }
 
         .mode-btn {
-            padding: 6px 12px;
+            padding: 5px 10px;
             border: 1px solid var(--board-bg);
             border-radius: 15px;
             background: transparent;
             color: var(--board-bg);
             font-weight: bold;
-            font-size: 13px;
-            white-space: nowrap; /* 防止文字换行 */
+            font-size: 12px;
+            white-space: nowrap;
         }
 
         .mode-btn.active {
@@ -185,7 +183,7 @@
         
         .toast {
             position: fixed;
-            top: 70px; /* 移到顶部，防止挡住底部格子 */
+            top: 60px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0,0,0,0.7);
@@ -240,7 +238,7 @@
         const CONFIG = {
             easy: { rows: 9, cols: 9, mines: 10 },
             medium: { rows: 12, cols: 12, mines: 20 },
-            hard: { rows: 20, cols: 12, mines: 35 } // 竖屏专家模式
+            hard: { rows: 20, cols: 12, mines: 35 }
         };
 
         // 状态变量
@@ -265,13 +263,11 @@
 
         // 初始化
         function init() {
-            // 阻止浏览器默认菜单
             window.oncontextmenu = (e) => {
                 e.preventDefault();
                 return false;
             };
             
-            // 监听窗口大小变化，实时调整网格
             window.addEventListener('resize', calculateGridSize);
             
             setDifficulty('easy');
@@ -281,7 +277,6 @@
         // 切换难度
         function setDifficulty(diff) {
             currentDiff = diff;
-            // 更新按钮状态
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 btn.classList.remove('active');
                 if(btn.onclick.toString().includes(diff)) btn.classList.add('active');
@@ -289,23 +284,29 @@
             resetGame();
         }
 
-        // 核心：计算网格尺寸
+        // 核心：计算网格尺寸（修复版）
         function calculateGridSize() {
             if (!containerEl) return;
             
             const { rows, cols } = CONFIG[currentDiff];
             
-            // 获取容器实际可用空间（减去padding）
-            const availableWidth = containerEl.clientWidth - 20;
-            const availableHeight = containerEl.clientHeight - 20;
+            // 获取容器实际可用空间
+            const containerRect = containerEl.getBoundingClientRect();
+            const containerPadding = 12; // 容器padding (6px * 2)
+            const gridPadding = 8; // 网格padding (4px * 2)
+            const gapTotal = (rows - 1) * 2; // 行间隙总和 (gap: 2px)
+            const gapTotalCols = (cols - 1) * 2; // 列间隙总和
+            
+            // 实际可用于放置格子的空间
+            const availableWidth = containerRect.width - containerPadding - gridPadding - gapTotalCols;
+            const availableHeight = containerRect.height - containerPadding - gridPadding - gapTotal;
 
-            // 计算两种情况下的单元格大小
+            // 计算单元格大小
             const sizeByWidth = Math.floor(availableWidth / cols);
             const sizeByHeight = Math.floor(availableHeight / rows);
 
-            // 取较小值，确保完全放入容器
-            // 限制最大为 45px，防止在电脑大屏上过于巨大
-            const finalSize = Math.min(sizeByWidth, sizeByHeight, 45);
+            // 取较小值，限制最大45px，最小18px
+            const finalSize = Math.max(18, Math.min(sizeByWidth, sizeByHeight, 45));
 
             // 更新 CSS 变量
             document.documentElement.style.setProperty('--cell-size', `${finalSize}px`);
@@ -326,36 +327,39 @@
             flags = mines;
             updateMineCount();
 
-            // 先计算尺寸
-            calculateGridSize();
-
+            // 先清空再计算尺寸
             gridEl.innerHTML = '';
             gridData = [];
-
-            // 生成格子
-            for (let r = 0; r < rows; r++) {
-                const row = [];
-                for (let c = 0; c < cols; c++) {
-                    const cellData = {
-                        r, c,
-                        isMine: false, isOpen: false, isFlagged: false,
-                        element: null, neighbors: 0
-                    };
-                    
-                    const el = document.createElement('div');
-                    el.className = 'cell';
-                    
-                    bindEvents(el, r, c);
-                    
-                    cellData.element = el;
-                    row.push(cellData);
-                    gridEl.appendChild(el);
+            
+            // 延迟一帧确保容器尺寸正确
+            requestAnimationFrame(() => {
+                calculateGridSize();
+                
+                // 生成格子
+                for (let r = 0; r < rows; r++) {
+                    const row = [];
+                    for (let c = 0; c < cols; c++) {
+                        const cellData = {
+                            r, c,
+                            isMine: false, isOpen: false, isFlagged: false,
+                            element: null, neighbors: 0
+                        };
+                        
+                        const el = document.createElement('div');
+                        el.className = 'cell';
+                        
+                        bindEvents(el, r, c);
+                        
+                        cellData.element = el;
+                        row.push(cellData);
+                        gridEl.appendChild(el);
+                    }
+                    gridData.push(row);
                 }
-                gridData.push(row);
-            }
+            });
         }
 
-        // 绑定事件（触摸与点击）
+        // 绑定事件
         function bindEvents(el, r, c) {
             const handleStart = (e) => {
                 if (!gameActive || gridData[r][c].isOpen) return;
@@ -363,26 +367,20 @@
                     toggleFlag(r, c);
                     longPressTimer = null;
                     if (navigator.vibrate) navigator.vibrate(50);
-                }, 350); // 略微缩短长按判断时间
+                }, 350);
             };
 
             const handleEnd = (e) => {
                 if (longPressTimer) {
                     clearTimeout(longPressTimer);
                     longPressTimer = null;
-                    handleClick(r, c); // 非长按即为点击
-                }
-                // 如果不是右键，阻止默认行为防止缩放
-                if(e.type !== 'mouseup' || e.button !== 2) {
-                     // e.preventDefault(); 
-                     // 注意：这里完全阻止 preventDefault 可能会影响部分机型的点击，
-                     // 但我们已经在 CSS 设置了 touch-action 或 user-scalable，通常只需处理逻辑
+                    handleClick(r, c);
                 }
             };
 
             el.addEventListener('touchstart', handleStart, {passive: true});
             el.addEventListener('touchend', (e) => {
-                e.preventDefault(); // 阻止触摸后的模拟鼠标点击
+                e.preventDefault();
                 handleEnd(e);
             }, {passive: false});
 
@@ -424,20 +422,18 @@
             updateMineCount();
         }
 
-        // 布雷逻辑 (保证首点安全)
+        // 布雷逻辑
         function placeMines(safeR, safeC) {
             const { rows, cols, mines } = CONFIG[currentDiff];
             let placed = 0;
             while (placed < mines) {
                 const r = Math.floor(Math.random() * rows);
                 const c = Math.floor(Math.random() * cols);
-                // 排除首点九宫格
                 if (!gridData[r][c].isMine && (Math.abs(r - safeR) > 1 || Math.abs(c - safeC) > 1)) {
                     gridData[r][c].isMine = true;
                     placed++;
                 }
             }
-            // 计算数字
             for(let r=0; r<rows; r++) {
                 for(let c=0; c<cols; c++) {
                     if(!gridData[r][c].isMine) gridData[r][c].neighbors = countNeighbors(r, c);
@@ -504,7 +500,7 @@
                         cell.element.innerText = '🐷';
                         if (!cell.isOpen) cell.element.style.color = '#555';
                     } else if (cell.isFlagged) {
-                        cell.element.innerText = '❌'; // 标记错误
+                        cell.element.innerText = '❌';
                         cell.element.style.color = 'red';
                     }
                 });
