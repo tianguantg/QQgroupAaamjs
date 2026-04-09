@@ -27,7 +27,7 @@
 
 <script>
 const APIs=[
-    {name:'IPIP.NET',url:'http://myip.ipip.net',t:'text',f:d=>{
+    {name:'IPIP.NET',url:'https://myip.ipip.net',t:'text',f:d=>{
         const m=d.match(/IP[：:]\s*(\S+).*?来自于[：:]\s*(.+)/);
         const p=m[2].split(/\s+/);
         return{ip:m[1],loc:p.slice(0,3).join(' '),isp:p[3]}
