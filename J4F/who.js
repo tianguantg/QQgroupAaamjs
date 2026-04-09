@@ -1,16 +1,18 @@
 const APIs=[
     {name:'IPIP.NET',url:'https://myip.ipip.net',t:'text',f:d=>{
         const m=d.match(/IP[：:]\s*(\S+).*?来自于[：:]\s*(.+)/);
-        const p=m[2].split(/\s+/);
-        return{ip:m[1],loc:p.slice(0,3).join(' '),isp:p[3]}
+        if(!m)return{ip:'-',loc:'-',isp:'-'};
+        const p=m[2].split(/\s+/).filter(Boolean);
+        return{ip:m[1],loc:p.slice(0,3).join(' '),isp:p[3]||'-'}
     }},
-    {name:'IP.sb',url:'https://api.ip.sb/geoip',t:'json',f:d=>({
-        ip:d.ip,loc:[d.country,d.region,d.city].filter(Boolean).join(' '),isp:d.isp||d.organization
-    })},
-    {name:'myip.la',url:'https://api.myip.la/cn?json',t:'json',f:d=>({
-        ip:d.ip,loc:[d.location?.country,d.location?.province,d.location?.city].filter(Boolean).join(' '),
-        isp:d.asn?.operator
-    })}
+    {name:'IP.sb',url:'https://api.ip.sb/geoip',t:'json',f:d=>{
+        const loc=[d.country,d.region].filter(Boolean).join(' ');
+        return{ip:d.ip,loc:loc,isp:d.isp||d.organization||'-'}
+    }},
+    {name:'myip.la',url:'https://api.myip.la/cn?json',t:'json',f:d=>{
+        const loc=[d.location?.province,d.location?.city].filter(Boolean).join(' ');
+        return{ip:d.ip,loc:loc||'-',isp:'-'}
+    }}
 ];
 
 function query(){
