@@ -201,6 +201,7 @@
         let isLoaded = false;
         let fetchResult = null;
         let animationFrameId;
+        let prevX = null, prevY = null;
 
         const PROVINCE_MAP = {
             '辽宁': 'kurutte',
@@ -320,32 +321,62 @@
             isLoaded = true;
         }
 
-        // 渲染彗星拖尾
+        // 渲染彗星拖尾 - 带插值处理，防止快速移动时间断
         function drawTrail(x, y) {
-            // 1. 使用 destination-out 模式，它的作用是“擦除”现有像素的不透明度
+            // 1. 使用 destination-out 模式擦除现有像素
             ctx.globalCompositeOperation = 'destination-out';
-            // 这里的颜色不重要，Alpha通道(0.1)决定了擦除的力度。值越大拖尾越短
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 2. 恢复正常的绘制模式，用来画新的点
+            // 2. 恢复正常的绘制模式
             ctx.globalCompositeOperation = 'source-over';
 
-            // 画布中心为 (150, 150)，绘制更大的拖尾点
+            const centerX = 150;
+            const centerY = 150;
+
+            // 3. 如果有上一帧位置，在两点间插值绘制
+            if (prevX !== null && prevY !== null) {
+                const dx = x - prevX;
+                const dy = y - prevY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                // 每 3 像素插值一个点，确保连续性
+                const steps = Math.max(1, Math.floor(distance / 3));
+
+                for (let i = 0; i <= steps; i++) {
+                    const t = i / steps;
+                    const ix = prevX + dx * t;
+                    const iy = prevY + dy * t;
+                    drawTrailPoint(centerX + ix, centerY + iy, t);
+                }
+            } else {
+                // 第一帧，直接绘制
+                drawTrailPoint(centerX + x, centerY + y, 1);
+            }
+
+            // 更新上一帧位置
+            prevX = x;
+            prevY = y;
+        }
+
+        // 绘制单个拖尾点
+        function drawTrailPoint(cx, cy, intensity) {
+            // 外圈拖尾
             ctx.beginPath();
-            ctx.arc(150 + x, 150 + y, 5, 0, Math.PI * 2);
-            ctx.fillStyle = '#525252';
+            ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(82, 82, 82, ${0.6 * intensity})`;
             ctx.fill();
 
-            // 添加中心亮点增强视觉效果
+            // 中心亮点
             ctx.beginPath();
-            ctx.arc(150 + x, 150 + y, 2, 0, Math.PI * 2);
-            ctx.fillStyle = '#d4d4d4';
+            ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(212, 212, 212, ${intensity})`;
             ctx.fill();
         }
 
         function startOrbitLoop() {
             let startTime = performance.now();
+            prevX = null;
+            prevY = null;
 
             function loop(currentTime) {
                 let elapsed = currentTime - startTime;
