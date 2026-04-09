@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你是 Kurutte 吗</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            background: #fafafa;
+            font-family: 'Source Han Serif SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 轨迹画布 */
+        #trailCanvas {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 卡片主体 */
+        .card {
+            background: #0a0a0a;
+            border: 1px solid #262626;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            /* 基础定位居中 */
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            /* 将 transform 的过渡交给 JS 动态控制，避免和帧动画冲突 */
+            transition: width 0.5s, height 0.5s, border-radius 0.5s, box-shadow 0.5s, border-color 0.5s;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        /* 初始状态 - 矩形 */
+        .card.initial {
+            width: 320px;
+            height: 180px;
+            border-radius: 32px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        /* 思考状态 - 小球 */
+        .card.ball {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border-color: #fafafa;
+        }
+
+        /* 结果状态 - 矩形 */
+        .card.result {
+            width: 300px;
+            height: 120px;
+            border-radius: 32px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        /* 卡片内容容器 */
+        .card-inner {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .card-inner.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 标题 & 按钮 */
+        /* 标题 & 按钮 */
+        .title {
+            font-family: 'Source Han Serif SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
+            font-size: 26px;
+            font-weight: 500;
+            color: #fafafa;
+            letter-spacing: 4px;
+            margin-bottom: 28px;
+        }
+
+        .btn {
+            padding: 12px 44px;
+            background: transparent;
+            border: 1px solid #737373;
+            border-radius: 0;
+            color: #d4d4d4;
+            font-family: 'Source Han Serif SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
+            font-size: 15px;
+            font-weight: 400;
+            letter-spacing: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #fafafa;
+            color: #0a0a0a;
+            border-color: #fafafa;
+        }
+
+        /* 思考中文字 */
+        .thinking-text {
+            position: absolute;
+            bottom: 25vh;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+            color: #737373;
+            letter-spacing: 6px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card.ball ~ .thinking-text {
+            opacity: 1;
+        }
+
+        /* 结果文字 */
+        .result-text {
+            font-family: 'Source Han Serif SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
+            font-size: 26px;
+            font-weight: 500;
+            color: #fafafa;
+            text-align: center;
+            letter-spacing: 2px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .result-text.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="trailCanvas" width="300" height="300"></canvas>
+
+        <div class="card initial" id="card">
+            <div class="card-inner active" id="initialView">
+                <h1 class="title">你是 Kurutte 吗</h1>
+                <button class="btn" id="thinkBtn">思考</button>
+            </div>
+
+            <div class="card-inner" id="resultView">
+                <div class="result-text" id="resultText"></div>
+            </div>
+        </div>
+        
+        <div class="thinking-text">思考中</div>
+    </div>
+
+    <script>
+        const card = document.getElementById('card');
+        const thinkBtn = document.getElementById('thinkBtn');
+        const initialView = document.getElementById('initialView');
+        const resultView = document.getElementById('resultView');
+        const resultText = document.getElementById('resultText');
+        const canvas = document.getElementById('trailCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // 动画物理参数
+        const ORBIT_RADIUS = 75;         // 绕圈半径
+        const CYCLE_DURATION = 1000;     // 每转一圈的时间 (ms)
+        
+        let isLoaded = false;
+        let fetchResult = null;
+        let animationFrameId;
+
+        const PROVINCE_MAP = {
+            '辽宁': 'kurutte',
+            'liaoning': 'kurutte',
+            '河南': 'gaobaiawa',
+            'henan': 'gaobaiawa',
+            '重': 'tg',
+            'chongqing': 'tg'
+        };
+
+        const RESULT_TEXTS = {
+            'kurutte': '你是 Kurutte',
+            'gaobaiawa': '你是 Gaobaiawa',
+            'tg': '你是 TG',
+            'none': '你不是 Kurutte'
+        };
+
+        const MAX_RETRIES = 2;
+        const IP_SERVICES = [
+            {
+                name: 'ipip',
+                url: 'https://myip.ipip.net/json',
+                parser: async (res) => {
+                    const data = await res.json();
+                    return data.data?.location?.length > 1 ? data.data.location[1] : null;
+                }
+            },
+            {
+                name: 'ipsb',
+                url: 'https://api.ip.sb/geoip',
+                parser: async (res) => {
+                    const data = await res.json();
+                    return data.region_name || data.province;
+                }
+            },
+            {
+                name: 'myip',
+                url: 'https://api.myip.la/cn?json',
+                parser: async (res) => {
+                    const data = await res.json();
+                    return data.Location?.Province || data.province;
+                }
+            }
+        ];
+
+        async function fetchWithTimeout(url, timeout = 5000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
+
+        async function getProvince() {
+            for (const service of IP_SERVICES) {
+                try {
+                    const response = await fetchWithTimeout(service.url);
+                    if (!response.ok) continue;
+                    const province = await service.parser(response);
+                    if (province) return province;
+                } catch (err) {}
+            }
+            return null;
+        }
+
+        async function checkIdentity() {
+            const province = await getProvince();
+            const normalized = province ? province.toLowerCase().trim() : '';
+            return { 
+                province, 
+                identity: PROVINCE_MAP[normalized] || 'none' 
+            };
+        }
+
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        // 核心流程控制
+        async function startThinking() {
+            // 1. 开始并行拉取数据
+            isLoaded = false;
+            fetchDataInBackground();
+
+            // 2. 卡片缩小为小球
+            card.classList.remove('initial');
+            card.classList.add('ball');
+            initialView.classList.remove('active');
+            
+            // 赋予平滑移动的过渡属性
+            card.style.transition = 'width 0.5s, height 0.5s, border-radius 0.5s, transform 0.5s ease-in-out';
+            await sleep(500);
+
+            // 3. 小球移动到圆周顶部
+            card.style.transform = `translate(-50%, calc(-50% - ${ORBIT_RADIUS}px))`;
+            await sleep(500);
+
+            // 4. 清除 transform 过渡（交给 JS 帧动画接管，防止卡顿），开始旋转
+            card.style.transition = 'width 0.5s, height 0.5s, border-radius 0.5s';
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            startOrbitLoop();
+        }
+
+        async function fetchDataInBackground() {
+            let result;
+            let attempts = 0;
+            while (attempts <= MAX_RETRIES) {
+                result = await checkIdentity();
+                if (result.province || attempts === MAX_RETRIES) break;
+                attempts++;
+                await sleep(500);
+            }
+            fetchResult = result;
+            isLoaded = true;
+        }
+
+        // 渲染彗星拖尾
+        function drawTrail(x, y) {
+            // 1. 使用 destination-out 模式，它的作用是“擦除”现有像素的不透明度
+            ctx.globalCompositeOperation = 'destination-out';
+            // 这里的颜色不重要，Alpha通道(0.1)决定了擦除的力度。值越大拖尾越短
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. 恢复正常的绘制模式，用来画新的点
+            ctx.globalCompositeOperation = 'source-over';
+
+            // 画布中心为 (150, 150)，绘制更大的拖尾点
+            ctx.beginPath();
+            ctx.arc(150 + x, 150 + y, 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#525252';
+            ctx.fill();
+
+            // 添加中心亮点增强视觉效果
+            ctx.beginPath();
+            ctx.arc(150 + x, 150 + y, 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#d4d4d4';
+            ctx.fill();
+        }
+
+        function startOrbitLoop() {
+            let startTime = performance.now();
+
+            function loop(currentTime) {
+                let elapsed = currentTime - startTime;
+                let tau = elapsed / CYCLE_DURATION;
+
+                // 防止单周期越界
+                if (tau >= 1) tau = 1;
+
+                // 核心数学：模拟机械能守恒 (最高点慢，最低点快)
+                // 使用余弦函数映射角度：在 0 和 2PI 处速度为 0，PI处(底部)速度最大
+                let theta = Math.PI * (2*tau - Math.sin(2*Math.PI * tau)/Math.PI);
+
+                // 计算坐标 (顶部起始)
+                let x = ORBIT_RADIUS * Math.sin(theta);
+                let y = -ORBIT_RADIUS * Math.cos(theta);
+
+                // 更新位置
+                card.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+                drawTrail(x, y);
+
+                // 判断本周期是否结束
+                if (tau >= 1) {
+                    if (isLoaded) {
+                        finishAnimation();
+                        return; // 结束循环
+                    } else {
+                        // 数据未加载完，重置时间继续下一圈
+                        startTime = performance.now();
+                        animationFrameId = requestAnimationFrame(loop);
+                        return;
+                    }
+                }
+
+                animationFrameId = requestAnimationFrame(loop);
+            }
+
+            animationFrameId = requestAnimationFrame(loop);
+        }
+
+        async function finishAnimation() {
+            // 立即清理拖尾
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 恢复 CSS 补间动画并回到中心
+            card.style.transition = 'width 0.5s, height 0.5s, border-radius 0.5s, transform 0.5s ease-in-out';
+            card.style.transform = `translate(-50%, -50%)`;
+            await sleep(500);
+
+            // 展开结果卡片
+            card.classList.remove('ball');
+            card.classList.add('result');
+            resultView.classList.add('active');
+
+            // 先设置文字内容（不可见）
+            const text = RESULT_TEXTS[fetchResult.identity] || RESULT_TEXTS.none;
+            resultText.textContent = text;
+
+            // 等待卡片变形稳定后再淡入文字
+            await sleep(500);
+            resultText.classList.add('show');
+        }
+
+        thinkBtn.addEventListener('click', startThinking);
+    </script>
+</body>
+</html>
