@@ -207,27 +207,27 @@
         // 省份必须匹配，城市如果配置了就也要匹配（可配置多个）
         const IDENTITY_RULES = [
             {
-                identity: 'kurutte',
-                provinces: ['辽宁', 'liaoning'],
-                cities: ['沈阳', 'shenyang']
+                identity: 'lyx',
+                provinces: ['四川', 'sichuan'],
+                cities: ['成都', 'chengdu']
             },
             {
-                identity: 'gaobaiawa',
-                provinces: ['河南', 'henan'],
-                cities: []
+                identity: 'gyc',
+                provinces: ['四川', 'sichuan'],
+                cities: ['雅安','yaan']
             },
             {
-                identity: 'tg',
+                identity: 'cyh',
                 provinces: ['重庆','chongqing'],
                 cities: []
             }
         ];
 
         const RESULT_TEXTS = {
-            'kurutte': '你是 Kurutte',
-            'gaobaiawa': '你是 Gaobaiawa',
-            'tg': '你是 TG',
-            'none': '你不是 Kurutte'
+            'lyx': '你是lyx',
+            'gyc': '你是👻',
+            'cyh': '你是cyh',
+            'none': '不熟'
         };
 
         const MAX_RETRIES = 2;
