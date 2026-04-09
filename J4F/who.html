@@ -16,12 +16,23 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
             min-height: 100vh;
             margin: 0;
-            background: #fafafa;
+            background: #fafafa !important;
+            background-color: #fafafa !important;
+            color: #0a0a0a;
             font-family: 'Source Han Serif SC', 'Noto Serif SC', 'STSong', 'SimSun', serif;
             overflow: hidden;
+        }
+
+        /* 强制覆盖暗黑模式 */
+        @media (prefers-color-scheme: dark) {
+            html, body {
+                background: #fafafa !important;
+                background-color: #fafafa !important;
+                color: #0a0a0a;
+            }
         }
 
         .container {
