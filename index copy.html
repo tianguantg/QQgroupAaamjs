@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light only">
+    <title>AAa美甲师后援会 - 星引擎游戏组队聊天群</title>
+    <link rel="stylesheet" href="style.css?v=202508272235">
+    
+    <!-- 动态背景CSS变量 -->
+    <style>
+        :root {
+            /* 动态背景渐变位置变量 */
+            --gradient1-x: 20%;
+            --gradient1-y: 20%;
+            --gradient2-x: 80%;
+            --gradient2-y: 80%;
+            --gradient3-x: 40%;
+            --gradient3-y: 60%;
+            --gradient4-x: 70%;
+            --gradient4-y: 30%;
+            --gradient5-x: 30%;
+            --gradient5-y: 70%;
+            --gradient6-x: 60%;
+            --gradient6-y: 40%;
+            
+            /* 光晕效果位置变量 */
+            --glow1-x: 25%;
+            --glow1-y: 75%;
+            --glow2-x: 75%;
+            --glow2-y: 25%;
+        }
+        
+        /* 动态背景样式 */
+        body {
+            background: 
+                radial-gradient(circle at var(--gradient1-x, 20%) var(--gradient1-y, 20%), var(--color-primary) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient2-x, 80%) var(--gradient2-y, 80%), var(--color-secondary) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient3-x, 40%) var(--gradient3-y, 60%), var(--color-primary-dark) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient4-x, 70%) var(--gradient4-y, 30%), var(--color-secondary-dark) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient5-x, 30%) var(--gradient5-y, 70%), var(--color-accent) 0%, transparent 50%),
+                radial-gradient(circle at var(--gradient6-x, 60%) var(--gradient6-y, 40%), var(--color-accent-dark) 0%, transparent 50%),
+                linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 25%, var(--color-secondary) 50%, var(--color-secondary-dark) 75%, var(--color-accent) 100%);
+            background-size: 100% 100%;
+            background-attachment: fixed;
+            transition: background-position 0.3s ease-out;
+        }
+        
+        /* 动态光晕覆盖层 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at var(--glow1-x, 25%) var(--glow1-y, 75%), rgba(255, 255, 255, 0.1) 0%, transparent 30%),
+                radial-gradient(circle at var(--glow2-x, 75%) var(--glow2-y, 25%), rgba(255, 255, 255, 0.08) 0%, transparent 25%);
+            pointer-events: none;
+            z-index: -1;
+            transition: background-position 0.3s ease-out;
+        }
+    </style>
+    
+    <!-- 主题预加载脚本，防止刷新时闪烁 -->
+    <script>
+        (function() {
+            // 立即从localStorage读取保存的主题
+            const savedTheme = localStorage.getItem('selectedTheme');
+            if (savedTheme && savedTheme !== 'default') {
+                // 如果是暗黑主题，立即应用暗黑主题的CSS变量
+                if (savedTheme === 'dark') {
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        :root {
+                            --color-primary: #2d3748;
+                            --color-primary-dark: #1a202c;
+                            --color-secondary: #4a5568;
+                            --color-secondary-dark: #2d3748;
+                            --color-accent: #1a365d;
+                            --color-accent-dark: #2c5282;
+                            --theme-bg-gradient: radial-gradient(circle at 20% 20%, var(--color-primary) 0%, transparent 50%), radial-gradient(circle at 80% 80%, var(--color-secondary) 0%, transparent 50%), radial-gradient(circle at 40% 60%, var(--color-primary-dark) 0%, transparent 50%), radial-gradient(circle at 70% 30%, var(--color-secondary-dark) 0%, transparent 50%), radial-gradient(circle at 30% 70%, var(--color-accent) 0%, transparent 50%), radial-gradient(circle at 60% 40%, var(--color-accent-dark) 0%, transparent 50%), linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 25%, var(--color-secondary) 50%, var(--color-secondary-dark) 75%, var(--color-accent) 100%);
+                            --theme-bg-overlay: radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.05) 1px, transparent 1px), radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0.5px, transparent 0.5px), radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+                            --theme-bg-secondary: linear-gradient(135deg, #16213e 0%, #0f3460 50%, #1a1a2e 100%);
+                            --theme-card-bg: rgba(40, 40, 40, 0.8);
+                            --theme-card-bg-hover: rgba(60, 60, 60, 0.9);
+                            --theme-btn-gradient: linear-gradient(135deg, #374151 0%, #1f2937 50%, #111827 100%);
+                            --theme-btn-gradient-hover: linear-gradient(135deg, #4b5563 0%, #374151 50%, #1f2937 100%);
+                            --theme-border-gradient: linear-gradient(45deg, #5a6fd8, #6b4190, #e081e9, #e3456a, #3d9aec, #00e0ec);
+                            --theme-tag-bg: rgba(90, 111, 216, 0.15);
+                            --theme-tag-bg-hover: rgba(160, 200, 180, 0.8);
+                            --color-text-primary: #f0f0f0;
+              --color-text-secondary: #e0e0e0;
+              --color-text-muted: #d0d0d0;
+                            --color-text-light: #808080;
+                            --color-text-white: #ffffff;
+                            --color-text-black: #e0e0e0;
+                            --color-text-dark: #c0c0c0;
+                            --color-text-info: #7c8ef0;
+                            --color-text-success: #4caf50;
+                            --color-text-error: #f44336;
+                            --color-text-warning: #ff6b6b;
+                            --color-text-link: #64b5f6;
+                            --color-bg-white: rgba(40, 40, 40, 0.9);
+                            --color-bg-light: rgba(60, 60, 60, 0.9);
+                            --color-bg-success: rgba(76, 175, 80, 0.2);
+                            --color-bg-error: rgba(244, 67, 54, 0.2);
+                            --color-bg-info: rgba(90, 111, 216, 0.2);
+                            --color-border-success: rgba(76, 175, 80, 0.4);
+                            --color-border-error: rgba(244, 67, 54, 0.4);
+                            --color-border-info: rgba(90, 111, 216, 0.4);
+                            --color-success: #4caf50;
+                            --color-error: #f44336;
+                            --color-warning: #ff6b6b;
+                            --theme-tag-gradient-1: linear-gradient(135deg, rgba(144, 164, 247, 0.15), rgba(107, 65, 144, 0.15));
+                            --theme-tag-gradient-2: linear-gradient(135deg, rgba(224, 129, 233, 0.15), rgba(227, 69, 106, 0.15));
+                            --theme-tag-gradient-3: linear-gradient(135deg, rgba(61, 154, 236, 0.15), rgba(0, 224, 236, 0.15));
+                            --announcement-bg-dark: rgba(50, 50, 50, 0.8);
+                            --announcement-border-dark: rgba(90, 111, 216, 0.3);
+                            --announcement-title-color-dark: #f0f0f0;
+                            --announcement-content-color-dark: #e0e0e0;
+                            --relation-header-bg: rgba(40, 40, 40, 0.8);
+                            --relation-header-border: rgba(90, 111, 216, 0.3);
+                            --relation-graph-bg: rgba(30, 30, 30, 0.9);
+                            --relation-note-bg: rgba(50, 50, 50, 0.9);
+                            --relation-note-border: rgba(90, 111, 216, 0.4);
+                            --relation-note-color: #9ca3af;
+                            --relation-legend-text-color: #e0e0e0;
+                            --relation-preview-label-color: #e0e0e0;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-content">
+                <div class="logo" id="navLogo">AAa美甲师后援会</div>
+                <div class="nav-buttons">
+                    <button class="nav-btn" onclick="window.location.href='quiz.html'">
+                        <span class="nav-btn-icon"></span>
+                        <span class="nav-btn-text">星趴小测验</span>
+                    </button>
+                    <button class="nav-btn" onclick="window.location.href='individual.html'">
+                        <span class="nav-btn-icon"></span>
+                        <span class="nav-btn-text">个人数据分析</span>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主要内容 -->
+        <div class="main-content">
+            <!-- 群信息卡片 -->
+            <div class="card group-info">
+                <div class="group-avatar" id="groupAvatar">A</div>
+                <h1 class="group-name" id="groupName">加载中...</h1>
+                <p class="group-description" id="groupDescription">加载中...</p>
+                <div class="group-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="memberCount">--</div>
+                        <div class="stat-label">群成员</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="establishedDate">--</div>
+                        <div class="stat-label">成立时间</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">活跃</div>
+                        <div class="stat-label">群状态</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 加群区域 -->
+            <div class="card join-section qr-card">
+                <h2 class="join-title">加入群聊</h2>
+                <div class="qq-number" id="qqNumber">QQ群: 加载中...</div>
+                <div class="qr-code" id="qrCode">二维码<br>加载中...</div>
+                <div class="join-button disabled" id="joinButton">点击直接加群</div>
+            </div>
+        </div>
+
+        <!-- 特色和公告 -->
+        <div class="features-announcements">
+            <!-- 群特色 -->
+            <div class="card features-card">
+                <h3 class="section-title">群特色</h3>
+                <div class="feature-tags-container">
+                    <div class="feature-category">
+                        <span class="category-label">主题</span>
+                        <div class="category-tags">
+                            <span class="tag theme-tag" id="groupTheme">加载中...</span>
+                        </div>
+                    </div>
+                    <div class="feature-category">
+                        <span class="category-label">氛围</span>
+                        <div class="category-tags">
+                            <span class="tag atmosphere-tag" id="groupAtmosphere">加载中...</span>
+                        </div>
+                    </div>
+                    <div class="feature-category">
+                        <span class="category-label">活动</span>
+                        <div class="category-tags" id="featureTags">
+                            <span class="tag">加载中...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 群公告 -->
+            <div class="card announcements-card" onclick="window.location.href='announcements.html'">
+                <h3 class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                  <span>群公告</span>
+                  <button class="nav-btn" style="margin-left:12px;" onclick="event.stopPropagation(); window.location.href='announcements.html'">
+                    <span class="nav-btn-text">查看全部</span>
+                  </button>
+                </h3>
+                <div id="announcements" onclick="event.stopPropagation();">
+                    <div class="announcement">
+                        <div class="announcement-title">加载中...</div>
+                        <div class="announcement-content">正在获取最新公告...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 关系图 + 词云并排 -->
+        <div class="wordcloud-relation">
+            <!-- 关系图预览（无交互） -->
+            <div class="card relation-preview-card" style="cursor: default;">
+                <h3 class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>成员关系图</span>
+                    <button class="nav-btn" style="margin-left:12px;" onclick="window.location.href='relation.html'">
+                        <span class="nav-btn-text">查看全图</span>
+                    </button>
+                </h3>
+                <div class="relation-preview-wrapper">
+                    <div id="relationPreview"></div>
+                </div>
+            </div>
+
+            <!-- 词云图 -->
+            <div class="card wordcloud-card">
+                <h3 class="section-title">群词云</h3>
+                <div class="wordcloud-wrapper">
+                    <img src="images/wordcloud.png" alt="群词云" loading="lazy">
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部信息 -->
+        <div class="footer">
+            <div class="join-requirements" id="joinRequirements">加载中...</div>
+            <p>联系方式: <span id="contactMethod">加载中...</span></p>
+        </div>
+
+        <!-- Powered by 标识 -->
+        <div class="powered-by">
+            <span>TGW~</span>
+        </div>
+    </div>
+
+    <!-- 图表库与初始化脚本 -->
+    <script src="echarts.min.js"></script>
+    <script>
+      (function(){
+        // 获取关系图预览标签颜色的主题变量
+        function getPreviewLabelColor() {
+          return getComputedStyle(document.documentElement).getPropertyValue('--relation-preview-label-color').trim() || '#2d3748';
+        }
+        
+        async function loadData(){
+          const res = await fetch(`assets/data/global_data/global_data.json?t=${Date.now()}`);
+          if(!res.ok) throw new Error('关系数据加载失败');
+          const data = await res.json();
+          return data.relationship_graph;
+        }
+        function scaleLinear(value, inMin, inMax, outMin, outMax){
+          if(inMax === inMin) return (outMin + outMax)/2;
+          const t = (value - inMin) / (inMax - inMin);
+          return outMin + t * (outMax - outMin);
+        }
+        function quantile(arr, p){
+          if(!arr.length) return 0;
+          const sorted = arr.slice().sort((a,b)=>a-b);
+          const idx = Math.max(0, Math.min(sorted.length-1, Math.floor(p*(sorted.length-1))));
+          return sorted[idx];
+        }
+        function buildGraph(dataset){
+          const nodesRaw = Array.isArray(dataset.nodes) ? dataset.nodes : [];
+          const edgesRaw = Array.isArray(dataset.edges) ? dataset.edges : (Array.isArray(dataset.links) ? dataset.links : []);
+          const nodes = nodesRaw.filter(n=>n && (n.id||n.name)).map(n=>({id:n.id||n.name, name:n.name||n.id, engagement_score:Number(n.engagement_score)||0}));
+          const es = nodes.map(n=>n.engagement_score);
+          const esMin = Math.min(...es,0), esMax = Math.max(...es,1);
+          const q1 = quantile(es,0.25), q2 = quantile(es,0.50), q3 = quantile(es,0.75);
+          const categoriesAll = [
+            { name:'潜水', itemStyle:{color:'#93C5FD'} },
+            { name:'偶尔活跃', itemStyle:{color:'#34D399'} },
+            { name:'活跃', itemStyle:{color:'#F59E0B'} },
+            { name:'核心', itemStyle:{color:'#EF4444'} }
+          ];
+          const allNodes = nodes.map(n=>{
+            const size = Math.round(scaleLinear(n.engagement_score, esMin, esMax, 12, 36));
+            let catIdx = 0;
+            if(n.engagement_score <= q1) catIdx = 0;
+            else if(n.engagement_score <= q2) catIdx = 1;
+            else if(n.engagement_score <= q3) catIdx = 2;
+            else catIdx = 3;
+            return {
+              id:n.id, name:n.name, value:n.engagement_score, symbolSize:size, category:catIdx,
+              itemStyle:{ color: categoriesAll[catIdx].itemStyle.color, borderColor:'#fff', borderWidth:1.5 }
+            };
+          });
+          const keptCategories = [categoriesAll[2], categoriesAll[3]];
+          const keptNodes = allNodes.filter(n=>n.category>=2);
+          const echartsNodes = keptNodes.map(n=>({...n, category:n.category-2, itemStyle:{...n.itemStyle, color: keptCategories[n.category-2].itemStyle.color}}));
+          const keptIdSet = new Set(echartsNodes.map(n=>n.id));
+          const edgesClean = edgesRaw.filter(e=>e && e.source && e.target && keptIdSet.has(e.source) && keptIdSet.has(e.target));
+          // 边样式简单化（预览用）
+          const echartsLinks = edgesClean.map(e=>({ source:e.source, target:e.target, lineStyle:{ width:1.5, opacity:0.35 } }));
+          let topId = null;
+          if(echartsNodes.length){
+            const topNode = echartsNodes.reduce((best,cur)=> (cur.value>best.value?cur:best), echartsNodes[0]);
+            topId = topNode.id;
+          }
+          return { nodes:echartsNodes, links:echartsLinks, categories:keptCategories, topId };
+        }
+        function centerAndSeed(graphData, dom){
+          if(!graphData.nodes.length) return;
+          const cx = dom.clientWidth/2, cy = dom.clientHeight/2;
+          // 居中并固定最高活跃节点
+          const i = graphData.nodes.findIndex(n=>n.id === graphData.topId);
+          if(i>=0){ graphData.nodes[i].x=cx; graphData.nodes[i].y=cy; graphData.nodes[i].fixed=true; graphData.nodes[i].itemStyle = Object.assign({}, graphData.nodes[i].itemStyle, { borderWidth:2 }); }
+          // 将其他节点种子分布成圆环
+          const others = graphData.nodes.filter(n=>n.id !== graphData.topId);
+          const radius = Math.max(80, Math.min(dom.clientWidth, dom.clientHeight)*0.34);
+          const m = Math.max(1, others.length);
+          for(let k=0;k<others.length;k++){
+            const theta = (2*Math.PI*k)/m;
+            const r = radius * (0.94 + Math.random()*0.12);
+            const a = theta + (Math.random()-0.5)*0.06;
+            others[k].x = cx + r * Math.cos(a);
+            others[k].y = cy + r * Math.sin(a);
+            others[k].fixed = false;
+          }
+        }
+        async function init(){
+          try{
+            const dataset = await loadData();
+            const graph = buildGraph(dataset);
+            const dom = document.getElementById('relationPreview');
+            if(!dom) return;
+            const chart = echarts.init(dom);
+            centerAndSeed(graph, dom);
+            const option = {
+              animation: true,
+              tooltip: { show: false },
+              legend: [{ show:false }],
+              series: [{
+                type: 'graph',
+                layout: 'force',
+                data: graph.nodes,
+                links: graph.links,
+                categories: graph.categories,
+                roam: false,
+                draggable: false,
+                label: { show: true, color: getPreviewLabelColor(), fontSize: 10 },
+                edgeSymbol: ['none','none'],
+                emphasis: { disabled: true },
+                lineStyle: { curveness: 0.12, opacity: 0.35 },
+                force: { initLayout: 'none', repulsion: 700, gravity: 0.08, edgeLength: 110 }
+              }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', ()=>{ chart.resize(); });
+            
+            // 将图表实例保存到全局，供主题切换时使用
+            window.relationPreviewChart = chart;
+            
+          }catch(e){
+            console.error(e);
+            const box = document.getElementById('relationPreview');
+            if(box) box.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--color-text-warning);">预览加载失败</div>';
+          }
+        }
+        if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+        
+        // 全局主题切换监听器，在主题系统加载后绑定
+        window.addEventListener('themeChanged', () => {
+          if (window.relationPreviewChart && window.getPreviewLabelColor) {
+            window.relationPreviewChart.setOption({
+              series: [{
+                label: { color: getPreviewLabelColor() }
+              }]
+            });
+          }
+        });
+        
+        // 将函数暴露到全局作用域
+        window.getPreviewLabelColor = getPreviewLabelColor;
+      })();
+    </script>
+
+    <!-- 主题切换系统 -->
+    <script src="theme-switcher.js?v=202508272235"></script>
+    <script src="theme-selector.js?v=202508272235"></script>
+    
+    <!-- 随机主题初始化 -->
+    <script>
+        // 页面加载完成后尝试应用随机主题
+        document.addEventListener('DOMContentLoaded', function() {
+            // 确保主题切换器已初始化
+            if (window.themeSwitcher) {
+                // 不再自动应用随机主题，改为由主题选择器控制
+                console.log('主题切换器已加载，等待用户选择');
+            }
+        });
+    </script>
+    
+    <!-- 动态背景系统 -->
+    <script src="dynamic-background.js?v=202508272235"></script>
+    
+    <!-- 引入配置文件 -->
+    <script src="config.js?v=202511022157"></script>
+</body>
+</html>
